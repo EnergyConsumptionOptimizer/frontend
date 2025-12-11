@@ -1,4 +1,4 @@
-export const ConsumptionService = {
+export const MockConsumptionService = {
   getConsumptions(params) {
     return new Promise((resolve) => {
       setTimeout(() => resolve(generateHistory(params)), 500);
