@@ -1,67 +1,57 @@
 <script setup>
-import { ref, reactive, watch, onMounted, onUnmounted } from "vue";
+import { ref, reactive, watch, computed, onMounted } from "vue";
 import { useLayout } from "@/layout/composables/layout";
-import { ConsumptionService } from "@/service/MockConsumptionService";
 
 defineOptions({ name: "ChartRealTime" });
 
 const props = defineProps({
-  users: {
+  labels: { type: Array, default: () => [] },
+  values: { type: Array, default: () => [] },
+  loading: { type: Boolean, default: false },
+  utilities: { type: Array, default: () => ["Utility"] },
+  timeRanges: {
     type: Array,
-    default: () => [{ label: "All Users", value: "all" }],
+    default: () => [{ label: "Time", value: "Time" }],
   },
-  zones: {
+  granularities: {
     type: Array,
-    default: () => [{ label: "Zone A", value: "a" }],
+    default: () => [{ label: "Granularity", value: "Granularity" }],
   },
+  users: { type: Array, default: () => [{ label: "User", value: "User" }] },
+  zones: { type: Array, default: () => [{ label: "Zone", value: "Zone" }] },
 });
 
-const UTILITIES = ["Electricity", "Gas", "Water"];
-const TIME_RANGES = [
-  { label: "1 Day", value: "1d" },
-  { label: "5 Days", value: "5d" },
-  { label: "1 Month", value: "1mo" },
-  { label: "All", value: "all" },
-];
-const GRANULARITIES = [
-  { label: "5 Min", value: "5m" },
-  { label: "1 Hour", value: "1h" },
-  { label: "1 Day", value: "1d" },
-];
-const UPDATE_INTERVAL = 1000;
+const emit = defineEmits(["filter-change"]);
 
 const { isDarkTheme } = useLayout();
-const isLoading = ref(false);
-const chartData = ref();
 const chartOptions = ref();
-let timer = null;
 
 const filters = reactive({
-  utility: "Electricity",
-  time: TIME_RANGES[0],
-  granularity: GRANULARITIES[0],
+  utility: props.utilities[0],
+  time: props.timeRanges[0],
+  granularity: props.granularities[0],
   user: props.users[0],
   zone: props.zones[0],
 });
 
-const onUserChange = () => {
-  if (filters.user.value !== props.users[0].value) {
+const notifyChange = () => {
+  if (filters.user?.value !== props.users[0]?.value)
     filters.zone = props.zones[0];
-  }
-};
-
-const onZoneChange = () => {
-  if (filters.zone.value !== props.zones[0].value) {
+  if (filters.zone?.value !== props.zones[0]?.value)
     filters.user = props.users[0];
-  }
+
+  emit("filter-change", { ...filters });
 };
 
 const getColor = (name, alpha = 1) => {
+  if (typeof window === "undefined") return `rgba(0,0,0,${alpha})`;
   const style = getComputedStyle(document.documentElement);
   const hex =
     style.getPropertyValue(name).trim() ||
     style.getPropertyValue("--p-primary-500").trim();
-  const [r, g, b] = hex.match(/\w\w/g).map((x) => parseInt(x, 16));
+  const [r, g, b] = hex.match(/\w\w/g)?.map((x) => parseInt(x, 16)) || [
+    0, 0, 0,
+  ];
   return `rgba(${r},${g},${b},${alpha})`;
 };
 
@@ -87,92 +77,69 @@ const updateChartOptions = () => {
   };
 };
 
-const tick = async () => {
-  if (!chartData.value) return;
+const chartDataComputed = computed(() => {
+  const utilName =
+    typeof filters.utility === "string"
+      ? filters.utility
+      : filters.utility?.label || "Default";
+  const colorName = `--p-${utilName.toLowerCase()}-500`;
 
-  const dataset = chartData.value.datasets[0];
-  const lastVal = dataset.data[dataset.data.length - 1];
-
-  const point = await ConsumptionService.getNextValue(lastVal, filters.utility);
-
-  const newLabels = [...chartData.value.labels.slice(1), point.label];
-  const newValues = [...dataset.data.slice(1), point.value];
-
-  chartData.value = {
-    ...chartData.value,
-    labels: newLabels,
-    datasets: [{ ...dataset, data: newValues }],
+  return {
+    labels: props.labels,
+    datasets: [
+      {
+        label: utilName,
+        data: props.values,
+        fill: true,
+        borderColor: getColor(colorName),
+        backgroundColor: getColor(colorName, 0.1),
+        tension: 0.4,
+        pointRadius: 0,
+      },
+    ],
   };
-};
-
-const initData = async () => {
-  if (timer) clearInterval(timer);
-
-  isLoading.value = true;
-  updateChartOptions();
-
-  try {
-    const res = await ConsumptionService.getConsumptions(filters);
-    const colorName = `--p-${filters.utility.toLowerCase()}-500`;
-
-    chartData.value = {
-      labels: res.labels,
-      datasets: [
-        {
-          label: filters.utility,
-          data: res.values,
-          fill: true,
-          borderColor: getColor(colorName),
-          backgroundColor: getColor(colorName, 0.1),
-          tension: 0.4,
-          pointRadius: 0,
-        },
-      ],
-    };
-
-    timer = setInterval(tick, UPDATE_INTERVAL);
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-watch([filters, isDarkTheme, () => props.users, () => props.zones], initData, {
-  deep: true,
 });
 
-onMounted(initData);
-onUnmounted(() => clearInterval(timer));
+watch(isDarkTheme, updateChartOptions);
+
+onMounted(() => {
+  updateChartOptions();
+  notifyChange();
+});
 </script>
 
 <template>
   <div class="card h-full flex flex-col">
     <div class="flex justify-between items-center mb-4">
       <h3 class="text-xl font-semibold m-0">Real-Time Consumptions</h3>
-      <i v-if="isLoading" class="pi pi-spin pi-spinner text-primary text-xl" />
+      <i
+        v-if="props.loading"
+        class="pi pi-spin pi-spinner text-primary text-xl"
+      />
     </div>
 
     <div class="flex flex-col gap-4 mb-6">
       <div class="flex flex-wrap gap-3 justify-between items-center">
         <SelectButton
           v-model="filters.utility"
-          :options="UTILITIES"
-          :disabled="isLoading"
+          :options="props.utilities"
           :allow-empty="false"
+          @change="notifyChange"
         />
         <div class="flex gap-2">
           <Dropdown
             v-model="filters.time"
-            :options="TIME_RANGES"
+            :options="props.timeRanges"
             optionLabel="label"
             class="w-32"
-            :disabled="isLoading"
+            @change="notifyChange"
           />
           <Dropdown
             v-model="filters.granularity"
-            :options="GRANULARITIES"
+            :options="props.granularities"
             optionLabel="label"
             class="w-36"
-            :disabled="isLoading"
+            @change="notifyChange"
           />
         </div>
       </div>
@@ -183,16 +150,14 @@ onUnmounted(() => clearInterval(timer));
           :options="props.users"
           optionLabel="label"
           class="w-32"
-          :disabled="isLoading"
-          @change="onUserChange"
+          @change="notifyChange"
         />
         <Dropdown
           v-model="filters.zone"
           :options="props.zones"
           optionLabel="label"
           class="w-32"
-          :disabled="isLoading"
-          @change="onZoneChange"
+          @change="notifyChange"
         />
       </div>
     </div>
@@ -200,10 +165,10 @@ onUnmounted(() => clearInterval(timer));
     <div class="flex-1 w-full min-h-64 relative">
       <Chart
         type="line"
-        :data="chartData"
+        :data="chartDataComputed"
         :options="chartOptions"
         class="h-full w-full"
-        :class="{ 'opacity-50': isLoading }"
+        :class="{ 'opacity-50': props.loading }"
       />
     </div>
   </div>
