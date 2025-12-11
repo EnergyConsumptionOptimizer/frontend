@@ -1,5 +1,5 @@
 import { onUnmounted } from "vue";
-import { ConsumptionService } from "@/service/ConsumptionService";
+import { MockConsumptionService } from "@/service/MockConsumptionService";
 import { useChartData } from "./useChart";
 
 export function useRealTimeChart() {
@@ -11,13 +11,13 @@ export function useRealTimeChart() {
 
     loading.value = true;
     try {
-      const res = await ConsumptionService.getConsumptions(filters);
+      const res = await MockConsumptionService.getConsumptions(filters);
       data.labels = res.labels;
       data.values = res.values;
 
       timer = setInterval(async () => {
         const lastVal = data.values[data.values.length - 1];
-        const point = await ConsumptionService.getNextValue(
+        const point = await MockConsumptionService.getNextValue(
           lastVal,
           filters.utility,
         );
