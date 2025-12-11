@@ -22,7 +22,7 @@ defineProps({
   },
   color: {
     type: String,
-    default: "#3B82F6",
+    default: "#FFFFFF",
     validator(value) {
       return value.startsWith("#") || value.startsWith("var(--");
     },

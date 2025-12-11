@@ -5,6 +5,17 @@ import { ConsumptionService } from "@/service/MockConsumptionService";
 
 defineOptions({ name: "ChartRealTime" });
 
+const props = defineProps({
+  users: {
+    type: Array,
+    default: () => [{ label: "All Users", value: "all" }],
+  },
+  zones: {
+    type: Array,
+    default: () => [{ label: "Zone A", value: "a" }],
+  },
+});
+
 const UTILITIES = ["Electricity", "Gas", "Water"];
 const TIME_RANGES = [
   { label: "1 Day", value: "1d" },
@@ -17,9 +28,7 @@ const GRANULARITIES = [
   { label: "1 Hour", value: "1h" },
   { label: "1 Day", value: "1d" },
 ];
-const USERS = [{ label: "All Users", value: "all" }];
-const ZONES = [{ label: "Zone A", value: "a" }];
-const UPDATE_INTERVAL = 2000;
+const UPDATE_INTERVAL = 1000;
 
 const { isDarkTheme } = useLayout();
 const isLoading = ref(false);
@@ -31,9 +40,21 @@ const filters = reactive({
   utility: "Electricity",
   time: TIME_RANGES[0],
   granularity: GRANULARITIES[0],
-  user: USERS[0],
-  zone: ZONES[0],
+  user: props.users[0],
+  zone: props.zones[0],
 });
+
+const onUserChange = () => {
+  if (filters.user.value !== props.users[0].value) {
+    filters.zone = props.zones[0];
+  }
+};
+
+const onZoneChange = () => {
+  if (filters.zone.value !== props.zones[0].value) {
+    filters.user = props.users[0];
+  }
+};
 
 const getColor = (name, alpha = 1) => {
   const style = getComputedStyle(document.documentElement);
@@ -85,7 +106,8 @@ const tick = async () => {
 };
 
 const initData = async () => {
-  clearInterval(timer);
+  if (timer) clearInterval(timer);
+
   isLoading.value = true;
   updateChartOptions();
 
@@ -97,6 +119,7 @@ const initData = async () => {
       labels: res.labels,
       datasets: [
         {
+          label: filters.utility,
           data: res.values,
           fill: true,
           borderColor: getColor(colorName),
@@ -113,7 +136,9 @@ const initData = async () => {
   }
 };
 
-watch([filters, isDarkTheme], initData, { deep: true });
+watch([filters, isDarkTheme, () => props.users, () => props.zones], initData, {
+  deep: true,
+});
 
 onMounted(initData);
 onUnmounted(() => clearInterval(timer));
@@ -155,17 +180,19 @@ onUnmounted(() => clearInterval(timer));
       <div class="flex gap-2">
         <Dropdown
           v-model="filters.user"
-          :options="USERS"
+          :options="props.users"
           optionLabel="label"
           class="w-32"
           :disabled="isLoading"
+          @change="onUserChange"
         />
         <Dropdown
           v-model="filters.zone"
-          :options="ZONES"
+          :options="props.zones"
           optionLabel="label"
           class="w-32"
           :disabled="isLoading"
+          @change="onZoneChange"
         />
       </div>
     </div>
