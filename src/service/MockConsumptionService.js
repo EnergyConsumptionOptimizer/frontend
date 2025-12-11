@@ -20,7 +20,7 @@ export const ConsumptionService = {
           }),
           value,
         });
-      }, 200);
+      }, 500);
     });
   },
 };
