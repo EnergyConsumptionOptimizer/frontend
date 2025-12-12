@@ -1,5 +1,5 @@
 <script setup>
-import { useLayout } from "@/layout/composables/layout";
+import { useLayout } from "@/layout/composables/useLayout";
 import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
 
