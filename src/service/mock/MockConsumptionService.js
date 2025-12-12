@@ -20,13 +20,33 @@ export const MockConsumptionService = {
           }),
           value,
         });
+      }, 1000);
+    });
+  },
+
+  // eslint-disable-next-line no-unused-vars
+  getForecast({ utility, period }) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const count = 30;
+        const labels = Array.from({ length: count }, (_, i) => `D${i + 1}`);
+
+        const base =
+          utility === "ELECTRICITY" ? 50 : utility === "GAS" ? 30 : 15;
+        const multiplier = utility === "ELECTRICITY" ? 40 : 20;
+
+        const values = Array.from({ length: count }, () =>
+          Math.floor(base + Math.random() * multiplier),
+        );
+
+        resolve({ labels, values });
       }, 500);
     });
   },
 };
 
 const generateHistory = ({ utility }) => {
-  const count = 20;
+  const count = 50;
   const baseValue = { Electricity: 50, Gas: 30, Water: 15 }[utility] || 40;
   const labels = [];
   const values = [];
