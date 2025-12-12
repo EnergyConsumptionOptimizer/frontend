@@ -1,8 +1,8 @@
 <script setup>
 import { ref, reactive, watch, computed, onMounted } from "vue";
-import { useLayout } from "@/layout/composables/layout";
+import { useLayout } from "@/layout/composables/useLayout";
 
-defineOptions({ name: "ChartRealTime" });
+defineOptions({ name: "ConsumptionRealTimeChart" });
 
 const props = defineProps({
   labels: { type: Array, default: () => [] },

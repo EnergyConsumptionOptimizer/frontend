@@ -1,8 +1,8 @@
 <script setup>
 import { ref, reactive, watch, computed, onMounted } from "vue";
-import { useLayout } from "@/layout/composables/layout";
+import { useLayout } from "@/layout/composables/useLayout";
 
-defineOptions({ name: "ChartHistorical" });
+defineOptions({ name: "ConsumptionHistoryChart" });
 
 const props = defineProps({
   labels: { type: Array, default: () => [] },
@@ -52,21 +52,32 @@ const getColor = (name, alpha = 1) => {
 const updateChartOptions = () => {
   const style = getComputedStyle(document.documentElement);
   const textColorSec = style.getPropertyValue("--text-color-secondary");
+  const surfaceBorder = style.getPropertyValue("--surface-border");
 
   chartOptions.value = {
     maintainAspectRatio: false,
-    animation: { duration: 0 },
+    responsive: true,
     plugins: {
       legend: { display: false },
       tooltip: { mode: "index", intersect: false },
     },
     scales: {
-      x: { ticks: { color: textColorSec }, grid: { display: false } },
+      x: {
+        ticks: {
+          color: textColorSec,
+          maxRotation: 0,
+          autoSkip: false,
+        },
+        grid: { display: false },
+      },
       y: {
         ticks: { color: textColorSec },
-        grid: { color: style.getPropertyValue("--surface-border") },
+        grid: { color: surfaceBorder, borderDash: [5, 5] },
         beginAtZero: true,
       },
+    },
+    elements: {
+      bar: { borderRadius: 4 },
     },
   };
 };
@@ -88,8 +99,26 @@ const chartDataComputed = computed(() => {
         borderColor: getColor(colorName),
         backgroundColor: getColor(colorName, 0.5),
         borderWidth: 1,
+        barPercentage: 0.8,
+        categoryPercentage: 0.9,
+        maxBarThickness: 60,
       },
     ],
+  };
+});
+
+const chartStyle = computed(() => {
+  const itemCount = props.values.length;
+  const PX_PER_ITEM = 30;
+  const SCROLL_THRESHOLD = 20;
+
+  const width =
+    itemCount > SCROLL_THRESHOLD ? `${itemCount * PX_PER_ITEM}px` : "100%";
+
+  return {
+    width: width,
+    height: "100%",
+    position: "relative",
   };
 });
 
@@ -103,31 +132,33 @@ onMounted(() => {
 
 <template>
   <div class="card h-full flex flex-col">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-xl font-semibold m-0">Historical Consumptions</h3>
-      <i
-        v-if="props.loading"
-        class="pi pi-spin pi-spinner text-primary text-xl"
-      />
-    </div>
+    <div class="flex flex-col gap-4 mb-4 shrink-0">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-semibold m-0">Historical Consumptions</h3>
+        <i
+          v-if="props.loading"
+          class="pi pi-spin pi-spinner text-primary text-xl"
+        />
+      </div>
 
-    <div class="flex flex-col gap-4 mb-6">
-      <div class="flex flex-wrap gap-3 justify-between items-center">
+      <div
+        class="flex flex-col md:flex-row gap-3 justify-between items-start md:items-center"
+      >
         <SelectButton
           v-model="filters.utility"
           :options="props.utilities"
           :allow-empty="false"
           @change="notifyChange"
+          class="w-full md:w-auto responsive-select-button"
         />
-        <div class="flex gap-2">
-          <Dropdown
-            v-model="filters.granularity"
-            :options="props.granularities"
-            optionLabel="label"
-            class="w-36"
-            @change="notifyChange"
-          />
-        </div>
+
+        <Dropdown
+          v-model="filters.granularity"
+          :options="props.granularities"
+          optionLabel="label"
+          class="w-full md:w-40"
+          @change="notifyChange"
+        />
       </div>
 
       <div class="flex gap-2">
@@ -135,27 +166,64 @@ onMounted(() => {
           v-model="filters.user"
           :options="props.users"
           optionLabel="label"
-          class="w-32"
+          class="w-1/2"
           @change="notifyChange"
         />
         <Dropdown
           v-model="filters.zone"
           :options="props.zones"
           optionLabel="label"
-          class="w-32"
+          class="w-1/2"
           @change="notifyChange"
         />
       </div>
     </div>
 
-    <div class="flex-1 w-full min-h-64 relative">
-      <Chart
-        type="bar"
-        :data="chartDataComputed"
-        :options="chartOptions"
-        class="h-full w-full"
-        :class="{ 'opacity-50': props.loading }"
-      />
+    <div class="flex-1 min-h-0 w-full relative">
+      <div
+        class="h-full w-full overflow-x-auto overflow-y-hidden custom-scrollbar"
+      >
+        <div :style="chartStyle">
+          <Chart
+            type="bar"
+            :data="chartDataComputed"
+            :options="chartOptions"
+            class="h-full w-full"
+            :class="{ 'opacity-50': props.loading }"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--surface-300);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--surface-400);
+}
+:deep(.responsive-select-button) {
+  display: flex;
+}
+:deep(.responsive-select-button .p-button) {
+  flex: 1;
+  justify-content: center;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+}
+@media (min-width: 768px) {
+  :deep(.responsive-select-button .p-button) {
+    flex: initial;
+    padding: 0.5rem 1rem;
+  }
+}
+</style>
