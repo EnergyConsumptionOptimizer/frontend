@@ -1,15 +1,15 @@
 <script setup>
-import StatsCard from "@/components/StatsCard.vue";
-import ChartRealTime from "@/components/ChartRealTime.vue";
-import ChartHistorical from "@/components/ChartHistorical.vue";
-import ChartFiltered from "@/components/ChartFiltered.vue";
+import StatsCard from "@/components/common/StatsCard.vue";
+import ChartRealTime from "@/components/charts/ConsumptionRealTimeChart.vue";
+import ChartHistorical from "@/components/charts/ConsumptionHistoryChart.vue";
+import ChartFiltered from "@/components/charts/ConsumptionDistributionChart.vue";
 import IconElectricity from "@/assets/icons/electricity.svg?component";
 import IconGas from "@/assets/icons/gas.svg?component";
 import IconWater from "@/assets/icons/water.svg?component";
 
 import { useDashboardContext } from "@/composables/useDashboard";
 import { useRealTimeChart } from "@/composables/useRealTime";
-import { useChartData } from "@/composables/useChart";
+import { useChartData } from "@/composables/useChartConfig";
 
 const CONFIG = {
   utilities: ["Electricity", "Gas", "Water"],
