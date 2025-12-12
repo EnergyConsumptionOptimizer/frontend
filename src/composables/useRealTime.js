@@ -1,6 +1,6 @@
 import { onUnmounted } from "vue";
-import { MockConsumptionService } from "@/service/MockConsumptionService";
-import { useChartData } from "@/composables/useChart";
+import { MockConsumptionService } from "@/service/mock/MockConsumptionService";
+import { useChartData } from "@/composables/useChartConfig";
 
 export function useRealTimeChart() {
   const { data, loading } = useChartData();

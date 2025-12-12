@@ -1,6 +1,6 @@
 import { ref, reactive, watch, onMounted } from "vue";
-import { useLayout } from "@/layout/composables/layout";
-import { MockedUserService } from "@/service/MockedUserService";
+import { useLayout } from "@/layout/composables/useLayout";
+import { MockedUserService } from "@/service/mock/MockedUserService";
 
 export function useDashboardContext() {
   const { getPrimary, getSurface, isDarkTheme } = useLayout();

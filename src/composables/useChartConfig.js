@@ -1,5 +1,5 @@
 import { reactive, ref } from "vue";
-import { MockedUserService } from "@/service/MockedUserService";
+import { MockConsumptionService } from "@/service/mock/MockConsumptionService";
 
 export function useChartData() {
   const data = reactive({ labels: [], values: [] });
@@ -8,7 +8,7 @@ export function useChartData() {
   const fetchData = async (filters) => {
     loading.value = true;
     try {
-      const res = await MockedUserService.getConsumptions(filters);
+      const res = await MockConsumptionService.getConsumptions(filters);
       data.labels = res.labels;
       data.values = res.values;
     } catch (err) {
