@@ -1,7 +1,13 @@
 export const MockConsumptionService = {
   getConsumptions(params) {
     return new Promise((resolve) => {
-      setTimeout(() => resolve(generateHistory(params)), 500);
+      setTimeout(() => {
+        const data = generateHistory(params);
+        resolve({
+          ...data,
+          utility: params.utility,
+        });
+      }, 500);
     });
   },
 
