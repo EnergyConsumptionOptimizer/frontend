@@ -4,6 +4,7 @@ import { useChartData } from "@/composables/useChartConfig";
 
 export function useRealTimeChart() {
   const { data, loading } = useChartData();
+  loading.value = true;
   let timer = null;
 
   const startPolling = async (filters) => {
@@ -14,6 +15,7 @@ export function useRealTimeChart() {
       const res = await MockConsumptionService.getConsumptions(filters);
       data.labels = res.labels;
       data.values = res.values;
+      data.activeUtility = res.utility;
 
       timer = setInterval(async () => {
         const lastVal = data.values[data.values.length - 1];

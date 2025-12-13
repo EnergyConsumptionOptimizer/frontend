@@ -2,7 +2,11 @@ import { reactive, ref } from "vue";
 import { MockConsumptionService } from "@/service/mock/MockConsumptionService";
 
 export function useChartData() {
-  const data = reactive({ labels: [], values: [] });
+  const data = reactive({
+    labels: [],
+    values: [],
+    activeUtility: "Electricity",
+  });
   const loading = ref(false);
 
   const fetchData = async (filters) => {
@@ -11,6 +15,7 @@ export function useChartData() {
       const res = await MockConsumptionService.getConsumptions(filters);
       data.labels = res.labels;
       data.values = res.values;
+      data.activeUtility = res.utility;
     } catch (err) {
       console.error("Chart Error:", err);
     } finally {
