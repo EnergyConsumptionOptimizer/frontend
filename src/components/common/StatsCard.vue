@@ -1,9 +1,11 @@
 <script setup>
+import { computed } from "vue";
+
 defineOptions({
   name: "StatCard",
 });
 
-defineProps({
+const props = defineProps({
   label: {
     type: String,
     required: true,
@@ -24,9 +26,20 @@ defineProps({
     type: String,
     default: "#FFFFFF",
     validator(value) {
-      return value.startsWith("#") || value.startsWith("var(--");
+      return (
+        value.startsWith("#") ||
+        value.startsWith("var(--") ||
+        value.startsWith("--")
+      );
     },
   },
+});
+
+const computedColor = computed(() => {
+  if (props.color.startsWith("--") && !props.color.startsWith("var(")) {
+    return `var(${props.color})`;
+  }
+  return props.color;
 });
 </script>
 
@@ -39,7 +52,7 @@ defineProps({
 
       <div
         class="flex items-center justify-center rounded-xl w-10 h-10"
-        :style="{ color: color }"
+        :style="{ color: computedColor }"
       >
         <slot name="icon">
           <i v-if="icon" :class="icon"></i>
