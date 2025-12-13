@@ -1,4 +1,4 @@
-export const createAuthGuard = async (to, from, next) => {
+export const createAuthGuard = async (to) => {
   const { useAuthStore } = await import("@/stores/auth");
   const authStore = useAuthStore();
 
@@ -11,22 +11,22 @@ export const createAuthGuard = async (to, from, next) => {
   const isLoggedIn = authStore.isAuthenticated;
 
   if (requiresAuth && !isLoggedIn) {
-    const query = to.fullPath === "/" ? {} : { redirect: to.fullPath };
-    return next({ name: "login", query });
+    return {
+      name: "login",
+      query: { redirect: to.fullPath !== "/" ? to.fullPath : undefined },
+    };
   }
 
   if (isGuestOnly && isLoggedIn) {
-    return next({ name: "dashboard" });
+    return { name: "dashboard" };
   }
 
   if (to.meta.roles) {
-    const requiredRoles = to.meta.roles;
     const userRole = authStore.user?.role;
-
-    if (!requiredRoles.includes(userRole)) {
-      return next({ name: "accessDenied" });
+    if (!to.meta.roles.includes(userRole)) {
+      return { name: "accessDenied" };
     }
   }
 
-  return next();
+  return true;
 };
