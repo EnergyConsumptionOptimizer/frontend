@@ -9,12 +9,15 @@ const UTILITY_CONFIG = [
   { id: "WATER", title: "Water" },
 ];
 
+const FORECAST_PERIODS = [
+  { label: "Daily", value: "daily" },
+  { label: "Weekly", value: "weekly" },
+  { label: "Monthly", value: "monthly" },
+];
+
 const charts = UTILITY_CONFIG.map((config) => {
   const logic = useForecast(config.id);
-  return {
-    ...config,
-    ...logic,
-  };
+  return { ...config, ...logic };
 });
 
 onMounted(() => {
@@ -38,6 +41,7 @@ onMounted(() => {
         :labels="chart.data.labels"
         :values="chart.data.values"
         :loading="chart.loading.value"
+        :periods="FORECAST_PERIODS"
         @period-change="chart.fetchForecast"
       />
     </div>
