@@ -4,7 +4,7 @@ export const routes = [
   {
     path: "/",
     component: AppLayout,
-    meta: { requiresAuth: true },
+    //meta: { requiresAuth: true },
     children: [
       {
         path: "",
