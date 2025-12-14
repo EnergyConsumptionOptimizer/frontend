@@ -11,7 +11,7 @@ import IconWater from "@/assets/icons/water.svg?component";
 import { DOMAIN_COLORS } from "@/config/chartPalette";
 import { useDashboardContext } from "@/composables/useDashboard";
 import { useRealTimeChart } from "@/composables/useRealTime";
-import { useChartData } from "@/composables/useChartConfig";
+import { useChartData } from "@/composables/charts/useChartData";
 
 const CONFIG = {
   utilities: ["Electricity", "Gas", "Water"],
