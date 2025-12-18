@@ -1,47 +1,33 @@
-import apiClient from "@/middlewares/authInterceptor";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
+import { UserService } from "@/service/UserService";
 
 const ROLES = {
   ADMIN: "admin",
   HOUSEHOLD: "household",
 };
 
-const API = {
-  LOGIN: "/auth/login",
-  LOGOUT: "/auth/logout",
-  REFRESH: "/auth/refresh",
-  VERIFY: "/auth/verify",
-};
-
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
   const isInitialized = ref(false);
+
   const isAuthenticated = computed(() => !!user.value);
-
   const isAdmin = computed(
-    () => user.value?.role.toLowerCase() === ROLES.ADMIN,
+    () => user.value?.role?.toLowerCase() === ROLES.ADMIN,
   );
-
   const isHousehold = computed(
-    () => user.value?.role.toLowerCase() === ROLES.HOUSEHOLD,
+    () => user.value?.role?.toLowerCase() === ROLES.HOUSEHOLD,
   );
 
-  function setUser(payload) {
-    user.value = payload;
-  }
-
-  function clearSession() {
-    user.value = null;
-  }
+  const setUser = (payload) => (user.value = payload);
+  const clearSession = () => (user.value = null);
 
   async function init() {
     if (isInitialized.value) return;
-
     try {
-      const { data } = await apiClient.get(API.VERIFY);
+      const data = await UserService.verifySession();
       setUser(data.user);
-    } catch (e) {
+    } catch {
       clearSession();
     } finally {
       isInitialized.value = true;
@@ -49,7 +35,7 @@ export const useAuthStore = defineStore("auth", () => {
   }
 
   async function login(credentials) {
-    const { data } = await apiClient.post(API.LOGIN, credentials);
+    const data = await UserService.login(credentials);
     setUser(data.user);
     isInitialized.value = true;
     return true;
@@ -57,9 +43,9 @@ export const useAuthStore = defineStore("auth", () => {
 
   async function logout() {
     try {
-      await apiClient.post(API.LOGOUT);
-    } catch (e) {
-      console.warn("Logout API failed, clearing session anyway", e);
+      await UserService.logout();
+    } catch (error) {
+      console.warn("Logout failed", error);
     } finally {
       clearSession();
     }
@@ -67,15 +53,14 @@ export const useAuthStore = defineStore("auth", () => {
 
   async function refreshToken() {
     try {
-      const { data } = await apiClient.post(API.REFRESH);
-
-      if (data.user) {
+      const data = await UserService.refreshToken();
+      if (data?.user) {
         setUser(data.user);
         isInitialized.value = true;
         return true;
       }
-      throw new Error("Refresh failed: No user data");
-    } catch (e) {
+      return false;
+    } catch {
       clearSession();
       return false;
     }

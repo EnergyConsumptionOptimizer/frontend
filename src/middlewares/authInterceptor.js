@@ -1,37 +1,21 @@
 import axios from "axios";
 
-const API_URL = "/api";
-const ENDPOINTS = {
-  LOGIN: "/auth/login",
-  REFRESH: "/auth/refresh",
-  VERIFY: "/auth/verify",
-  LOGOUT: "/auth/logout",
-};
-
 const apiClient = axios.create({
-  baseURL: API_URL,
+  baseURL: "",
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
 
+const AUTH_ROUTES = [
+  "/user/auth/login",
+  "/user/auth/refresh",
+  "/user/auth/logout",
+];
+
 let refreshPromise = null;
 
-const isAuthManagementEndpoint = (url) => {
-  return url.includes(ENDPOINTS.LOGIN) || url.includes(ENDPOINTS.REFRESH);
-};
-
-const createSessionRestoredResponse = (config, user) => {
-  return {
-    data: {
-      success: true,
-      user: user,
-    },
-    status: 200,
-    statusText: "OK",
-    headers: {},
-    config: config,
-  };
-};
+const isAuthEndpoint = (url) =>
+  AUTH_ROUTES.some((route) => url.includes(route));
 
 apiClient.interceptors.response.use(
   (response) => response,
@@ -41,12 +25,9 @@ apiClient.interceptors.response.use(
     if (
       !error.response ||
       error.response.status !== 401 ||
-      originalRequest._retry
+      originalRequest._retry ||
+      isAuthEndpoint(originalRequest.url)
     ) {
-      return Promise.reject(error);
-    }
-
-    if (isAuthManagementEndpoint(originalRequest.url)) {
       return Promise.reject(error);
     }
 
@@ -67,10 +48,14 @@ apiClient.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      if (originalRequest.url.includes(ENDPOINTS.VERIFY)) {
-        return Promise.resolve(
-          createSessionRestoredResponse(originalRequest, authStore.user),
-        );
+      if (originalRequest.url.includes("/user/auth/verify")) {
+        return Promise.resolve({
+          data: { success: true, user: authStore.user },
+          status: 200,
+          statusText: "OK",
+          headers: {},
+          config: originalRequest,
+        });
       }
 
       return apiClient(originalRequest);
