@@ -1,5 +1,5 @@
 import { ref, onMounted } from "vue";
-import { MockedUserService } from "@/service/mock/MockedUserService";
+import { UserService } from "@/service/UserService";
 
 export function useDashboardContext() {
   const usersList = ref([{ label: "All Users", value: "all" }]);
@@ -7,7 +7,7 @@ export function useDashboardContext() {
 
   const loadContext = async () => {
     try {
-      const [users] = await Promise.all([MockedUserService.getUsers()]);
+      const [users] = await Promise.all([UserService.getUsers()]);
       usersList.value = [
         { label: "All Users", value: "all" },
         ...users.map((u) => ({ label: u.username, value: u._id })),

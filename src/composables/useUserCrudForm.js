@@ -1,7 +1,7 @@
 import { ref } from "vue";
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
-import { MockedUserService } from "@/service/mock/MockedUserService";
+import { UserService } from "@/service/UserService";
 
 export function useUserCrudForm() {
   const toast = useToast();
@@ -43,7 +43,7 @@ export function useUserCrudForm() {
 
   const loadUsers = () =>
     executeAsync(async () => {
-      const rawData = await MockedUserService.getUsers();
+      const rawData = await UserService.getUsers();
       users.value = rawData.map((u) => ({ ...u, id: u.id || u._id }));
     });
 
@@ -52,7 +52,7 @@ export function useUserCrudForm() {
     if (!user.value.password?.trim()) return;
 
     await executeAsync(async () => {
-      const result = await MockedUserService.createUser(user.value);
+      const result = await UserService.createUser(user.value);
       const normalized = { ...result, id: result.id || result._id };
 
       users.value.push(normalized);
@@ -64,7 +64,7 @@ export function useUserCrudForm() {
     if (!user.value.username?.trim()) return;
 
     await executeAsync(async () => {
-      const result = await MockedUserService.updateUsername(
+      const result = await UserService.updateUsername(
         user.value.id,
         user.value.username,
       );
@@ -94,7 +94,7 @@ export function useUserCrudForm() {
       acceptClass: "p-button-danger",
       accept: () =>
         executeAsync(async () => {
-          await MockedUserService.deleteUser(targetUser.id);
+          await UserService.deleteUser(targetUser.id);
           users.value = users.value.filter((u) => u.id !== targetUser.id);
         }, "User Deleted"),
     });
@@ -108,6 +108,10 @@ export function useUserCrudForm() {
       acceptClass: "p-button-danger",
       accept: () =>
         executeAsync(async () => {
+          const deletePromises = selectedUsers.value.map((u) =>
+            UserService.deleteUser(u.id),
+          );
+          await Promise.all(deletePromises);
           const idsToDelete = selectedUsers.value.map((u) => u.id);
           users.value = users.value.filter((u) => !idsToDelete.includes(u.id));
           selectedUsers.value = [];
