@@ -1,0 +1,9 @@
+#!/bin/sh
+
+
+
+envsubst '\
+    \${USER_SERVICE_NAME} \${USER_SERVICE_PORT}'< /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/nginx.conf
+
+# Start Nginx
+exec "$@"

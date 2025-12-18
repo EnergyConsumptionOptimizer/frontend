@@ -1,31 +1,33 @@
-FROM node:22.13-alpine AS build
+FROM node:22.13-alpine AS builder
 
-# Set working directory inside the container
 WORKDIR /app
 
-# Install build dependencies first to leverage Docker layer caching
+# Copy dependency definitions first
 COPY package*.json ./
 
-# Prefer npm ci when package-lock.json is present (faster, reproducible)
+# Install dependencies 
 RUN npm ci || npm install
 
-# Copy the rest of the application code
 COPY . .
 
-# Build the application
 RUN npm run build
 
-# Serve the application with Nginx
-FROM nginx:alpine AS prod-stage
 
-# Remove the default config (for safety)
-RUN rm -rf /etc/nginx/conf.d/*
+FROM nginx:alpine AS production
 
-# Copy the Vue build
-COPY --from=build /app/dist /usr/share/nginx/html
+# Clear the default Nginx wpage
+RUN rm -rf /usr/share/nginx/html/*
 
-# Overwrite the main file /etc/nginx/nginx.conf
-COPY ./nginx.conf /etc/nginx/nginx.conf
+# Transfer the compiled assets from the 'builder' stage
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy the custom Nginx configuration template
+COPY ./nginx.conf /etc/nginx/conf.d/nginx.conf.template
+
+# Setup the entrypoint script for environment variable handling
+COPY ./entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 80
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
