@@ -15,11 +15,6 @@ const model = computed(() => [
     label: "Analytics",
     visible: true,
     items: [
-      {
-        label: "Consumptions",
-        icon: "pi pi-fw pi-chart-bar",
-        to: "/consumptions",
-      },
       { label: "Forecasts", icon: "pi pi-fw pi-chart-line", to: "/forecasts" },
     ],
   },

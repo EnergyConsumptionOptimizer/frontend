@@ -4,7 +4,7 @@ export const routes = [
   {
     path: "/",
     component: AppLayout,
-    //meta: { requiresAuth: true },
+    meta: { requiresAuth: true },
     children: [
       {
         path: "",
@@ -15,25 +15,24 @@ export const routes = [
         path: "forecasts",
         name: "forecasts",
         component: () => import("@/views/pages/Forecasts.vue"),
-        //meta: { roles: ["admin"] },
       },
       {
         path: "users",
         name: "users",
         component: () => import("@/views/pages/Users.vue"),
-        //meta: { roles: ["admin"] },
+        meta: { roles: ["admin"] },
       },
       {
         path: "thresholds",
         name: "thresholds",
         component: () => import("@/views/pages/Thresholds.vue"),
-        //meta: { roles: ["admin"] },
+        meta: { roles: ["admin"] },
       },
       {
         path: "mapeditor",
         name: "mapeditor",
         component: () => import("@/views/pages/Empty.vue"),
-        //meta: { roles: ["admin"] },
+        meta: { roles: ["admin"] },
       },
       {
         path: "access-denied",
