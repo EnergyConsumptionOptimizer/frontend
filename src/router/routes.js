@@ -47,8 +47,10 @@ export const routes = [
     component: () => import("@/views/pages/auth/Login.vue"),
     meta: { guestOnly: true },
   },
+  /*
   {
     path: "/:pathMatch(.*)*",
     redirect: { name: "dashboard" },
   },
+  */
 ];
