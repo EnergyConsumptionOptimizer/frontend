@@ -1,13 +1,13 @@
-import { ref, computed } from "vue";
+import { ref, computed, toRaw } from "vue";
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
-import { MockThresholdService } from "@/service/mock/MockThresholdsService";
+import { ThresholdService } from "@/service/ThresholdService";
 
 const STATIC_OPTIONS = Object.freeze({
   utilities: ["GAS", "WATER", "ELECTRICITY"],
   types: ["HISTORICAL", "ACTUAL", "FORECAST"],
   periods: ["ONE_DAY", "ONE_WEEK", "ONE_MONTH"],
-  _allStatuses: ["ACTIVE", "INACTIVE", "EXCEEDED"],
+  _allStatuses: ["ENABLED", "DISABLED", "BREACHED"],
 });
 
 export function useThresholdsCrudForm() {
@@ -23,11 +23,13 @@ export function useThresholdsCrudForm() {
 
   const statusOptions = computed(() => {
     return !threshold.value.id
-      ? STATIC_OPTIONS._allStatuses.filter((s) => s !== "EXCEEDED")
+      ? STATIC_OPTIONS._allStatuses.filter((s) => s !== "BREACHED")
       : STATIC_OPTIONS._allStatuses;
   });
 
-  const isPeriodDisabled = computed(() => threshold.value.type === "ACTUAL");
+  const isPeriodDisabled = computed(
+    () => threshold.value.thresholdType === "ACTUAL",
+  );
 
   const executeAsync = async (action, successMsg) => {
     loading.value = true;
@@ -56,25 +58,23 @@ export function useThresholdsCrudForm() {
 
   const loadThresholds = () =>
     executeAsync(async () => {
-      thresholds.value = await MockThresholdService.getThresholds();
+      thresholds.value = await ThresholdService.getThresholds();
     });
 
-  const createThreshold = async () => {
+  const createThreshold = async (payload) => {
     await executeAsync(async () => {
-      const result = await MockThresholdService.createThreshold(
-        threshold.value,
-      );
+      const result = await ThresholdService.createThreshold(payload);
       thresholds.value.push(result);
       dialog.value = false;
       threshold.value = {};
     }, "Threshold Created");
   };
 
-  const updateThreshold = async () => {
+  const updateThreshold = async (payload) => {
     await executeAsync(async () => {
-      const result = await MockThresholdService.updateThreshold(
-        threshold.value.id,
-        threshold.value,
+      const result = await ThresholdService.updateThreshold(
+        payload.id,
+        payload,
       );
       const index = thresholds.value.findIndex((t) => t.id === result.id);
       if (index !== -1) thresholds.value[index] = result;
@@ -85,23 +85,36 @@ export function useThresholdsCrudForm() {
 
   const saveThreshold = () => {
     submitted.value = true;
-    const { name, utility, type } = threshold.value;
+    const {
+      name,
+      utilityType,
+      thresholdType,
+      value: thresholdValue,
+    } = threshold.value;
 
-    if (!name?.trim() || !utility || !type) return;
+    if (!name || !name.trim()) return;
+    if (!utilityType || !thresholdType) return;
+    if (thresholdValue == null || Number(thresholdValue) <= 0) return;
 
-    if (threshold.value.id) {
-      updateThreshold();
+    const payload = { ...threshold.value };
+
+    if (payload.thresholdType === "ACTUAL" || !payload.periodType) {
+      delete payload.periodType;
+    }
+
+    if (payload.id) {
+      updateThreshold(payload);
     } else {
-      createThreshold();
+      createThreshold(payload);
     }
   };
 
   const toggleStatus = (item) => {
-    const newStatus = item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-    const updatedItem = { ...item, status: newStatus };
+    const newState = item.thresholdState === "ENABLED" ? "DISABLED" : "ENABLED";
+    const updatedItem = { ...item, thresholdState: newState };
 
     executeAsync(async () => {
-      await MockThresholdService.updateThreshold(item.id, updatedItem);
+      await ThresholdService.updateThreshold(item.id, updatedItem);
       const idx = thresholds.value.findIndex((t) => t.id === item.id);
       if (idx !== -1) thresholds.value[idx] = updatedItem;
     });
@@ -115,7 +128,7 @@ export function useThresholdsCrudForm() {
       acceptClass: "p-button-danger",
       accept: () =>
         executeAsync(async () => {
-          await MockThresholdService.deleteThreshold(item.id);
+          await ThresholdService.deleteThreshold(item.id);
           thresholds.value = thresholds.value.filter((t) => t.id !== item.id);
         }, "Threshold Deleted"),
     });
@@ -139,13 +152,13 @@ export function useThresholdsCrudForm() {
   };
 
   const openNew = () => {
-    threshold.value = { status: "ACTIVE" };
+    threshold.value = { thresholdState: "ENABLED" };
     submitted.value = false;
     dialog.value = true;
   };
 
   const openEdit = (item) => {
-    threshold.value = structuredClone(item);
+    threshold.value = structuredClone(toRaw(item));
     dialog.value = true;
   };
 
@@ -155,7 +168,7 @@ export function useThresholdsCrudForm() {
   };
 
   const handleTypeChange = () => {
-    if (threshold.value.type === "ACTUAL") {
+    if (threshold.value.thresholdType === "ACTUAL") {
       threshold.value.periodType = "";
     }
   };

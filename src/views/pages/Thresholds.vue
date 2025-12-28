@@ -21,6 +21,7 @@ const {
   openNew,
   openEdit,
   hideDialog,
+  handleTypeChange,
 } = useThresholdsCrudForm();
 
 const filters = ref({
@@ -73,10 +74,34 @@ onMounted(loadThresholds);
       </template>
 
       <Column selectionMode="multiple" style="width: 3rem" />
-      <Column field="id" header="ID" sortable style="min-width: 8rem" />
-      <Column field="name" header="Name" sortable style="min-width: 12rem" />
-      <Column field="utility" header="Utility" sortable />
-      <Column field="type" header="Type" sortable />
+
+      <Column field="name" header="Name" sortable style="min-width: 12rem">
+        <template #body="{ data }">
+          {{ data.name }}
+        </template>
+      </Column>
+
+      <Column
+        field="thresholdType"
+        header="Threshold Type"
+        sortable
+        style="min-width: 12rem"
+      >
+        <template #body="{ data }">
+          {{ data.thresholdType || "-" }}
+        </template>
+      </Column>
+      <Column field="utilityType" header="Utility" sortable>
+        <template #body="{ data }">
+          {{ data.utilityType || "-" }}
+        </template>
+      </Column>
+
+      <Column field="value" header="Value" sortable>
+        <template #body="{ data }">
+          {{ data.value ?? "-" }}
+        </template>
+      </Column>
 
       <Column field="periodType" header="Period" sortable>
         <template #body="{ data }">
@@ -84,11 +109,11 @@ onMounted(loadThresholds);
         </template>
       </Column>
 
-      <Column field="status" header="Active" style="width: 6rem">
+      <Column field="thresholdState" header="State" style="width: 8rem">
         <template #body="{ data }">
           <ToggleSwitch
-            :model-value="data.status === 'ACTIVE'"
-            @update:model-value="toggleStatus(data)"
+            :model-value="data.thresholdState === 'ENABLED'"
+            @update:model-value="() => toggleStatus(data)"
           />
         </template>
       </Column>
@@ -119,7 +144,11 @@ onMounted(loadThresholds);
       header="Threshold Details"
       :modal="true"
     >
-      <div class="flex flex-col gap-4">
+      <form
+        id="thresholdForm"
+        @submit.prevent="saveThreshold"
+        class="flex flex-col gap-4"
+      >
         <div>
           <label for="name" class="font-bold block mb-2">Name</label>
           <InputText
@@ -130,47 +159,70 @@ onMounted(loadThresholds);
             :invalid="submitted && !threshold.name"
             fluid
           />
-          <small v-if="submitted && !threshold.name" class="text-red-500"
-            >Name is required.</small
-          >
+          <small v-if="submitted && !threshold.name" class="text-red-500">
+            Name is required.
+          </small>
         </div>
 
         <div>
           <label for="utility" class="font-bold block mb-2">Utility</label>
-          <Dropdown
+          <Select
             id="utility"
-            v-model="threshold.utility"
+            v-model="threshold.utilityType"
             :options="options.utilities"
             placeholder="Select Utility"
-            :invalid="submitted && !threshold.utility"
+            :invalid="submitted && !threshold.utilityType"
             fluid
           />
-          <small v-if="submitted && !threshold.utility" class="text-red-500"
-            >Utility is required.</small
+          <small
+            v-if="submitted && !threshold.utilityType"
+            class="text-red-500"
           >
+            Utility is required.
+          </small>
         </div>
 
         <div>
-          <label for="type" class="font-bold block mb-2">Type</label>
-          <Dropdown
+          <label for="type" class="font-bold block mb-2">Threshold Type</label>
+          <Select
             id="type"
-            v-model="threshold.type"
+            v-model="threshold.thresholdType"
             :options="options.types"
             placeholder="Select Type"
-            :invalid="submitted && !threshold.type"
+            :invalid="submitted && !threshold.thresholdType"
             fluid
             @change="handleTypeChange"
           />
-          <small v-if="submitted && !threshold.type" class="text-red-500"
-            >Type is required.</small
+          <small
+            v-if="submitted && !threshold.thresholdType"
+            class="text-red-500"
           >
+            Type is required.
+          </small>
+        </div>
+
+        <div>
+          <label for="value" class="font-bold block mb-2">Value</label>
+          <InputNumber
+            id="value"
+            v-model.number="threshold.value"
+            :min="0"
+            :invalid="submitted && (!threshold.value || threshold.value <= 0)"
+            fluid
+          />
+          <small
+            v-if="submitted && (!threshold.value || threshold.value <= 0)"
+            class="text-red-500"
+          >
+            Value must be a positive number.
+          </small>
         </div>
 
         <div>
           <label for="periodType" class="font-bold block mb-2"
             >Period Type</label
           >
-          <Dropdown
+          <Select
             id="periodType"
             v-model="threshold.periodType"
             :options="options.periods"
@@ -181,23 +233,25 @@ onMounted(loadThresholds);
         </div>
 
         <div>
-          <label for="status" class="font-bold block mb-2">Status</label>
-          <Dropdown
+          <label for="status" class="font-bold block mb-2">State</label>
+          <Select
             id="status"
-            v-model="threshold.status"
+            v-model="threshold.thresholdState"
             :options="statusOptions"
-            placeholder="Select Status"
+            placeholder="Select State"
             fluid
           />
         </div>
-      </div>
+      </form>
 
       <template #footer>
         <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
+
         <Button
           label="Save"
           icon="pi pi-check"
-          @click="saveThreshold"
+          type="submit"
+          form="thresholdForm"
           :loading="loading"
         />
       </template>
