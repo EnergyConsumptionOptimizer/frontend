@@ -1,27 +1,30 @@
 <script setup>
 import { onMounted } from "vue";
+import { useForecastStore } from "@/stores/forecastStore";
+import { useForecastChart } from "@/composables/useForecastChart";
 import ConsumptionForecastChart from "@/components/charts/ConsumptionForecastChart.vue";
-import { useForecast } from "@/composables/useForecast";
 
-const UTILITY_CONFIG = [
-  { id: "ELECTRICITY", title: "Electricity" },
-  { id: "GAS", title: "Gas" },
-  { id: "WATER", title: "Water" },
-];
-
-const FORECAST_PERIODS = [
+const PERIOD_OPTIONS = [
   { label: "Daily", value: "daily" },
   { label: "Weekly", value: "weekly" },
   { label: "Monthly", value: "monthly" },
 ];
 
-const charts = UTILITY_CONFIG.map((config) => {
-  const logic = useForecast(config.id);
-  return { ...config, ...logic };
+const UTILITIES = [
+  { id: "ELECTRICITY", title: "Electricity" },
+  { id: "GAS", title: "Gas" },
+  { id: "WATER", title: "Water" },
+];
+
+const charts = UTILITIES.map((u) => {
+  const logic = useForecastChart(u.id);
+  return { ...u, ...logic };
 });
 
+const store = useForecastStore();
+
 onMounted(() => {
-  charts.forEach((chart) => chart.fetchForecast());
+  store.fetchAll();
 });
 </script>
 
@@ -38,11 +41,11 @@ onMounted(() => {
     >
       <ConsumptionForecastChart
         :title="chart.title"
-        :labels="chart.data.labels"
-        :values="chart.data.values"
+        :labels="chart.chartData.value.labels"
+        :values="chart.chartData.value.values"
         :loading="chart.loading.value"
-        :periods="FORECAST_PERIODS"
-        @period-change="chart.fetchForecast"
+        :periods="PERIOD_OPTIONS"
+        @period-change="chart.setPeriod"
       />
     </div>
   </div>
