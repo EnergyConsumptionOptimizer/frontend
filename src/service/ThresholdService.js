@@ -27,12 +27,4 @@ export const ThresholdService = {
     await apiClient.delete(`${THRESHOLD_BASE}/${id}`);
     return true;
   },
-
-  async evaluateForecast(payload) {
-    const { data } = await apiClient.post(
-      `${THRESHOLD_BASE}/evaluations/forecast`,
-      payload,
-    );
-    return data;
-  },
 };
