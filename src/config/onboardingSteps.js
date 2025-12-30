@@ -15,10 +15,10 @@ export const ONBOARDING_STEPS = [
   },
   {
     index: 3,
-    path: "add-hookups",
+    path: "create-hookups",
     name: "onboarding-step-3",
-    label: "Configure hookups",
-    component: "ConfigureSmartFurnitureHookups",
+    label: "Create hookups",
+    component: "CreateSmartFurnitureHookups",
   },
   {
     index: 4,
