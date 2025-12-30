@@ -1,4 +1,7 @@
 import AppLayout from "@/layout/AppLayout.vue";
+import OnboardingLayout from "@/layout/OnboardingLayout.vue";
+import { useOnboardingStore } from "@/stores/onboarding.js";
+import { generateOnboardingRoutes } from "@/utils/generateOnboardingRoutes.js";
 
 export const routes = [
   {
@@ -42,15 +45,37 @@ export const routes = [
     ],
   },
   {
+    path: "/onboarding",
+    component: OnboardingLayout,
+    meta: {
+      onboardingPhase: true,
+      requiresAuth: true,
+    },
+    children: [
+      {
+        path: "",
+        name: "onboarding",
+        redirect: () => {
+          const store = useOnboardingStore();
+          const currentPath = store.getPathByStep(store.getCurrentStepIndex);
+          return currentPath
+            ? `/onboarding/${currentPath}`
+            : `/onboarding/${store.getPathByStep(1)}`;
+        },
+      },
+      ...generateOnboardingRoutes(),
+    ],
+  },
+  {
     path: "/auth/login",
     name: "login",
     component: () => import("@/views/pages/auth/Login.vue"),
     meta: { guestOnly: true },
   },
   /*
-  {
-    path: "/:pathMatch(.*)*",
-    redirect: { name: "dashboard" },
-  },
-  */
+    {
+      path: "/:pathMatch(.*)*",
+      redirect: { name: "dashboard" },
+    },
+    */
 ];

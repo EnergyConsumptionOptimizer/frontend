@@ -1,3 +1,47 @@
+export const createOnboardingGuard = async (to) => {
+  const { useOnboardingStore } = await import("@/stores/onboarding.js");
+  const onboardingStore = useOnboardingStore();
+
+  if (!onboardingStore.isInitialized) {
+    await onboardingStore.init();
+  }
+
+  const isOnboardingComplete = onboardingStore.isComplete;
+  const isOnboardingRoute = to.matched.some(
+    (record) => record.meta.onboardingPhase,
+  );
+
+  const isGuestRoute = to.matched.some((record) => record.meta.guestOnly);
+
+  if (isGuestRoute) {
+    return true;
+  }
+
+  if (isOnboardingComplete && isOnboardingRoute) {
+    return { name: "dashboard" };
+  }
+
+  if (!isOnboardingComplete && !isOnboardingRoute) {
+    return { name: "onboarding" };
+  }
+
+  const requestedStep = to.meta.step;
+
+  if (requestedStep) {
+    if (!onboardingStore.canAccessStep(requestedStep)) {
+      return {
+        name: onboardingStore.getNameByStep(
+          onboardingStore.getCurrentStepIndex,
+        ),
+      };
+    }
+
+    onboardingStore.setCurrentStep(requestedStep);
+  }
+
+  return true;
+};
+
 export const createAuthGuard = async (to) => {
   const { useAuthStore } = await import("@/stores/auth");
   const authStore = useAuthStore();
@@ -23,6 +67,7 @@ export const createAuthGuard = async (to) => {
 
   if (to.meta.roles) {
     const userRole = authStore.user?.role;
+
     if (!to.meta.roles.includes(userRole)) {
       return { name: "accessDenied" };
     }

@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { createAuthGuard } from "./guards";
+import { createAuthGuard, createOnboardingGuard } from "./guards";
 import { routes } from "./routes";
 
 const router = createRouter({
@@ -10,6 +10,20 @@ const router = createRouter({
   },
 });
 
-router.beforeEach(createAuthGuard);
+router.beforeEach(async (to, from, next) => {
+  const onboardingResult = await createOnboardingGuard(to);
+
+  if (onboardingResult !== true) {
+    next(onboardingResult);
+    return;
+  }
+
+  const authResult = await createAuthGuard(to);
+  if (authResult !== true) {
+    next(authResult);
+    return;
+  }
+  next();
+});
 
 export default router;
