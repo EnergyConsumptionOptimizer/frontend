@@ -1,5 +1,5 @@
 <script setup>
-const props = defineProps({
+defineProps({
   title: String,
   subtitle: String
 })
@@ -14,6 +14,8 @@ const props = defineProps({
   <div class="flex justify-center flex-1 mt-4">
     <slot name="content" />
   </div>
+
+  <slot name="dialogs" />
 </template>
 
 <style>
