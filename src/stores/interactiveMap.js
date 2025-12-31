@@ -36,9 +36,6 @@ export const useInteractiveMap = defineStore("interactiveMap", {
     smartFurnitureHookupsCount: (state) => state.smartFurnitureHookups.length,
   },
   actions: {
-    setPersist(set) {
-      this.shouldPersist = set;
-    },
     uploadSvg(file, filename) {
       this.svgDataUrl = file;
       this.svgFileName = filename;
@@ -78,6 +75,29 @@ export const useInteractiveMap = defineStore("interactiveMap", {
         .forEach((sfh) => {
           sfh.zone = null;
         });
+    },
+    addSmartFurnitureHookup(smartFurnitureHookup) {
+      this.smartFurnitureHookups.push(smartFurnitureHookup);
+    },
+    findSmartFurnitureHookup(id) {
+      return this.smartFurnitureHookups.find((sfh) => sfh.id === id);
+    },
+    updateSmartFurnitureHookup(id, updates) {
+      const index = this.smartFurnitureHookups.findIndex(
+        (sfh) => sfh.id === id,
+      );
+
+      if (index !== -1) {
+        this.smartFurnitureHookups[index] = {
+          ...this.smartFurnitureHookups[index],
+          ...updates,
+        };
+      }
+    },
+    deleteSmartFurnitureHookup(id) {
+      this.smartFurnitureHookups = this.smartFurnitureHookups.filter(
+        (sfh) => sfh.id !== id,
+      );
     },
   },
   persist: {
