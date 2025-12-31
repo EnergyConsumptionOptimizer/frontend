@@ -1,4 +1,4 @@
-<script setup >
+<script setup>
 defineProps({
   color: {
     type: String,
@@ -10,17 +10,17 @@ defineProps({
   label: {
     type: String,
     required: true,
-  }
-})
+  },
+});
 </script>
 
 <template>
   <div class="flex flex-row space-x-2 justify-between items-center flex-1">
     <div class="flex flex-row space-x-2 items-center">
       <div
-          class="h-4 w-4"
-          :class="indicatorClass"
-          :style="{ backgroundColor: color }"
+        class="h-4 w-4"
+        :class="indicatorClass"
+        :style="{ backgroundColor: color }"
       />
       <b>{{ label }}</b>
     </div>
@@ -30,6 +30,4 @@ defineProps({
   </div>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

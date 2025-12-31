@@ -1,16 +1,16 @@
 <script setup>
-import {computed, ref} from "vue";
-import {getSvgViewBox} from '@/utils/getSvgViewBox'
-import { provide  } from 'vue';
+import { computed, ref } from "vue";
+import { getSvgViewBox } from "@/utils/getSvgViewBox";
+import { provide } from "vue";
 
 const props = defineProps({
   floorPlanSvg: {
-    type: String
+    type: String,
   },
-  cursor: String
+  cursor: String,
 });
 
-const emit = defineEmits(['interactiveMapClick', 'interactiveMapMouseMove'])
+const emit = defineEmits(["interactiveMapClick", "interactiveMapMouseMove"]);
 
 const svgRef = ref(null);
 
@@ -26,29 +26,28 @@ const extractedSvg = computed(() => {
 
   if (!svgEl) return props.floorPlanSvg;
 
-  const innerViewBox = svgEl.getAttribute('viewBox');
+  const innerViewBox = svgEl.getAttribute("viewBox");
   const outerViewBox = viewBox.value;
 
   if (innerViewBox && outerViewBox) {
-    const [, , innerW, innerH] = innerViewBox.split(' ').map(Number);
-    const [, , outerW, outerH] = outerViewBox.split(' ').map(Number);
+    const [, , innerW, innerH] = innerViewBox.split(" ").map(Number);
+    const [, , outerW, outerH] = outerViewBox.split(" ").map(Number);
 
     const scaleX = outerW / innerW;
     const scaleY = outerH / innerH;
     const scale = Math.min(scaleX, scaleY);
 
     const innerContent = Array.from(svgEl.children)
-        .map(child => child.outerHTML)
-        .join('');
+      .map((child) => child.outerHTML)
+      .join("");
 
     return `<g transform="scale(${scale})">${innerContent}</g>`;
   }
 
   return Array.from(svgEl.children)
-      .map(child => child.outerHTML)
-      .join('');
+    .map((child) => child.outerHTML)
+    .join("");
 });
-
 
 const getSvgPoint = (event) => {
   if (!svgRef.value) return null;
@@ -66,29 +65,29 @@ const svgClick = (event) => {
   if (!svgRef.value) return null;
   const point = getSvgPoint(event);
   emit("interactiveMapClick", point);
-}
+};
 
 const svgMouseMove = (event) => {
   if (!svgRef.value) return null;
   const point = getSvgPoint(event);
   emit("interactiveMapMouseMove", point);
-}
+};
 
-provide('interactiveMap', {
+provide("interactiveMap", {
   getSvgPoint,
-  svgRef
+  svgRef,
 });
 </script>
 
 <template>
   <svg
-      ref="svgRef"
-      :viewBox="viewBox"
-      preserveAspectRatio="xMidYMid meet"
-      class="h-full w-full"
-      @click="svgClick"
-      @mousemove="svgMouseMove"
-      :class="cursor"
+    ref="svgRef"
+    :viewBox="viewBox"
+    preserveAspectRatio="xMidYMid meet"
+    class="h-full w-full"
+    @click="svgClick"
+    @mousemove="svgMouseMove"
+    :class="cursor"
   >
     <g>
       <g v-html="extractedSvg" />

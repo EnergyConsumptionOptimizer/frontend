@@ -1,6 +1,6 @@
 <script setup>
 import { useOnboardingStore } from "@/stores/onboarding";
-import {computed, onMounted, ref} from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import router from "@/router/index.js";
 import { useAuthStore } from "@/stores/auth.js";
@@ -50,8 +50,8 @@ const handleLogout = async () => {
 };
 
 onMounted(() => {
-  localStorage.setItem('shouldStoresPersist', 'true')
-})
+  localStorage.setItem("shouldStoresPersist", "true");
+});
 </script>
 
 <template>

@@ -1,8 +1,8 @@
 <script setup>
 defineProps({
   title: String,
-  subtitle: String
-})
+  subtitle: String,
+});
 </script>
 
 <template>
@@ -18,6 +18,4 @@ defineProps({
   <slot name="dialogs" />
 </template>
 
-<style>
-
-</style>
+<style></style>

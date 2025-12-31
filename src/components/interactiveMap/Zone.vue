@@ -1,5 +1,5 @@
 <script setup>
-import {inject} from 'vue';
+import { inject } from "vue";
 
 const props = defineProps({
   zone: {
@@ -7,14 +7,14 @@ const props = defineProps({
     required: true,
   },
   editModeActive: Boolean,
-})
-const interactiveMap = inject('interactiveMap');
+});
+const interactiveMap = inject("interactiveMap");
 
-const emit = defineEmits(['zoneClick', 'zoneVerticeClick'])
+const emit = defineEmits(["zoneClick", "zoneVerticeClick"]);
 
 const pointsToPath = (points) => {
-  if (points.length === 0) return '';
-  return `M ${points.map(p => `${p.x},${p.y}`).join(' L ')} Z`;
+  if (points.length === 0) return "";
+  return `M ${points.map((p) => `${p.x},${p.y}`).join(" L ")} Z`;
 };
 
 const zoneClick = (event, zone, pointID = null) => {
@@ -23,59 +23,61 @@ const zoneClick = (event, zone, pointID = null) => {
   event.stopPropagation();
   const position = interactiveMap.getSvgPoint(event);
 
-  if(pointID != null){
-    emit('zoneVerticeClick', zone, pointID, position);
+  if (pointID != null) {
+    emit("zoneVerticeClick", zone, pointID, position);
     return;
   }
 
-  emit('zoneClick', zone, position);
-
-}
-
+  emit("zoneClick", zone, position);
+};
 </script>
 
 <template>
   <g
-      @mousedown="props.editModeActive ? zoneClick($event, props.zone) : null"
-      :class="{'cursor-move': props.editModeActive}">
+    @mousedown="props.editModeActive ? zoneClick($event, props.zone) : null"
+    :class="{ 'cursor-move': props.editModeActive }"
+  >
     <path
-        :d="pointsToPath(props.zone.points)"
-        :fill="props.zone.color"
-        fill-opacity="0.4"
-        :stroke="props.zone.color"
-        stroke-width="2"
+      :d="pointsToPath(props.zone.points)"
+      :fill="props.zone.color"
+      fill-opacity="0.4"
+      :stroke="props.zone.color"
+      stroke-width="2"
     />
 
     <g v-if="props.editModeActive">
       <circle
-          v-for="(point, i) in props.zone.points"
-          :key="i"
-          :cx="point.x"
-          :cy="point.y"
-          r="12"
-          :fill="props.zone.color"
-          stroke="white"
-          stroke-width="3"
-          style="cursor: pointer"
-          @mousedown="zoneClick($event, props.zone, i)"
+        v-for="(point, i) in props.zone.points"
+        :key="i"
+        :cx="point.x"
+        :cy="point.y"
+        r="12"
+        :fill="props.zone.color"
+        stroke="white"
+        stroke-width="3"
+        style="cursor: pointer"
+        @mousedown="zoneClick($event, props.zone, i)"
       />
     </g>
 
-
     <text
-        :x="props.zone.points.reduce((sum, p) => sum + p.x, 0) / props.zone.points.length"
-        :y="props.zone.points.reduce((sum, p) => sum + p.y, 0) / props.zone.points.length"
-        text-anchor="middle"
-        fill="#000"
-        font-size="28"
-        font-weight="bold"
-        pointer-events="none"
+      :x="
+        props.zone.points.reduce((sum, p) => sum + p.x, 0) /
+        props.zone.points.length
+      "
+      :y="
+        props.zone.points.reduce((sum, p) => sum + p.y, 0) /
+        props.zone.points.length
+      "
+      text-anchor="middle"
+      fill="#000"
+      font-size="28"
+      font-weight="bold"
+      pointer-events="none"
     >
       {{ props.zone.name }}
     </text>
   </g>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>
