@@ -6,11 +6,21 @@ const MapMode = {
   EDIT: "edit",
 };
 
+const checkShouldPersist = () => {
+  const storeShouldPersist = localStorage.getItem("shouldStoresPersist");
+
+  if (!storeShouldPersist) {
+    localStorage.removeItem("interactiveMap");
+    return false;
+  }
+
+  return true;
+};
+
 export const useInteractiveMap = defineStore("interactiveMap", {
   state: () => ({
     svgDataUrl: null,
     svgFileName: null,
-    shouldPersist: true,
     zones: [],
     smartFurnitureHookups: [],
   }),
@@ -26,6 +36,9 @@ export const useInteractiveMap = defineStore("interactiveMap", {
     smartFurnitureHookupsCount: (state) => state.smartFurnitureHookups.length,
   },
   actions: {
+    setPersist(set) {
+      this.shouldPersist = set;
+    },
     uploadSvg(file, filename) {
       this.svgDataUrl = file;
       this.svgFileName = filename;
@@ -68,12 +81,6 @@ export const useInteractiveMap = defineStore("interactiveMap", {
     },
   },
   persist: {
-    enabled: true,
-    strategies: [
-      {
-        storage: localStorage,
-        paths: ["svgDataUrl", "svgFileName", "zones", "smartFurnitureHookups"],
-      },
-    ],
+    enabled: checkShouldPersist(),
   },
 });
