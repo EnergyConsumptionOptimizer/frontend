@@ -101,7 +101,7 @@ const handleLogout = async () => {
       </Card>
     </div>
     <div
-      class="pt-4 pb-4 p w-full bg-white border-t border-gray-200 flex justify-between"
+      class="pt-4 pl-4 pr-4 pb-4 p w-full bg-white border-t border-gray-200 flex justify-between"
     >
       <div>
         <Button
