@@ -1,13 +1,16 @@
 <script setup>
 import {computed, ref} from "vue";
 import {getSvgViewBox} from '@/utils/getSvgViewBox'
-
+import { provide  } from 'vue';
 
 const props = defineProps({
   floorPlanSvg: {
     type: String
-  }
+  },
+  cursor: String
 });
+
+const emit = defineEmits(['interactiveMapClick', 'interactiveMapMouseMove'])
 
 const svgRef = ref(null);
 
@@ -45,6 +48,36 @@ const extractedSvg = computed(() => {
       .map(child => child.outerHTML)
       .join('');
 });
+
+
+const getSvgPoint = (event) => {
+  if (!svgRef.value) return null;
+
+  const svg = svgRef.value;
+  const pt = svg.createSVGPoint();
+  pt.x = event.clientX;
+  pt.y = event.clientY;
+  const svgP = pt.matrixTransform(svg.getScreenCTM()?.inverse());
+
+  return { x: svgP.x, y: svgP.y };
+};
+
+const svgClick = (event) => {
+  if (!svgRef.value) return null;
+  const point = getSvgPoint(event);
+  emit("interactiveMapClick", point);
+}
+
+const svgMouseMove = (event) => {
+  if (!svgRef.value) return null;
+  const point = getSvgPoint(event);
+  emit("interactiveMapMouseMove", point);
+}
+
+provide('interactiveMap', {
+  getSvgPoint,
+  svgRef
+});
 </script>
 
 <template>
@@ -53,9 +86,19 @@ const extractedSvg = computed(() => {
       :viewBox="viewBox"
       preserveAspectRatio="xMidYMid meet"
       class="h-full w-full"
+      @click="svgClick"
+      @mousemove="svgMouseMove"
+      :class="cursor"
   >
     <g>
       <g v-html="extractedSvg" />
+      <g>
+        <slot name="zones" />
+      </g>
+      <g>
+        <slot name="hookups" />
+      </g>
+      <slot></slot>
     </g>
   </svg>
 </template>
