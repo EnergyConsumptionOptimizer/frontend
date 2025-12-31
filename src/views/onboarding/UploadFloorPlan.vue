@@ -60,7 +60,7 @@ onMounted(()=>{
     <template #content>
       <div class="border-dashed border-gray-300 border-2 rounded-lg w-2/4 mt-4">
         <div class="p-4 flex h-fit" :class="src ? 'border-b-gray-300 border-b-2' : '' ">
-          <FileUpload v-if="!src && !warningBeforeReupload" mode="basic" @select="onFileSelect" customUpload auto accept=".svg" severity="secondary"
+          <FileUpload v-if="!src || !warningBeforeReupload" mode="basic" @select="onFileSelect" customUpload auto accept=".svg" severity="secondary"
                       class="p-button-outlined" :chooseLabel="src ? 'Change' : 'Upload'"  />
           <Button
               v-else
