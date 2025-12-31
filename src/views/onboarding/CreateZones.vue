@@ -180,12 +180,14 @@ onBeforeMount(() => {
             <template #viewActions>
               <Button
                 label="Create new zone"
+                icon="pi pi-plus"
                 severity="success"
                 @click="handleStartDrawing"
               />
               <Button
                 label="Edit zones"
-                severity="success"
+                severity="secondary"
+                icon="pi pi-arrows-alt"
                 :disabled="!mapStore.hasZones"
                 @click="handleStartEditing"
               />

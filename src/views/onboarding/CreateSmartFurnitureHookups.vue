@@ -197,11 +197,13 @@ onBeforeMount(() => {
               <Button
                 label="Create new hookup"
                 severity="success"
+                icon="pi pi-plus"
                 @click="handleStartDrawing"
               />
               <Button
                 label="Edit hookups"
-                severity="success"
+                severity="secondary"
+                icon="pi pi-arrows-alt"
                 :disabled="!mapStore.hasSmartFurnitureHookups"
                 @click="handleStartEditing"
               />

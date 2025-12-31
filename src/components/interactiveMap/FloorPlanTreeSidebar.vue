@@ -68,19 +68,20 @@ const expandedKeys = computed(() =>
         >
           <template #actions v-if="props.hasZoneActions">
             <Button
-              icon="pi pi-pen-to-square"
-              variant="text"
+              icon="pi pi-pencil"
+              outlined
               rounded
+              class="mr-2"
               aria-label="Edit"
               :disabled="disableActionsZone"
               @click="emit('editZone', slotProps.node.id)"
             />
             <Button
               icon="pi pi-trash"
-              severity="danger"
-              variant="text"
+              outlined
               rounded
               aria-label="Delete"
+              severity="danger"
               :disabled="disableActionsZone"
               @click="emit('deleteZone', slotProps.node.id)"
             />
