@@ -123,6 +123,8 @@ export function useZoneEditor(existingZones) {
   }
 
   function hideZoneDialog() {
+    zoneDialog.value = false;
+
     if (isZoneOnEditMode.value) {
       resetState();
     }
