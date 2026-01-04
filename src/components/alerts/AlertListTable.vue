@@ -34,14 +34,14 @@ const formatDate = (dateString) => {
 
 const getMessage = (alert) => {
   if (alert?.details) {
-    const { thresholdName, detectedValue, limitValue } = alert.details;
-    return `${thresholdName}: Detected ${detectedValue} (Limit: ${limitValue})`;
+    const { thresholdName, detected, limit } = alert.details;
+    return `${thresholdName}: Detected ${detected} (Limit: ${limit})`;
   }
   return alert?.message ?? "";
 };
 
 const rowClass = (data) => {
-  return [{ "bg-blue-50 dark:bg-blue-900/20": !data.read }];
+  return [{ "bg-blue-50 dark:bg-blue-900/20": !data.isRead }];
 };
 
 const onBulkAction = (action) => {
@@ -106,11 +106,11 @@ const onBulkAction = (action) => {
         </template>
       </Column>
 
-      <Column header="Status" field="read" sortable style="width: 8rem">
+      <Column header="Status" field="isRead" sortable style="width: 8rem">
         <template #body="{ data }">
           <Tag
-            :severity="!data.read ? 'info' : 'success'"
-            :value="!data.read ? 'New' : 'Read'"
+            :severity="!data.isRead ? 'info' : 'success'"
+            :value="!data.isRead ? 'New' : 'Read'"
           />
         </template>
       </Column>
@@ -135,7 +135,7 @@ const onBulkAction = (action) => {
               @click="$emit('delete', data)"
             />
             <Button
-              v-if="!data.read"
+              v-if="!data.isRead"
               icon="pi pi-check"
               text
               rounded

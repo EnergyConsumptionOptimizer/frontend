@@ -15,7 +15,7 @@ export const useAlertStore = defineStore("alert", () => {
   let reconnectAttempt = 0;
   let isRunning = false;
 
-  const unreadAlerts = computed(() => alerts.value.filter((a) => !a.read));
+  const unreadAlerts = computed(() => alerts.value.filter((a) => !a.isRead));
   const hasUnread = computed(() => unreadCount.value > 0);
   const getById = (id) => alerts.value.find((a) => a.id === id);
 
@@ -41,14 +41,14 @@ export const useAlertStore = defineStore("alert", () => {
 
   async function markAsRead(id) {
     const alert = alerts.value.find((a) => a.id === id);
-    if (alert && alert.read) return;
-    if (alert) alert.read = true;
+    if (alert && alert.isRead) return;
+    if (alert) alert.isRead = true;
     if (unreadCount.value > 0) unreadCount.value--;
 
     try {
       await AlertService.markAsRead(id);
     } catch (err) {
-      if (alert) alert.read = false;
+      if (alert) alert.isRead = false;
       unreadCount.value++;
       error.value = err.message || "Failed to mark as read";
     }
@@ -59,7 +59,7 @@ export const useAlertStore = defineStore("alert", () => {
     if (index === -1) return;
 
     const alert = alerts.value[index];
-    const wasRead = alert.read;
+    const wasRead = alert.isRead;
     alerts.value.splice(index, 1);
     if (!wasRead && unreadCount.value > 0) unreadCount.value--;
 
@@ -98,7 +98,7 @@ export const useAlertStore = defineStore("alert", () => {
 
   // SSE Logic
   const scheduleReconnect = () => {
-    if (!authStore.user || reconnectTimer) return;
+    if (!authStore.user || !authStore.isAdmin || reconnectTimer) return;
 
     reconnectAttempt += 1;
     const delayMs = Math.min(10000, 500 * 2 ** Math.min(reconnectAttempt, 4));
@@ -109,7 +109,7 @@ export const useAlertStore = defineStore("alert", () => {
   };
 
   function connect() {
-    if (isRunning || !authStore.user) return;
+    if (isRunning || !authStore.user || !authStore.isAdmin) return;
 
     isRunning = true;
     abortController = new AbortController();
@@ -157,7 +157,7 @@ export const useAlertStore = defineStore("alert", () => {
   watch(
     () => authStore.user,
     (user) => {
-      if (user) {
+      if (user && authStore.isAdmin) {
         connect();
       } else {
         disconnect();

@@ -15,6 +15,12 @@ export const routes = [
         component: () => import("@/views/Dashboard.vue"),
       },
       {
+        path: "alerts",
+        name: "alerts",
+        component: () => import("@/views/pages/Alerts.vue"),
+        meta: { roles: ["admin"] },
+      },
+      {
         path: "forecasts",
         name: "forecasts",
         component: () => import("@/views/pages/Forecasts.vue"),
@@ -67,15 +73,13 @@ export const routes = [
     ],
   },
   {
+    path: "/auth",
+    redirect: "/auth/login",
+  },
+  {
     path: "/auth/login",
     name: "login",
     component: () => import("@/views/pages/auth/Login.vue"),
     meta: { guestOnly: true },
   },
-  /*
-    {
-      path: "/:pathMatch(.*)*",
-      redirect: { name: "dashboard" },
-    },
-    */
 ];

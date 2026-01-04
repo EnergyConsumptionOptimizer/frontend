@@ -1,8 +1,7 @@
 import apiClient from "@/middlewares/authInterceptor";
 import { subscribeToSse } from "@/service/sseClient";
 
-const BASE_URL = "/alert/api";
-const SSE_URL = "/alert/internal/stream";
+const BASE_URL = "/alert";
 
 export const AlertService = {
   async getAlerts() {
@@ -30,6 +29,6 @@ export const AlertService = {
   },
 
   async subscribeToUnreadAlerts({ onEvent, onOpen, signal } = {}) {
-    return subscribeToSse(SSE_URL, { onEvent, onOpen, signal });
+    return subscribeToSse(`${BASE_URL}/stream`, { onEvent, onOpen, signal });
   },
 };
