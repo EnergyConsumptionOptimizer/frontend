@@ -1,13 +1,13 @@
 import AppLayout from "@/layout/AppLayout.vue";
 import OnboardingLayout from "@/layout/OnboardingLayout.vue";
-import { useOnboardingStore } from "@/stores/onboarding.js";
+import { useOnboardingStore } from "@/stores/onboardingStore.js";
 import { generateOnboardingRoutes } from "@/utils/generateOnboardingRoutes.js";
 
 export const routes = [
   {
     path: "/",
     component: AppLayout,
-    meta: { requiresAuth: true },
+    //meta: { requiresAuth: true },
     children: [
       {
         path: "",
@@ -29,7 +29,7 @@ export const routes = [
         path: "users",
         name: "users",
         component: () => import("@/views/pages/Users.vue"),
-        meta: { roles: ["admin"] },
+        //meta: { roles: ["admin"] },
       },
       {
         path: "thresholds",
@@ -71,6 +71,12 @@ export const routes = [
       },
       ...generateOnboardingRoutes(),
     ],
+  },
+  {
+    path: "/reset-password",
+    name: "reset-password",
+    component: () => import("@/views/pages/auth/ResetPassword.vue"),
+    meta: { guest: true },
   },
   {
     path: "/auth",

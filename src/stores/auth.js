@@ -10,6 +10,7 @@ const ROLES = {
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
   const isInitialized = ref(false);
+  const isLoading = ref(false);
 
   const isAuthenticated = computed(() => !!user.value);
   const isAdmin = computed(
@@ -66,9 +67,19 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
+  async function resetPassword(resetCode, password) {
+    isLoading.value = true;
+    try {
+      await UserService.resetAdminPassword(resetCode, password);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   return {
     user,
     isInitialized,
+    isLoading,
     isAuthenticated,
     isAdmin,
     isHousehold,
@@ -76,5 +87,6 @@ export const useAuthStore = defineStore("auth", () => {
     login,
     logout,
     refreshToken,
+    resetPassword,
   };
 });

@@ -2,6 +2,7 @@
 import { useAuthStore } from "@/stores/auth";
 import { reactive, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import AuthWrapper from "@/components/auth/AuthWrapper.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -50,94 +51,70 @@ const handleLoginError = (error) => {
 </script>
 
 <template>
-  <div
-    class="min-h-screen flex items-center justify-center bg-surface-100 dark:bg-surface-900 p-4"
+  <AuthWrapper
+    title="Energy Consumption Optimizer"
+    subtitle="Log in to continue"
   >
-    <div class="w-full max-w-md">
-      <div
-        class="bg-linear-to-b from-primary-400 to-primary-400 p-1 rounded-[56px]"
-      >
-        <div
-          class="bg-surface-0 dark:bg-surface-900 rounded-[53px] p-8 sm:p-12"
+    <form @submit.prevent="handleLogin" class="space-y-6">
+      <div>
+        <label
+          for="username"
+          class="block text-xl font-medium mb-2 text-surface-900 dark:text-surface-0"
         >
-          <div class="text-center mb-8">
-            <h1
-              class="text-3xl font-medium text-surface-900 dark:text-surface-0 mb-2"
-            >
-              Energy Consumption Optimizer
-            </h1>
-            <p class="text-muted-color">Log in to continue</p>
-          </div>
-
-          <form @submit.prevent="handleLogin" class="space-y-6">
-            <div>
-              <label
-                for="username"
-                class="block text-xl font-medium mb-2 text-surface-900 dark:text-surface-0"
-              >
-                Username
-              </label>
-              <InputText
-                id="username"
-                v-model="form.username"
-                placeholder="Username"
-                class="w-full"
-                :invalid="!!status.error"
-                autocomplete="username"
-              />
-            </div>
-
-            <div>
-              <label
-                for="password"
-                class="block text-xl font-medium mb-2 text-surface-900 dark:text-surface-0"
-              >
-                Password
-              </label>
-              <Password
-                inputId="password"
-                v-model="form.password"
-                placeholder="Password"
-                :toggleMask="true"
-                :feedback="false"
-                :invalid="!!status.error"
-                autocomplete="current-password"
-                fluid
-              />
-            </div>
-
-            <div class="text-right">
-              <span
-                class="text-primary font-medium cursor-pointer hover:underline"
-              >
-                Reset admin password
-              </span>
-            </div>
-
-            <div
-              v-if="status.error"
-              class="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-center"
-            >
-              {{ status.error }}
-            </div>
-
-            <Button
-              label="Log In"
-              type="submit"
-              :loading="status.loading"
-              :disabled="status.loading || isFormInvalid"
-              class="w-full"
-            />
-          </form>
-        </div>
+          Username
+        </label>
+        <InputText
+          id="username"
+          v-model="form.username"
+          placeholder="Username"
+          class="w-full"
+          :invalid="!!status.error"
+          autocomplete="username"
+        />
       </div>
-    </div>
-  </div>
-</template>
 
-<style scoped>
-:deep(.p-password .p-icon) {
-  transform: scale(1.2);
-  margin-right: 0.5rem;
-}
-</style>
+      <div>
+        <label
+          for="password"
+          class="block text-xl font-medium mb-2 text-surface-900 dark:text-surface-0"
+        >
+          Password
+        </label>
+        <Password
+          inputId="password"
+          v-model="form.password"
+          placeholder="Password"
+          :toggleMask="true"
+          :feedback="false"
+          :invalid="!!status.error"
+          autocomplete="current-password"
+          fluid
+        />
+      </div>
+
+      <div class="text-right">
+        <router-link
+          to="/reset-password"
+          class="text-primary font-medium cursor-pointer hover:underline"
+        >
+          Reset admin password
+        </router-link>
+      </div>
+
+      <div
+        v-if="status.error"
+        class="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-center"
+      >
+        {{ status.error }}
+      </div>
+
+      <Button
+        label="Log In"
+        type="submit"
+        :loading="status.loading"
+        :disabled="status.loading || isFormInvalid"
+        class="w-full"
+      />
+    </form>
+  </AuthWrapper>
+</template>

@@ -44,4 +44,12 @@ export const UserService = {
     await apiClient.delete(`${HOUSEHOLD_BASE}/${id}`);
     return true;
   },
+
+  async resetAdminPassword(resetCode, password) {
+    const { data } = await apiClient.post(`/admin/reset-password`, {
+      resetCode,
+      password,
+    });
+    return data;
+  },
 };
