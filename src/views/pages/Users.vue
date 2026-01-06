@@ -1,144 +1,103 @@
 <script setup>
-import { onMounted, ref } from "vue";
-import { FilterMatchMode } from "@primevue/core/api";
-import { useUserCrudForm } from "@/composables/useUserCrudForm";
+import { ref, onMounted } from "vue";
+import { useConfirm } from "primevue/useconfirm";
+import { useUserStore } from "@/stores/userStore";
+import UserListTable from "@/components/users/UserListTable.vue";
+import UserFormDialog from "@/components/users/UserFormDialog.vue";
 
-const {
-  users,
-  user,
-  selectedUsers,
-  loading,
-  userDialog,
-  submitted,
-  loadUsers,
-  saveUser,
-  confirmDeleteUser,
-  confirmDeleteSelected,
-  openNew,
-  openEdit,
-  hideDialog,
-} = useUserCrudForm();
+const confirm = useConfirm();
+const userStore = useUserStore();
 
-const filters = ref({
-  global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+const userDialog = ref(false);
+const user = ref({});
+const selectedUsers = ref([]);
+const submitted = ref(false);
+
+onMounted(() => {
+  userStore.fetchUsers();
 });
 
-onMounted(loadUsers);
+const openNew = () => {
+  user.value = {};
+  submitted.value = false;
+  userDialog.value = true;
+};
+
+const hideDialog = () => {
+  userDialog.value = false;
+  submitted.value = false;
+};
+
+const editUser = (prod) => {
+  user.value = { ...prod };
+  userDialog.value = true;
+};
+
+const saveUser = async () => {
+  submitted.value = true;
+
+  if (user.value.username?.trim()) {
+    let success = false;
+    if (user.value.id) {
+      success = await userStore.updateUser(user.value.id, user.value.username);
+    } else {
+      if (!user.value.password?.trim()) return;
+      success = await userStore.createUser(user.value);
+    }
+
+    if (success) {
+      hideDialog();
+    }
+  }
+};
+
+const confirmDeleteUser = (prod) => {
+  confirm.require({
+    message: `Are you sure you want to delete ${prod.username}?`,
+    header: "Confirm",
+    icon: "pi pi-exclamation-triangle",
+    accept: async () => {
+      await userStore.deleteUser(prod.id);
+      selectedUsers.value = selectedUsers.value.filter((u) => u.id !== prod.id);
+    },
+  });
+};
+
+const confirmDeleteSelected = () => {
+  confirm.require({
+    message: "Are you sure you want to delete the selected users?",
+    header: "Confirm",
+    icon: "pi pi-exclamation-triangle",
+    accept: async () => {
+      const ids = selectedUsers.value.map((u) => u.id);
+      const success = await userStore.deleteUsers(ids);
+      if (success) {
+        selectedUsers.value = [];
+      }
+    },
+  });
+};
 </script>
 
 <template>
   <div class="card">
-    <Toolbar class="mb-6">
-      <template #start>
-        <Button
-          label="New"
-          icon="pi pi-plus"
-          severity="secondary"
-          class="mr-2"
-          @click="openNew"
-        />
-        <Button
-          label="Delete"
-          icon="pi pi-trash"
-          severity="secondary"
-          @click="confirmDeleteSelected"
-          :disabled="!selectedUsers.length"
-        />
-      </template>
-    </Toolbar>
+    <UserListTable
+      :users="userStore.users"
+      :loading="userStore.isLoading"
+      v-model:selectedUsers="selectedUsers"
+      @create="openNew"
+      @edit="editUser"
+      @delete="confirmDeleteUser"
+      @delete-selected="confirmDeleteSelected"
+    />
 
-    <DataTable
-      v-model:selection="selectedUsers"
-      :value="users"
-      :loading="loading"
-      dataKey="id"
-      :paginator="true"
-      :rows="10"
-      :filters="filters"
-    >
-      <template #header>
-        <div class="flex flex-wrap gap-2 items-center justify-between">
-          <h4 class="m-0">Users</h4>
-          <IconField>
-            <InputIcon><i class="pi pi-search" /></InputIcon>
-            <InputText
-              v-model="filters['global'].value"
-              placeholder="Search..."
-            />
-          </IconField>
-        </div>
-      </template>
-
-      <Column selectionMode="multiple" style="width: 3rem" />
-      <Column field="username" header="Username" sortable />
-      <Column field="role" header="Role" sortable />
-      <Column style="width: 10rem">
-        <template #body="{ data }">
-          <Button
-            icon="pi pi-pencil"
-            outlined
-            rounded
-            class="mr-2"
-            @click="openEdit(data)"
-          />
-          <Button
-            icon="pi pi-trash"
-            outlined
-            rounded
-            severity="danger"
-            @click="confirmDeleteUser(data)"
-          />
-        </template>
-      </Column>
-    </DataTable>
-
-    <Dialog
+    <UserFormDialog
       v-model:visible="userDialog"
-      :style="{ width: '450px' }"
-      header="User Details"
-      :modal="true"
-    >
-      <div class="flex flex-col gap-4">
-        <div>
-          <label for="username" class="font-bold block mb-2">Username</label>
-          <InputText
-            id="username"
-            v-model.trim="user.username"
-            required
-            autofocus
-            :invalid="submitted && !user.username"
-            fluid
-          />
-          <small v-if="submitted && !user.username" class="text-red-500"
-            >Username is required.</small
-          >
-        </div>
-        <div v-if="!user.id">
-          <label for="password" class="font-bold block mb-2">Password</label>
-          <Password
-            id="password"
-            v-model.trim="user.password"
-            toggleMask
-            :feedback="false"
-            :invalid="submitted && !user.password"
-            fluid
-          />
-          <small v-if="submitted && !user.password" class="text-red-500"
-            >Password is required.</small
-          >
-        </div>
-      </div>
-      <template #footer>
-        <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
-        <Button
-          label="Save"
-          icon="pi pi-check"
-          @click="saveUser"
-          :loading="loading"
-        />
-      </template>
-    </Dialog>
-
-    <ConfirmDialog />
+      v-model:user="user"
+      :submitted="submitted"
+      :loading="userStore.isLoading"
+      @save="saveUser"
+      @cancel="hideDialog"
+    />
   </div>
 </template>

@@ -1,16 +1,15 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
-import { UserService } from "@/service/UserService";
+import { AuthService } from "@/service/AuthService";
+import { useAsyncAction } from "@/composables/utils/asyncAction";
 
-const ROLES = {
-  ADMIN: "admin",
-  HOUSEHOLD: "household",
-};
+const ROLES = { ADMIN: "admin", HOUSEHOLD: "household" };
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
   const isInitialized = ref(false);
-  const isLoading = ref(false);
+
+  const { isLoading, error, perform } = useAsyncAction();
 
   const isAuthenticated = computed(() => !!user.value);
   const isAdmin = computed(
@@ -21,43 +20,50 @@ export const useAuthStore = defineStore("auth", () => {
   );
 
   const setUser = (payload) => (user.value = payload);
-  const clearSession = () => (user.value = null);
+  const clearSession = () => {
+    user.value = null;
+    error.value = null;
+  };
 
-  async function init() {
+  const login = (credentials) =>
+    perform(async () => {
+      const data = await AuthService.login(credentials);
+      setUser(data.user);
+      isInitialized.value = true;
+    });
+
+  const logout = () =>
+    perform(async () => {
+      try {
+        await AuthService.logout();
+      } finally {
+        clearSession();
+        // Optional: router.push("/login");
+      }
+    });
+
+  const resetPassword = (code, password) =>
+    perform(async () => {
+      await AuthService.resetAdminPassword(code, password);
+    });
+
+  const init = async () => {
     if (isInitialized.value) return;
     try {
-      const data = await UserService.verifySession();
+      const data = await AuthService.verifySession();
       setUser(data.user);
     } catch {
       clearSession();
     } finally {
       isInitialized.value = true;
     }
-  }
+  };
 
-  async function login(credentials) {
-    const data = await UserService.login(credentials);
-    setUser(data.user);
-    isInitialized.value = true;
-    return true;
-  }
-
-  async function logout() {
+  const refreshToken = async () => {
     try {
-      await UserService.logout();
-    } catch (error) {
-      console.warn("Logout failed", error);
-    } finally {
-      clearSession();
-    }
-  }
-
-  async function refreshToken() {
-    try {
-      const data = await UserService.refreshToken();
+      const data = await AuthService.refreshToken();
       if (data?.user) {
         setUser(data.user);
-        isInitialized.value = true;
         return true;
       }
       return false;
@@ -65,28 +71,20 @@ export const useAuthStore = defineStore("auth", () => {
       clearSession();
       return false;
     }
-  }
-
-  async function resetPassword(resetCode, password) {
-    isLoading.value = true;
-    try {
-      await UserService.resetAdminPassword(resetCode, password);
-    } finally {
-      isLoading.value = false;
-    }
-  }
+  };
 
   return {
     user,
     isInitialized,
     isLoading,
+    error,
     isAuthenticated,
     isAdmin,
     isHousehold,
     init,
     login,
     logout,
-    refreshToken,
     resetPassword,
+    refreshToken,
   };
 });

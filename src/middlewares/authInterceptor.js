@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: "",
+  baseURL: import.meta.env.VITE_API_URL || "",
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
@@ -14,9 +14,6 @@ const AUTH_ROUTES = [
 
 let refreshPromise = null;
 
-const isAuthEndpoint = (url) =>
-  AUTH_ROUTES.some((route) => url.includes(route));
-
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -26,17 +23,17 @@ apiClient.interceptors.response.use(
       !error.response ||
       error.response.status !== 401 ||
       originalRequest._retry ||
-      isAuthEndpoint(originalRequest.url)
+      AUTH_ROUTES.some((route) => originalRequest.url.includes(route))
     ) {
       return Promise.reject(error);
     }
 
     originalRequest._retry = true;
 
-    const { useAuthStore } = await import("@/stores/auth");
-    const authStore = useAuthStore();
-
     try {
+      const { useAuthStore } = await import("@/stores/auth");
+      const authStore = useAuthStore();
+
       if (!refreshPromise) {
         refreshPromise = authStore.refreshToken();
       }
@@ -47,17 +44,6 @@ apiClient.interceptors.response.use(
         await authStore.logout();
         return Promise.reject(error);
       }
-
-      if (originalRequest.url.includes("/user/auth/verify")) {
-        return Promise.resolve({
-          data: { success: true, user: authStore.user },
-          status: 200,
-          statusText: "OK",
-          headers: {},
-          config: originalRequest,
-        });
-      }
-
       return apiClient(originalRequest);
     } catch (err) {
       return Promise.reject(err);
