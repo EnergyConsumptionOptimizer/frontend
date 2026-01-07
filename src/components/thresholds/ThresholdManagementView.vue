@@ -72,7 +72,7 @@ const saveThreshold = async () => {
 
   const payload = { ...threshold.value };
   if (payload.thresholdType === "ACTUAL" || !payload.periodType) {
-    delete payload.periodType;
+    payload.periodType = "";
   }
 
   let success = false;
