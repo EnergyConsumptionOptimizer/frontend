@@ -14,7 +14,7 @@ export const UserLocalService = {
 
     const alreadyExists = users.some((u) => u.username === payload.username);
     if (alreadyExists) {
-      throw new Error(`Lo username "${payload.username}" è già in uso.`);
+      throw new Error(`username "${payload.username}" already in use.`);
     }
 
     const newUser = { ...payload, id: `temp-${Date.now()}`, role: "HOUSEHOLD" };
@@ -34,7 +34,7 @@ export const UserLocalService = {
         );
 
         if (alreadyExists) {
-          throw new Error(`Lo username "${payload.username}" è già in uso.`);
+          throw new Error(`username "${payload.username}" already in use.`);
         }
       }
 
