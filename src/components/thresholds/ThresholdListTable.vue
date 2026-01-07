@@ -38,6 +38,13 @@ const filters = ref({
     :rows="10"
     :filters="filters"
     :loading="loading"
+    :globalFilterFields="[
+      'name',
+      'thresholdType',
+      'utilityType',
+      'periodType',
+      'thresholdState',
+    ]"
   >
     <template #header>
       <div class="flex justify-between items-center">

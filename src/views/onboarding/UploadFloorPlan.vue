@@ -86,7 +86,7 @@ onMounted(() => {
         <div v-if="src" class="p-4">
           <interactive-map :floor-plan-svg="src"></interactive-map>
           <div class="flex justify-between mt-4">
-            <p class="!m-0"><strong>Filename:</strong> {{ fileName }}</p>
+            <p class="m-0!"><strong>Filename:</strong> {{ fileName }}</p>
           </div>
         </div>
       </div>
