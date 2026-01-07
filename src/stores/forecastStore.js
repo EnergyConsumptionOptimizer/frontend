@@ -1,12 +1,13 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { ForecastService } from "@/service/ForecastService";
+import { useAsyncAction } from "@/composables/utils/asyncAction";
 
 export const useForecastStore = defineStore("forecast", () => {
   const items = ref([]);
-  const isLoading = ref(false);
-  const error = ref(null);
   const lastFetched = ref(null);
+
+  const { isLoading, error, perform } = useAsyncAction();
 
   const getByUtility = computed(() => (utilityType) => {
     return items.value.find((f) => f.utilityType === utilityType);
@@ -15,18 +16,12 @@ export const useForecastStore = defineStore("forecast", () => {
   const fetchAll = async (force = false) => {
     if (!force && items.value.length > 0) return;
 
-    isLoading.value = true;
-    error.value = null;
-
-    try {
+    const success = await perform(async () => {
       items.value = await ForecastService.getForecasts();
       lastFetched.value = Date.now();
-    } catch (err) {
-      console.error("Error fetching forecasts:", err);
-      error.value = err;
+    });
+    if (!success) {
       items.value = [];
-    } finally {
-      isLoading.value = false;
     }
   };
 
