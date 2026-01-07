@@ -2,14 +2,21 @@
 import { useOnboardingStore } from "@/stores/onboarding";
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
+import { useToast } from "primevue/usetoast";
 import router from "@/router/index.js";
 import { useAuthStore } from "@/stores/auth.js";
+import { useUserStore } from "@/stores/userStore";
+import { useThresholdStore } from "@/stores/thresholdStore";
 
 const route = useRoute();
 
 const loading = ref(false);
 
+const toast = useToast();
+
 const onboardingStore = useOnboardingStore();
+const userStore = useUserStore();
+const thresholdStore = useThresholdStore();
 
 const step = computed(() => {
   return route.meta.step ?? 1;
@@ -44,6 +51,32 @@ function goToNextStep() {
     } else loading.value = false;
   }
 }
+
+async function completeOnboarding() {
+  loading.value = true;
+  try {
+    // upload svg
+    // sync zones+devices
+    await userStore.syncAndFinalize();
+    await thresholdStore.syncAndFinalize();
+
+    onboardingStore.finishOnboarding();
+
+    router.push({ name: "dashboard" });
+  } catch (error) {
+    console.error("Error during onboarding completion:", error);
+    toast.add({
+      severity: "error",
+      summary: "Error",
+      detail:
+        "There was a problem finalizing your configuration. Please try again.",
+      life: 3000,
+    });
+  } finally {
+    loading.value = false;
+  }
+}
+
 const handleLogout = async () => {
   await authStore.logout();
   router.push({ name: "login" });
@@ -133,6 +166,8 @@ onMounted(() => {
           label="Complete"
           icon="pi pi-arrow-right"
           iconPos="right"
+          :disabled="!canProceed"
+          @click="completeOnboarding"
         />
       </div>
     </div>
