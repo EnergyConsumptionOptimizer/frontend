@@ -88,4 +88,9 @@ export const routes = [
     component: () => import("@/views/auth/Login.vue"),
     meta: { guestOnly: true },
   },
+  {
+    path: "/:pathMatch(.*)*",
+    name: "not-found",
+    component: () => import("@/views/pages/NotFound.vue"),
+  },
 ];

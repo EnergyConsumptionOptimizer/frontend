@@ -4,7 +4,7 @@ const getInitialDarkTheme = () => {
   if (typeof window === "undefined") return false;
   const stored = localStorage.getItem("layoutConfig.darkTheme");
   if (stored !== null) return stored === "true";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  return false;
 };
 
 const layoutConfig = reactive({
