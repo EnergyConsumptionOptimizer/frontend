@@ -1,37 +1,41 @@
 import { defineStore } from "pinia";
+import { ref, computed } from "vue";
 import { ForecastService } from "@/service/ForecastService";
 
-export const useForecastStore = defineStore("forecast", {
-  state: () => ({
-    items: [],
-    loading: false,
-    error: null,
-    lastFetched: null,
-  }),
+export const useForecastStore = defineStore("forecast", () => {
+  const items = ref([]);
+  const isLoading = ref(false);
+  const error = ref(null);
+  const lastFetched = ref(null);
 
-  getters: {
-    getByUtility: (state) => (utilityType) => {
-      return state.items.find((f) => f.utilityType === utilityType);
-    },
-  },
+  const getByUtility = computed(() => (utilityType) => {
+    return items.value.find((f) => f.utilityType === utilityType);
+  });
 
-  actions: {
-    async fetchAll(force = false) {
-      if (!force && this.items.length > 0) return;
+  const fetchAll = async (force = false) => {
+    if (!force && items.value.length > 0) return;
 
-      this.loading = true;
-      this.error = null;
+    isLoading.value = true;
+    error.value = null;
 
-      try {
-        this.items = await ForecastService.getForecasts();
-        this.lastFetched = Date.now();
-      } catch (err) {
-        this.error = err;
-        this.items = [];
-        console.error(err);
-      } finally {
-        this.loading = false;
-      }
-    },
-  },
+    try {
+      items.value = await ForecastService.getForecasts();
+      lastFetched.value = Date.now();
+    } catch (err) {
+      console.error("Error fetching forecasts:", err);
+      error.value = err;
+      items.value = [];
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  return {
+    items,
+    isLoading,
+    error,
+    lastFetched,
+    getByUtility,
+    fetchAll,
+  };
 });
