@@ -1,10 +1,28 @@
-import { computed, reactive } from "vue";
+import { computed, reactive, watch } from "vue";
+
+const getInitialDarkTheme = () => {
+  if (typeof window === "undefined") return false;
+  const stored = localStorage.getItem("layoutConfig.darkTheme");
+  if (stored !== null) return stored === "true";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+};
 
 const layoutConfig = reactive({
   surface: null,
-  darkTheme: false,
+  darkTheme: getInitialDarkTheme(),
   menuMode: "static",
 });
+
+if (layoutConfig.darkTheme && typeof document !== "undefined") {
+  document.documentElement.classList.add("app-dark");
+}
+
+watch(
+  () => layoutConfig.darkTheme,
+  (newValue) => {
+    localStorage.setItem("layoutConfig.darkTheme", newValue);
+  },
+);
 
 const layoutState = reactive({
   staticMenuDesktopInactive: false,
