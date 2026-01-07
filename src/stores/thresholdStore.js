@@ -64,16 +64,17 @@ export const useThresholdStore = defineStore("threshold", () => {
     perform(async () => {
       if (!isLocalMode.value) return;
 
-      const localData = await ThresholdLocalService.getThresholds();
-      const promises = localData.map(({ ...payload }) =>
+      const localThresholds = await ThresholdLocalService.getThresholds();
+
+      const promises = localThresholds.map(({ ...payload }) =>
         ThresholdApiService.createThreshold(payload),
       );
 
-      const createdReal = await Promise.all(promises);
+      const createdThresholds = await Promise.all(promises);
 
       ThresholdLocalService.clear();
       isLocalMode.value = false;
-      thresholds.value = createdReal;
+      thresholds.value = createdThresholds;
       return true;
     });
 

@@ -66,7 +66,6 @@ export const useUserStore = defineStore("user", () => {
       UserLocalService.clear();
       isLocalMode.value = false;
       users.value = createdUsers;
-
       return true;
     });
 

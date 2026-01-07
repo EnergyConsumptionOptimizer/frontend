@@ -98,6 +98,11 @@ export const useOnboardingStore = defineStore("onboarding", {
 
       this.maxAccessibleStep = this.currentStep;
     },
+    finishOnboarding() {
+      this.isComplete = true;
+      localStorage.setItem("onboarding_status", "completed");
+      localStorage.removeItem("shouldStoresPersist");
+    },
   },
   persist: {
     omit: ["isInitialized"],
