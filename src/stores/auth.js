@@ -38,7 +38,6 @@ export const useAuthStore = defineStore("auth", () => {
         await AuthService.logout();
       } finally {
         clearSession();
-        // Optional: router.push("/login");
       }
     });
 

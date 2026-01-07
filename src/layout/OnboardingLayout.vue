@@ -84,7 +84,7 @@ onMounted(() => {
       <div class="flex justify-center w-full">
         <Card class="w-2/3">
           <template #content>
-            <Stepper :value="step" class="basis-[50rem]" linear>
+            <Stepper :value="step" class="basis-200" linear>
               <StepList>
                 <Step
                   v-for="step in onboardingStore.steps"
@@ -137,6 +137,8 @@ onMounted(() => {
       </div>
     </div>
   </div>
+  <Toast />
+  <ConfirmDialog />
 </template>
 
 <style scoped></style>

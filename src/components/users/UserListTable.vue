@@ -39,6 +39,7 @@ const filters = ref({
       :paginator="true"
       :rows="10"
       :filters="filters"
+      :globalFilterFields="['username', 'role']"
     >
       <template #header>
         <div class="flex flex-wrap gap-2 items-center justify-between">

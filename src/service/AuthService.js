@@ -1,29 +1,29 @@
 import apiClient from "@/middlewares/authInterceptor";
 
-const ENDPOINT = "/user/auth";
+const BASE_URL = "/user/auth";
 
 export const AuthService = {
   async login(credentials) {
-    const { data } = await apiClient.post(`${ENDPOINT}/login`, credentials);
+    const { data } = await apiClient.post(`${BASE_URL}/login`, credentials);
     return data;
   },
 
   async logout() {
-    return apiClient.post(`${ENDPOINT}/logout`);
+    return apiClient.post(`${BASE_URL}/logout`);
   },
 
   async refreshToken() {
-    const { data } = await apiClient.post(`${ENDPOINT}/refresh`);
+    const { data } = await apiClient.post(`${BASE_URL}/refresh`);
     return data;
   },
 
   async verifySession() {
-    const { data } = await apiClient.get(`${ENDPOINT}/verify`);
+    const { data } = await apiClient.get(`${BASE_URL}/verify`);
     return data;
   },
 
   async resetAdminPassword(resetCode, password) {
-    const { data } = await apiClient.post(`/admin/reset-password`, {
+    const { data } = await apiClient.post(`user/admin/reset-password`, {
       resetCode,
       password,
     });
