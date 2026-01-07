@@ -75,7 +75,7 @@ export const routes = [
   {
     path: "/reset-password",
     name: "reset-password",
-    component: () => import("@/views/pages/auth/ResetPassword.vue"),
+    component: () => import("@/views/auth/ResetPassword.vue"),
     meta: { guest: true },
   },
   {
@@ -85,7 +85,7 @@ export const routes = [
   {
     path: "/auth/login",
     name: "login",
-    component: () => import("@/views/pages/auth/Login.vue"),
+    component: () => import("@/views/auth/Login.vue"),
     meta: { guestOnly: true },
   },
 ];

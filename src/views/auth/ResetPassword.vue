@@ -2,36 +2,38 @@
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
-import { storeToRefs } from "pinia";
 import AuthWrapper from "@/components/auth/AuthWrapper.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
-const { isLoading } = storeToRefs(authStore);
 
 const resetCode = ref("");
 const newPassword = ref("");
 const confirmPassword = ref("");
-const error = ref("");
+const codeError = ref(false);
+
+const passwordsMatch = computed(() => {
+  if (!newPassword.value || !confirmPassword.value) return true;
+  return newPassword.value === confirmPassword.value;
+});
 
 const isValid = computed(() => {
-  return (
-    resetCode.value &&
-    newPassword.value &&
-    newPassword.value === confirmPassword.value
-  );
+  return resetCode.value && newPassword.value && passwordsMatch.value;
 });
 
 const handleSubmit = async () => {
   if (!isValid.value) return;
-  error.value = "";
+  codeError.value = false;
 
-  try {
-    await authStore.resetPassword(resetCode.value, newPassword.value);
+  const success = await authStore.resetPassword(
+    resetCode.value,
+    newPassword.value,
+  );
+
+  if (success) {
     router.push({ name: "login" });
-  } catch (err) {
-    error.value =
-      err.response?.data?.message || err.message || "Failed to reset password";
+  } else {
+    codeError.value = true;
   }
 };
 
@@ -58,6 +60,8 @@ const handleCancel = () => {
           v-model="resetCode"
           placeholder="Reset Code"
           class="w-full"
+          :invalid="codeError"
+          @input="codeError = false"
         />
       </div>
 
@@ -91,31 +95,25 @@ const handleCancel = () => {
           placeholder="Confirm Password"
           :toggleMask="true"
           :feedback="false"
+          :invalid="!passwordsMatch"
           fluid
         />
-        <small
-          v-if="
-            newPassword && confirmPassword && newPassword !== confirmPassword
-          "
-          class="text-red-500 block mt-1"
-        >
+
+        <small v-if="!passwordsMatch" class="text-red-500 block mt-1">
           Passwords do not match
+        </small>
+
+        <small v-if="codeError" class="text-red-500 block mt-2 font-medium">
+          Invalid reset code.
         </small>
       </div>
 
-      <div
-        v-if="error"
-        class="p-3 bg-red-50 border border-red-200 text-red-700 rounded text-center"
-      >
-        {{ error }}
-      </div>
-
-      <div class="flex gap-4">
+      <div class="flex gap-4 pt-2">
         <Button label="Cancel" text @click="handleCancel" class="w-full" />
         <Button
           label="Confirm"
           type="submit"
-          :loading="isLoading"
+          :loading="authStore.isLoading"
           :disabled="!isValid"
           class="w-full"
         />
