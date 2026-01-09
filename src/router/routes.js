@@ -18,7 +18,7 @@ export const routes = [
         path: "alerts",
         name: "alerts",
         component: () => import("@/views/pages/Alerts.vue"),
-        meta: { roles: ["admin"] },
+        meta: { roles: ["ADMIN"] },
       },
       {
         path: "forecasts",
@@ -29,19 +29,19 @@ export const routes = [
         path: "users",
         name: "users",
         component: () => import("@/views/pages/Users.vue"),
-        meta: { roles: ["admin"] },
+        meta: { roles: ["ADMIN"] },
       },
       {
         path: "thresholds",
         name: "thresholds",
         component: () => import("@/views/pages/Thresholds.vue"),
-        meta: { roles: ["admin"] },
+        meta: { roles: ["ADMIN"] },
       },
       {
         path: "mapeditor",
         name: "mapeditor",
         component: () => import("@/views/pages/Empty.vue"),
-        meta: { roles: ["admin"] },
+        meta: { roles: ["ADMIN"] },
       },
       {
         path: "access-denied",
