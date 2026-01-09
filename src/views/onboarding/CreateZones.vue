@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeMount, watch } from "vue";
+import { computed, onBeforeMount, onMounted, watch } from "vue";
 import { useConfirm, useToast } from "primevue";
 
 import InteractiveMapLayout from "@/layout/InteractiveMapLayout.vue";
@@ -104,10 +104,6 @@ function handleSaveZone() {
         sfh.zone = newZone.id;
       }
     }
-
-    if (mapStore.zoneCount === 1) {
-      onboardingStore.completeStep();
-    }
   } else if (isZoneOnEditMode.value) {
     mapStore.updateZone(draftZone.value.id, {
       name: name,
@@ -143,10 +139,6 @@ function handleDeleteZone(zoneId) {
     deleteZoneDialog(() => {
       mapStore.deleteZone(zoneId);
 
-      if (!mapStore.hasZones) {
-        onboardingStore.uncompleteStep();
-      }
-
       toast.add(deleteZoneToast);
     }),
   );
@@ -161,6 +153,10 @@ watch(collisionError, (error) => {
 
 onBeforeMount(() => {
   mapStore.viewMap();
+});
+
+onMounted(() => {
+  onboardingStore.completeStep();
 });
 </script>
 
