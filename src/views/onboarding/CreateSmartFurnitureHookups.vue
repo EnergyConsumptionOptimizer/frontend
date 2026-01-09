@@ -53,6 +53,7 @@ const {
 
   isSmartFurnitureHookupOnDrawMode,
   isSmartFurnitureHookupOnEditMode,
+  isSmartFurnitureHookupEndpointConfigured,
 
   startDrawing,
   stopDrawing,
@@ -91,14 +92,16 @@ async function fetchSmartFurnitureHookupInfo() {
   try {
     const response = await axios.get(draftSmartFurnitureHookup.value.endpoint);
 
-    console.log(response);
-
-    if (response.data < 1) {
+    if (!response.data || !(response.data.name || response.data.utilityType)) {
       toast.add(cannotFetchSmartFurnitureHookupInfoToast);
       return;
     }
 
-    draftSmartFurnitureHookup.value.name = response.data.name;
+    isSmartFurnitureHookupEndpointConfigured.value = true;
+
+    if (!draftSmartFurnitureHookup.value.name)
+      draftSmartFurnitureHookup.value.name = response.data.name;
+
     draftSmartFurnitureHookup.value.utilityType = response.data.node_type;
   } catch (error) {
     toast.add(cannotFetchSmartFurnitureHookupInfoToast);
@@ -285,6 +288,7 @@ onBeforeMount(() => {
     <template #dialogs>
       <smart-furniture-hookup-information-dialog
         :isOnDrawMode="isSmartFurnitureHookupOnDrawMode"
+        :isSaveDisabled="!isSmartFurnitureHookupEndpointConfigured"
         v-model:visible="smartFurnitureHookupDialog"
         v-model:loading="endpointLoading"
         v-model:smartFurnitureHookup="draftSmartFurnitureHookup"
@@ -292,6 +296,7 @@ onBeforeMount(() => {
         @hide="hideSmartFurnitureHookupDialog"
         @cancel="hideSmartFurnitureHookupDialog"
         @fetchInfo="fetchSmartFurnitureHookupInfo"
+        @endpointUpdated="isSmartFurnitureHookupEndpointConfigured = false"
       />
     </template>
   </onboarding-step-layout>

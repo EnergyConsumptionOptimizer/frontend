@@ -6,6 +6,8 @@ export function useSmartFurnitureHookupEditor() {
   const smartFurnitureHookupDialog = ref(false);
   const currentMode = ref(null);
 
+  const isSmartFurnitureHookupEndpointConfigured = ref(false);
+
   const isSmartFurnitureHookupOnDrawMode = computed(
     () => currentMode.value === "create",
   );
@@ -22,6 +24,7 @@ export function useSmartFurnitureHookupEditor() {
       endpoint: "",
     };
     isPositioned.value = false;
+    isSmartFurnitureHookupEndpointConfigured.value = false;
     smartFurnitureHookupDialog.value = false;
     currentMode.value = null;
   }
@@ -71,6 +74,7 @@ export function useSmartFurnitureHookupEditor() {
     };
 
     isPositioned.value = true;
+    isSmartFurnitureHookupEndpointConfigured.value = true;
 
     smartFurnitureHookupDialog.value = true;
     currentMode.value = "edit";
@@ -95,6 +99,7 @@ export function useSmartFurnitureHookupEditor() {
 
     isSmartFurnitureHookupOnDrawMode,
     isSmartFurnitureHookupOnEditMode,
+    isSmartFurnitureHookupEndpointConfigured,
 
     startDrawing,
     stopDrawing,
