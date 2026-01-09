@@ -293,8 +293,6 @@ onBeforeMount(() => {
         @cancel="hideSmartFurnitureHookupDialog"
         @fetchInfo="fetchSmartFurnitureHookupInfo"
       />
-      <ConfirmDialog />
-      <Toast />
     </template>
   </onboarding-step-layout>
 </template>
