@@ -235,7 +235,7 @@ onBeforeMount(() => {
         </template>
         <template #floor-plan>
           <interactive-map
-            :floor-plan-svg="mapStore.svgDataUrl"
+            :floor-plan-svg="mapStore.svgData"
             :cursor="cursorStyle"
             @interactiveMapClick="handleFloorPlanClick"
             @interactiveMapMouseMove="handleDragMove"

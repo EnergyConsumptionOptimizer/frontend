@@ -48,7 +48,7 @@ function reuploadFloorPlan(event) {
 }
 
 onMounted(() => {
-  src.value = interactiveMapStore.svgDataUrl;
+  src.value = interactiveMapStore.svgData;
   fileName.value = interactiveMapStore.svgFileName;
 });
 </script>
