@@ -5,6 +5,7 @@ import { utilityType } from "@/utils/utilityType.js";
 
 const props = defineProps({
   isOnDrawMode: Boolean,
+  isSaveDisabled: Boolean,
 });
 
 const smartFurnitureHookup = defineModel("smartFurnitureHookup", {
@@ -13,13 +14,23 @@ const smartFurnitureHookup = defineModel("smartFurnitureHookup", {
 const visible = defineModel("visible", { type: Boolean, default: false });
 const loading = defineModel("loading", { type: Boolean });
 
-const emit = defineEmits(["hide", "fetchInfo", "save", "cancel"]);
+const emit = defineEmits([
+  "hide",
+  "fetchInfo",
+  "save",
+  "cancel",
+  "endpointUpdated",
+]);
 
 const dialogTitle = computed(() =>
   props.isOnDrawMode
     ? "Create new smart furniture hookup"
     : "Edit smart furniture hookup",
 );
+
+function endpointUpdated() {
+  if (!props.isOnDrawMode) emit("endpointUpdated");
+}
 </script>
 
 <template>
@@ -31,7 +42,8 @@ const dialogTitle = computed(() =>
     @hide="emit('hide')"
   >
     <span class="text-surface-500 dark:text-surface-400 block mb-8">
-      Smart furniture hookup information
+      Smart furniture hookup information. Click the link to button to verify the
+      connection of the hookup.
     </span>
 
     <div class="grid grid-cols-12 gap-2 mb-4">
@@ -48,6 +60,7 @@ const dialogTitle = computed(() =>
           class="w-full"
           v-model="smartFurnitureHookup.endpoint"
           :invalid="!smartFurnitureHookup.endpoint"
+          @update:modelValue="endpointUpdated"
         />
         <Button
           :disabled="!smartFurnitureHookup.endpoint"
@@ -127,7 +140,12 @@ const dialogTitle = computed(() =>
         severity="secondary"
         @click="emit('cancel')"
       />
-      <Button type="button" label="Save" @click="emit('save')" />
+      <Button
+        type="button"
+        label="Save"
+        @click="emit('save')"
+        :disabled="isSaveDisabled"
+      />
     </div>
   </Dialog>
 </template>
