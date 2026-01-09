@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ONBOARDING_STEPS } from "@/config/onboardingSteps.js";
+import { MapService } from "@/service/MapService.js";
 
 export const useOnboardingStore = defineStore("onboarding", {
   state: () => ({
@@ -65,7 +66,14 @@ export const useOnboardingStore = defineStore("onboarding", {
   actions: {
     async init() {
       const status = localStorage.getItem("onboarding_status");
-      this.isComplete = status === "completed";
+
+      if (status === "completed") {
+        this.isComplete = true;
+      } else {
+        const fp = await MapService.getFloorPlan();
+        this.isComplete = fp != null;
+      }
+
       this.isInitialized = true;
     },
     reset() {
@@ -102,6 +110,7 @@ export const useOnboardingStore = defineStore("onboarding", {
       this.isComplete = true;
       localStorage.setItem("onboarding_status", "completed");
       localStorage.removeItem("shouldStoresPersist");
+      this.reset();
     },
   },
   persist: {
