@@ -278,8 +278,6 @@ onMounted(() => {
         @cancel="hideZoneDialog"
         @save="handleSaveZone"
       />
-      <ConfirmDialog />
-      <Toast />
     </template>
   </onboarding-step-layout>
 </template>
