@@ -1,16 +1,15 @@
 <script setup>
 import Dialog from "primevue/dialog";
 import { computed } from "vue";
-import { utilityType } from "@/utils/utilityType.js";
 
 const props = defineProps({
   isOnDrawMode: Boolean,
-  isSaveDisabled: Boolean,
 });
 
 const smartFurnitureHookup = defineModel("smartFurnitureHookup", {
   type: Object,
 });
+
 const visible = defineModel("visible", { type: Boolean, default: false });
 const loading = defineModel("loading", { type: Boolean });
 
@@ -28,7 +27,17 @@ const dialogTitle = computed(() =>
     : "Edit smart furniture hookup",
 );
 
+const utilityTypeLabel = computed(() => {
+  const type = smartFurnitureHookup.value?.utilityType;
+
+  if (type) {
+    return type;
+  }
+  return "Sync the information to see the utility type";
+});
+
 function endpointUpdated() {
+  emit("endpointUpdated");
   if (!props.isOnDrawMode) emit("endpointUpdated");
 }
 </script>
@@ -42,8 +51,8 @@ function endpointUpdated() {
     @hide="emit('hide')"
   >
     <span class="text-surface-500 dark:text-surface-400 block mb-8">
-      Smart furniture hookup information. Click the link to button to verify the
-      connection of the hookup.
+      Smart furniture hookup information. Click the link to button to sync the
+      information
     </span>
 
     <div class="grid grid-cols-12 gap-2 mb-4">
@@ -67,6 +76,7 @@ function endpointUpdated() {
           :loading="loading"
           icon="pi pi-link"
           aria-label="Connect"
+          severity="secondary"
           class="col-span-12 md:col-span-10"
           @click="emit('fetchInfo')"
         />
@@ -94,17 +104,8 @@ function endpointUpdated() {
           type="text"
           class="w-full"
           v-model="smartFurnitureHookup.name"
-          :invalid="!smartFurnitureHookup.name"
         />
       </div>
-      <Message
-        class="col-span-12"
-        v-show="!smartFurnitureHookup.name"
-        severity="error"
-        variant="simple"
-        size="small"
-        >Name is required
-      </Message>
     </div>
 
     <div class="grid grid-cols-12 gap-2 mb-4">
@@ -114,23 +115,8 @@ function endpointUpdated() {
         >Utility type</label
       >
       <div class="col-span-12 md:col-span-10 w-full flex space-x-4">
-        <Select
-          v-model="smartFurnitureHookup.utilityType"
-          class="w-full"
-          :invalid="!smartFurnitureHookup.utilityType"
-          :options="Object.values(utilityType)"
-          id="smartFurnitureHookupUtilityType"
-          placeholder="Select a utility type"
-        />
+        <span>{{ utilityTypeLabel }}</span>
       </div>
-      <Message
-        class="col-span-12"
-        v-show="!smartFurnitureHookup.utilityType"
-        severity="error"
-        variant="simple"
-        size="small"
-        >Utility type is required
-      </Message>
     </div>
 
     <div class="flex justify-end gap-2">
@@ -144,7 +130,7 @@ function endpointUpdated() {
         type="button"
         label="Save"
         @click="emit('save')"
-        :disabled="isSaveDisabled"
+        :disabled="!smartFurnitureHookup.endpoint"
       />
     </div>
   </Dialog>
