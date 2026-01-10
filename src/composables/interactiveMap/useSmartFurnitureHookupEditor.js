@@ -81,7 +81,8 @@ export function useSmartFurnitureHookupEditor() {
   }
 
   function hideSmartFurnitureHookupDialog() {
-    smartFurnitureHookupDialog.value = true;
+    smartFurnitureHookupDialog.value = false;
+
     if (isSmartFurnitureHookupOnEditMode.value) {
       resetState();
     }
