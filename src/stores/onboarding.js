@@ -70,8 +70,11 @@ export const useOnboardingStore = defineStore("onboarding", {
       if (status === "completed") {
         this.isComplete = true;
       } else {
-        const fp = await MapService.getFloorPlan();
-        this.isComplete = fp != null;
+        const floorPlan = await MapService.getFloorPlan();
+
+        if (floorPlan) {
+          this.finishOnboarding();
+        }
       }
 
       this.isInitialized = true;
