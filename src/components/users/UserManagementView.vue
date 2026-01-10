@@ -4,6 +4,7 @@ import { useConfirm } from "primevue/useconfirm";
 import { useUserStore } from "@/stores/userStore";
 import UserListTable from "@/components/users/UserListTable.vue";
 import UserFormDialog from "@/components/users/UserFormDialog.vue";
+import { confirmDeleteDialog } from "@/utils/ui/confirmPresets.js";
 
 const props = defineProps({
   isLocalMode: {
@@ -56,28 +57,32 @@ const saveUser = async () => {
 };
 
 const confirmDeleteUser = (prod) => {
-  confirm.require({
-    message: `Are you sure you want to delete ${prod.username}?`,
-    header: "Confirm",
-    icon: "pi pi-exclamation-triangle",
-    accept: async () => {
-      await userStore.deleteUser(prod.id);
-      selectedUsers.value = selectedUsers.value.filter((u) => u.id !== prod.id);
-    },
-  });
+  confirm.require(
+    confirmDeleteDialog({
+      message: `Are you sure you want to delete ${prod.username}?`,
+      header: "Delete User",
+      onAccept: async () => {
+        await userStore.deleteUser(prod.id);
+        selectedUsers.value = selectedUsers.value.filter(
+          (u) => u.id !== prod.id,
+        );
+      },
+    }),
+  );
 };
 
 const confirmDeleteSelected = () => {
-  confirm.require({
-    message: "Are you sure you want to delete selected users?",
-    header: "Confirm",
-    icon: "pi pi-exclamation-triangle",
-    accept: async () => {
-      const ids = selectedUsers.value.map((u) => u.id);
-      const success = await userStore.deleteUsers(ids);
-      if (success) selectedUsers.value = [];
-    },
-  });
+  confirm.require(
+    confirmDeleteDialog({
+      message: "Are you sure you want to delete selected users?",
+      header: "Delete Users",
+      onAccept: async () => {
+        const ids = selectedUsers.value.map((u) => u.id);
+        const success = await userStore.deleteUsers(ids);
+        if (success) selectedUsers.value = [];
+      },
+    }),
+  );
 };
 </script>
 

@@ -21,9 +21,9 @@ import { useSmartFurnitureHookupZoneDetection } from "@/composables/interactiveM
 import { useSmartFurnitureHookupDrag } from "@/composables/interactiveMap/useSmartFurnitureHookupDrag.js";
 
 import { computeFloorPlanTree } from "@/utils/floorPlanTree.js";
-import { deleteSmartFurnitureHookupTost } from "@/utils/deleteSmartFurnitureHookupTost.js";
-import { cannotFetchSmartFurnitureHookupInfoToast } from "@/utils/cannotFetchSmartFurnitureHookupInfoToast.js";
-import { deleteSmartFurnitureHookupDialog } from "@/utils/deleteSmartFurnitureHookupDialog.js";
+import { deleteSmartFurnitureHookupTost } from "@/utils/ui/deleteSmartFurnitureHookupTost.js";
+import { cannotFetchSmartFurnitureHookupInfoToast } from "@/utils/ui/cannotFetchSmartFurnitureHookupInfoToast.js";
+import { deleteSmartFurnitureHookupDialog } from "@/utils/ui/deleteSmartFurnitureHookupDialog.js";
 
 const onboardingStore = useOnboardingStore();
 const mapStore = useInteractiveMap();
@@ -293,8 +293,6 @@ onBeforeMount(() => {
         @cancel="hideSmartFurnitureHookupDialog"
         @fetchInfo="fetchSmartFurnitureHookupInfo"
       />
-      <ConfirmDialog />
-      <Toast />
     </template>
   </onboarding-step-layout>
 </template>

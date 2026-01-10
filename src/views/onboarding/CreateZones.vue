@@ -20,9 +20,9 @@ import { useZoneEditor } from "@/composables/interactiveMap/useZoneEditor.js";
 import { useZoneDrag } from "@/composables/interactiveMap/useZoneDrag.js";
 import { useZoneCollision } from "@/composables/interactiveMap/useZoneCollision.js";
 import { computeFloorPlanTree } from "@/utils/floorPlanTree.js";
-import { deleteZoneDialog } from "@/utils/deleteZoneDialog.js";
-import { collisionZoneToast } from "@/utils/collisionZoneToast.js";
-import { deleteZoneToast } from "@/utils/deleteZoneToast.js";
+import { deleteZoneDialog } from "@/utils/ui/deleteZoneDialog.js";
+import { collisionZoneToast } from "@/utils/ui/collisionZoneToast.js";
+import { deleteZoneToast } from "@/utils/ui/deleteZoneToast.js";
 
 const onboardingStore = useOnboardingStore();
 const mapStore = useInteractiveMap();
@@ -282,8 +282,6 @@ onBeforeMount(() => {
         @cancel="hideZoneDialog"
         @save="handleSaveZone"
       />
-      <ConfirmDialog />
-      <Toast />
     </template>
   </onboarding-step-layout>
 </template>

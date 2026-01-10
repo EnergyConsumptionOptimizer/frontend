@@ -4,6 +4,7 @@ import { useConfirm } from "primevue/useconfirm";
 import { useThresholdStore } from "@/stores/thresholdStore";
 import ThresholdListTable from "@/components/thresholds/ThresholdListTable.vue";
 import ThresholdFormDialog from "@/components/thresholds/ThresholdFormDialog.vue";
+import { confirmDeleteDialog } from "@/utils/ui/confirmPresets.js";
 
 const props = defineProps({
   isLocalMode: {
@@ -94,36 +95,36 @@ const toggleStatus = async (item) => {
 };
 
 const confirmDelete = (item) => {
-  confirm.require({
-    message: `Delete threshold "${item.name}"?`,
-    header: "Confirm",
-    icon: "pi pi-exclamation-triangle",
-    acceptClass: "p-button-danger",
-    accept: async () => {
-      const success = await thresholdStore.deleteThreshold(item.id);
-      if (success) {
-        selectedThresholds.value = selectedThresholds.value.filter(
-          (t) => t.id !== item.id,
-        );
-      }
-    },
-  });
+  confirm.require(
+    confirmDeleteDialog({
+      message: `Delete threshold "${item.name}"?`,
+      header: "Delete Threshold",
+      onAccept: async () => {
+        const success = await thresholdStore.deleteThreshold(item.id);
+        if (success) {
+          selectedThresholds.value = selectedThresholds.value.filter(
+            (t) => t.id !== item.id,
+          );
+        }
+      },
+    }),
+  );
 };
 
 const confirmDeleteSelected = () => {
-  confirm.require({
-    message: "Delete selected thresholds?",
-    header: "Confirm",
-    icon: "pi pi-exclamation-triangle",
-    acceptClass: "p-button-danger",
-    accept: async () => {
-      const ids = selectedThresholds.value.map((t) => t.id);
-      const success = await thresholdStore.deleteThresholds(ids);
-      if (success) {
-        selectedThresholds.value = [];
-      }
-    },
-  });
+  confirm.require(
+    confirmDeleteDialog({
+      message: "Delete selected thresholds?",
+      header: "Delete Thresholds",
+      onAccept: async () => {
+        const ids = selectedThresholds.value.map((t) => t.id);
+        const success = await thresholdStore.deleteThresholds(ids);
+        if (success) {
+          selectedThresholds.value = [];
+        }
+      },
+    }),
+  );
 };
 </script>
 

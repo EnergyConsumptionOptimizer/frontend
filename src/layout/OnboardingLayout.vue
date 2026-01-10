@@ -7,6 +7,7 @@ import router from "@/router/index.js";
 import { useAuthStore } from "@/stores/auth.js";
 import { useUserStore } from "@/stores/userStore";
 import { useThresholdStore } from "@/stores/thresholdStore";
+import { errorToast } from "@/utils/ui/toastPresets.js";
 
 const route = useRoute();
 
@@ -65,13 +66,13 @@ async function completeOnboarding() {
     router.push({ name: "dashboard" });
   } catch (error) {
     console.error("Error during onboarding completion:", error);
-    toast.add({
-      severity: "error",
-      summary: "Error",
-      detail:
-        "There was a problem finalizing your configuration. Please try again.",
-      life: 3000,
-    });
+    toast.add(
+      errorToast({
+        summary: "Error",
+        detail:
+          "There was a problem finalizing your configuration. Please try again.",
+      }),
+    );
   } finally {
     loading.value = false;
   }
