@@ -19,10 +19,11 @@ const checkShouldPersist = () => {
 
 export const useInteractiveMap = defineStore("interactiveMap", {
   state: () => ({
-    svgDataUrl: null,
+    svgData: null,
     svgFileName: null,
     zones: [],
     smartFurnitureHookups: [],
+    mapService: null,
   }),
   getters: {
     isViewMode: (state) => state.mode === MapMode.VIEW,
@@ -36,8 +37,35 @@ export const useInteractiveMap = defineStore("interactiveMap", {
     smartFurnitureHookupsCount: (state) => state.smartFurnitureHookups.length,
   },
   actions: {
+    initializeWithService(mapService) {
+      this.mapService = mapService;
+    },
+    async syncAndFinalize() {
+      await this.mapService?.saveFloorPlan(this.svgData);
+
+      await Promise.all(
+        this.zones.map(async (zone) => {
+          const savedZone = await this.mapService?.saveZone(zone);
+          if (savedZone) {
+            this.smartFurnitureHookups.forEach((sfh) => {
+              console.log(sfh.zone === zone.id);
+
+              if (String(sfh.zone) === zone.id) {
+                sfh.zone = savedZone.id;
+              }
+            });
+          }
+        }),
+      );
+
+      await Promise.all(
+        this.smartFurnitureHookups.map(async (sfh) => {
+          this.mapService?.saveSmartFurnitureHookup(sfh);
+        }),
+      );
+    },
     uploadSvg(file, filename) {
-      this.svgDataUrl = file;
+      this.svgData = file;
       this.svgFileName = filename;
     },
     resetMap() {
@@ -60,7 +88,6 @@ export const useInteractiveMap = defineStore("interactiveMap", {
       this.zones.push(zone);
     },
     updateZone(id, updates) {
-      console.log(updates);
       const index = this.zones.findIndex((zone) => zone.id === id);
 
       if (index !== -1) {
