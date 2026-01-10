@@ -1,7 +1,7 @@
 import apiClient from "@/middlewares/authInterceptor";
 import { subscribeToSse } from "@/service/sseClient";
 
-const BASE_URL = "/alert";
+const BASE_URL = "/alert/alerts";
 
 export const AlertService = {
   async getAlerts() {
@@ -20,7 +20,7 @@ export const AlertService = {
   },
 
   async markAsRead(id) {
-    const { data } = await apiClient.patch(`${BASE_URL}/${id}/read`);
+    const { data } = await apiClient.patch(`${BASE_URL}/${id}`, { read: true });
     return data?.data;
   },
 
