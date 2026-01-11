@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { saveInteractiveMap } from "@/stores/utils/saveInteractiveMap.js";
 
 const MapMode = {
   VIEW: "view",
@@ -40,29 +41,15 @@ export const useInteractiveMap = defineStore("interactiveMap", {
     initializeWithService(mapService) {
       this.mapService = mapService;
     },
+    removeService() {
+      this.mapService = null;
+    },
     async syncAndFinalize() {
-      await this.mapService?.saveFloorPlan(this.svgData);
+      if (this.mapService === null) {
+        throw new Error("mapService is null");
+      }
 
-      await Promise.all(
-        this.zones.map(async (zone) => {
-          const savedZone = await this.mapService?.saveZone(zone);
-          if (savedZone) {
-            this.smartFurnitureHookups.forEach((sfh) => {
-              console.log(sfh.zone === zone.id);
-
-              if (String(sfh.zone) === zone.id) {
-                sfh.zone = savedZone.id;
-              }
-            });
-          }
-        }),
-      );
-
-      await Promise.all(
-        this.smartFurnitureHookups.map(async (sfh) => {
-          this.mapService?.saveSmartFurnitureHookup(sfh);
-        }),
-      );
+      await saveInteractiveMap(this);
     },
     uploadSvg(file, filename) {
       this.svgData = file;
