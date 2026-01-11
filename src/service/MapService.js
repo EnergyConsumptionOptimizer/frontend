@@ -35,14 +35,26 @@ export const MapService = {
         smartFurnitureHookup,
       );
 
-    const { data } = await apiClient.post(
-      `${BASE_URL}/smart-furniture-hookups`,
-      {
+    const { data } = await apiClient
+      .post(`${BASE_URL}/smart-furniture-hookups`, {
         id: result.id,
         position: smartFurnitureHookup.position,
         zoneID: smartFurnitureHookup.zone,
-      },
-    );
+      })
+      .catch(async (error) => {
+        await SmartFurnitureHookupService.deleteSmartFurnitureHookup(result.id);
+        throw error;
+      });
+
     return data;
+  },
+
+  async deleteZone(id) {
+    return apiClient.delete(`${BASE_URL}/zones/${id}`);
+  },
+
+  async deleteSmartFurnitureHookup(id) {
+    await SmartFurnitureHookupService.deleteSmartFurnitureHookup(id);
+    return apiClient.delete(`${BASE_URL}/smart-furniture-hookups/${id}`);
   },
 };
