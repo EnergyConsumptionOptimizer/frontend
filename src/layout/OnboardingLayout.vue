@@ -6,8 +6,10 @@ import { useToast } from "primevue/usetoast";
 import router from "@/router/index.js";
 import { useAuthStore } from "@/stores/auth.js";
 import { useUserStore } from "@/stores/userStore";
+import { useInteractiveMap } from "@/stores/interactiveMap.js";
 import { useThresholdStore } from "@/stores/thresholdStore";
 import { errorToast } from "@/utils/ui/toastPresets.js";
+import { MapService } from "@/service/MapService.js";
 
 const route = useRoute();
 
@@ -17,6 +19,7 @@ const toast = useToast();
 
 const onboardingStore = useOnboardingStore();
 const userStore = useUserStore();
+const interactiveMapStore = useInteractiveMap();
 const thresholdStore = useThresholdStore();
 
 const step = computed(() => {
@@ -53,24 +56,36 @@ function goToNextStep() {
   }
 }
 
+async function syncStep(step, syncFn) {
+  try {
+    await syncFn();
+  } catch (err) {
+    err.failedStep = step;
+    throw err;
+  }
+}
+
 async function completeOnboarding() {
   loading.value = true;
   try {
-    // upload svg
-    // sync zones+devices
-    await userStore.syncAndFinalize();
-    await thresholdStore.syncAndFinalize();
+    interactiveMapStore.initializeWithService(MapService);
+
+    await syncStep("interactive map", () =>
+      interactiveMapStore.syncAndFinalize(),
+    );
+    await syncStep("household user", () => userStore.syncAndFinalize());
+    await syncStep("threshold", () => thresholdStore.syncAndFinalize());
 
     onboardingStore.finishOnboarding();
 
     router.push({ name: "dashboard" });
   } catch (error) {
+    interactiveMapStore.removeService();
     console.error("Error during onboarding completion:", error);
     toast.add(
       errorToast({
         summary: "Error",
-        detail:
-          "There was a problem finalizing your configuration. Please try again.",
+        detail: `There was a problem finalizing ${error.failedStep} step of the configuration. Please try again.`,
       }),
     );
   } finally {
