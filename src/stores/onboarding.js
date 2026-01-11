@@ -74,13 +74,14 @@ export const useOnboardingStore = defineStore("onboarding", {
 
         if (floorPlan) {
           this.finishOnboarding();
-        }
+        } else this.isComplete = false;
       }
 
       this.isInitialized = true;
     },
     reset() {
       this.maxAccessibleStep = 1;
+      this.currentStep = 1;
       this.completedSteps = [];
     },
     setCurrentStep(step) {
