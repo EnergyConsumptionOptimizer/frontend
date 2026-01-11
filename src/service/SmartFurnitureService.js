@@ -15,4 +15,7 @@ export const SmartFurnitureHookupService = {
 
     return data;
   },
+  async deleteSmartFurnitureHookup(id) {
+    return apiClient.delete(`${BASE_URL}/smart-furniture-hookups/${id}`);
+  },
 };
