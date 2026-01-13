@@ -4,12 +4,12 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useToast } from "primevue/usetoast";
 import router from "@/router/index.js";
-import { useAuthStore } from "@/stores/auth.js";
+import { useAuthStore } from "@/stores/authsStore.js";
 import { useUserStore } from "@/stores/userStore";
 import { useInteractiveMap } from "@/stores/interactiveMap.js";
 import { useThresholdStore } from "@/stores/thresholdStore";
 import { errorToast } from "@/utils/ui/toastPresets.js";
-import { MapService } from "@/service/MapService.js";
+import { InteractiveMapService } from "@/service/InteractiveMapService.js";
 
 const route = useRoute();
 
@@ -68,7 +68,7 @@ async function syncStep(step, syncFn) {
 async function completeOnboarding() {
   loading.value = true;
   try {
-    interactiveMapStore.initializeWithService(MapService);
+    interactiveMapStore.initializeWithService(InteractiveMapService);
 
     await syncStep("interactive map", () =>
       interactiveMapStore.syncAndFinalize(),

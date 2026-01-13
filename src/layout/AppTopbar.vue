@@ -1,6 +1,6 @@
 <script setup>
 import { useLayout } from "@/layout/composables/useLayout";
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "@/stores/authsStore.js";
 import { useAlertStore } from "@/stores/alertStore";
 import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";

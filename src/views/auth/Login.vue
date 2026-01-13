@@ -1,5 +1,5 @@
 <script setup>
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "@/stores/authsStore.js";
 import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import AuthWrapper from "@/components/auth/AuthWrapper.vue";

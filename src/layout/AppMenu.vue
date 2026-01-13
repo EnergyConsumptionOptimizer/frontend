@@ -1,5 +1,5 @@
 <script setup>
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "@/stores/authsStore.js";
 import { computed } from "vue";
 import AppMenuItem from "./AppMenuItem.vue";
 

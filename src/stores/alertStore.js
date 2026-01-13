@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed, watch } from "vue";
-import { useAuthStore } from "./auth";
+import { useAuthStore } from "./authsStore.js";
 import { AlertService } from "@/service/AlertService";
 import { useAsyncAction } from "@/composables/utils/asyncAction";
 

@@ -31,7 +31,7 @@ apiClient.interceptors.response.use(
     originalRequest._retry = true;
 
     try {
-      const { useAuthStore } = await import("@/stores/auth");
+      const { useAuthStore } = await import("@/stores/authsStore.js");
       const authStore = useAuthStore();
 
       if (!refreshPromise) {
