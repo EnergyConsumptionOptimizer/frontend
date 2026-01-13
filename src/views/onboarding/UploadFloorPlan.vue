@@ -1,16 +1,14 @@
 <script setup>
 import { useOnboardingStore } from "@/stores/onboarding";
-import { useInteractiveMap } from "@/stores/interactiveMap";
 import { computed, onMounted, ref } from "vue";
 
 import OnboardingStepLayout from "@/layout/OnboardingStepLayout.vue";
-import InteractiveMap from "@/components/InteractiveMap.vue";
+import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
+import InteractiveMapLayout from "@/layout/InteractiveMapLayout.vue";
 
 const onboardingStore = useOnboardingStore();
-const interactiveMapStore = useInteractiveMap();
 
-const src = ref(null);
-const fileName = ref(null);
+const interactiveMapStore = useInteractiveMapStore();
 
 const showWarningDialog = ref(false);
 
@@ -26,12 +24,8 @@ function onFileSelect(event) {
   if (file && file.type === "image/svg+xml") {
     const reader = new FileReader();
 
-    fileName.value = file.name;
-
     reader.onload = async (e) => {
-      src.value = e.target.result;
-
-      interactiveMapStore.uploadSvg(src.value, fileName.value);
+      await interactiveMapStore.uploadSvg(e.target.result, file.name);
     };
 
     onboardingStore.completeStep();
@@ -47,9 +41,8 @@ function reuploadFloorPlan(event) {
   onFileSelect(event);
 }
 
-onMounted(() => {
-  src.value = interactiveMapStore.svgData;
-  fileName.value = interactiveMapStore.svgFileName;
+onMounted(async () => {
+  interactiveMapStore.setLocalMode(true).then(() => {});
 });
 </script>
 
@@ -62,10 +55,12 @@ onMounted(() => {
       <div class="border-dashed border-gray-300 border-2 rounded-lg w-2/4 mt-4">
         <div
           class="p-4 flex h-fit"
-          :class="src ? 'border-b-gray-300 border-b-2' : ''"
+          :class="
+            interactiveMapStore.svgData ? 'border-b-gray-300 border-b-2' : ''
+          "
         >
           <FileUpload
-            v-if="!src || !warningBeforeReupload"
+            v-if="!interactiveMapStore.svgData || !warningBeforeReupload"
             mode="basic"
             @select="onFileSelect"
             customUpload
@@ -73,7 +68,7 @@ onMounted(() => {
             accept=".svg"
             severity="secondary"
             class="p-button-outlined"
-            :chooseLabel="src ? 'Change' : 'Upload'"
+            :chooseLabel="interactiveMapStore.svgData ? 'Change' : 'Upload'"
           />
           <Button
             v-else
@@ -83,10 +78,14 @@ onMounted(() => {
             @click="showWarningDialog = true"
           />
         </div>
-        <div v-if="src" class="p-4">
-          <interactive-map :floor-plan-svg="src"></interactive-map>
+        <div v-if="interactiveMapStore.svgData" class="p-4">
+          <interactive-map-layout
+            :floor-plan-svg="interactiveMapStore.svgData"
+          ></interactive-map-layout>
           <div class="flex justify-between mt-4">
-            <p class="m-0!"><strong>Filename:</strong> {{ fileName }}</p>
+            <p class="m-0!">
+              <strong>Filename:</strong> {{ interactiveMapStore.svgFileName }}
+            </p>
           </div>
         </div>
       </div>

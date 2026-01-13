@@ -1,12 +1,10 @@
 <script setup>
-import { computed, onBeforeMount, ref } from "vue";
+import { computed, onBeforeMount, onMounted, ref } from "vue";
 import axios from "axios";
 import { useConfirm, useToast } from "primevue";
 
-import InteractiveMapLayout from "@/layout/InteractiveMapLayout.vue";
+import InteractiveMapEditorLayout from "@/layout/InteractiveMapEditorLayout.vue";
 import OnboardingStepLayout from "@/layout/OnboardingStepLayout.vue";
-
-import InteractiveMap from "@/components/InteractiveMap.vue";
 import Zone from "@/components/interactiveMap/Zone.vue";
 import SmartFurnitureHookup from "@/components/interactiveMap/SmartFurnitureHookup.vue";
 import FloorPlanTreeSidebar from "@/components/interactiveMap/FloorPlanTreeSidebar.vue";
@@ -14,7 +12,6 @@ import MapEditorActionButtons from "@/components/interactiveMap/MapEditorActionB
 import SmartFurnitureHookupInformationDialog from "@/components/interactiveMap/SmartFurnitureHookupInformationDialog.vue";
 
 import { useOnboardingStore } from "@/stores/onboarding";
-import { useInteractiveMap } from "@/stores/interactiveMap";
 
 import { useSmartFurnitureHookupEditor } from "@/composables/interactiveMap/useSmartFurnitureHookupEditor.js";
 import { useSmartFurnitureHookupZoneDetection } from "@/composables/interactiveMap/useSmartFurnitureHookupZoneDetection.js";
@@ -24,23 +21,28 @@ import { computeFloorPlanTree } from "@/utils/floorPlanTree.js";
 import { deleteSmartFurnitureHookupTost } from "@/utils/ui/deleteSmartFurnitureHookupTost.js";
 import { cannotFetchSmartFurnitureHookupInfoToast } from "@/utils/ui/cannotFetchSmartFurnitureHookupInfoToast.js";
 import { deleteSmartFurnitureHookupDialog } from "@/utils/ui/deleteSmartFurnitureHookupDialog.js";
+import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
+import InteractiveMapLayout from "@/layout/InteractiveMapLayout.vue";
 
 const onboardingStore = useOnboardingStore();
-const mapStore = useInteractiveMap();
+const interactiveMapStore = useInteractiveMapStore();
 
 const confirm = useConfirm();
 const toast = useToast();
 
+const existingZones = computed(() => interactiveMapStore.zones);
+
 const endpointLoading = ref(false);
 
-const existingZones = computed(() => mapStore.zones);
-
 const tree = computed(() =>
-  computeFloorPlanTree(mapStore.zones, mapStore.smartFurnitureHookups),
+  computeFloorPlanTree(
+    interactiveMapStore.zones,
+    interactiveMapStore.smartFurnitureHookups,
+  ),
 );
 
 const cursorStyle = computed(() => {
-  if (mapStore.isDrawMode && !isPositioned.value) {
+  if (interactiveMapStore.isDrawMode && !isPositioned.value) {
     return "cursor-crosshair";
   }
   return "cursor-default";
@@ -65,24 +67,39 @@ const {
   hideSmartFurnitureHookupDialog,
 } = useSmartFurnitureHookupEditor();
 
-const { startDragSmartFurnitureHookup, handleDragMove, stopDrag } =
+const { startDragSmartFurnitureHookup, handleDragMove, stopDrag, dragState } =
   useSmartFurnitureHookupDrag(existingZones);
 
 const { findZoneForSmartFurnitureHookup } =
   useSmartFurnitureHookupZoneDetection(existingZones);
 
+function handleStopSmartFurnitureHookupDrag() {
+  if (!dragState.value.isDragging) return;
+  let draggedSmartFurnitureHookup = stopDrag();
+
+  if (!draggedSmartFurnitureHookup.id) return;
+
+  interactiveMapStore.updateSmartFurnitureHookup(
+    draggedSmartFurnitureHookup.id,
+    {
+      position: draggedSmartFurnitureHookup.position,
+      zone: draggedSmartFurnitureHookup.zone,
+    },
+  );
+}
+
 function handleStartDrawing() {
-  mapStore.startDrawing();
+  interactiveMapStore.startDrawing();
   startDrawing();
 }
 
 function handleStopDrawing() {
-  mapStore.viewMap();
+  interactiveMapStore.viewMap();
   stopDrawing();
 }
 
 function handleFloorPlanClick(point) {
-  if (mapStore.isDrawMode) {
+  if (interactiveMapStore.isDrawMode) {
     positionSmartFurnitureHookup(point);
   }
 }
@@ -136,50 +153,54 @@ async function handleSaveSmartFurnitureHookup() {
       newSmartFurnitureHookup,
     );
 
-    mapStore.addSmartFurnitureHookup(newSmartFurnitureHookup);
+    await interactiveMapStore.addSmartFurnitureHookup(newSmartFurnitureHookup);
 
-    if (mapStore.smartFurnitureHookupsCount === 1) {
+    if (interactiveMapStore.smartFurnitureHookups.length === 1) {
       onboardingStore.completeStep();
     }
   } else if (isSmartFurnitureHookupOnEditMode.value) {
-    mapStore.updateSmartFurnitureHookup(draftSmartFurnitureHookup.value.id, {
-      name: name,
-      endpoint: draftSmartFurnitureHookup.value.endpoint,
-      utilityType: draftSmartFurnitureHookup.value.utilityType,
-    });
+    await interactiveMapStore.updateSmartFurnitureHookup(
+      draftSmartFurnitureHookup.value.id,
+      {
+        name: name,
+        endpoint: draftSmartFurnitureHookup.value.endpoint,
+        utilityType: draftSmartFurnitureHookup.value.utilityType,
+      },
+    );
 
     doneEditingSmartFurnitureHookup();
   }
 }
 
 function handleStartEditing() {
-  mapStore.startEditing();
+  interactiveMapStore.startEditing();
 }
 
 function handleStopEditing() {
-  mapStore.viewMap();
+  interactiveMapStore.viewMap();
 }
 
-function handleEditSmartFurnitureHookup(smartFurnitureHookupId) {
-  if (mapStore.isDrawMode) {
+async function handleEditSmartFurnitureHookup(smartFurnitureHookupId) {
+  if (interactiveMapStore.isDrawMode) {
     handleStopDrawing();
   }
 
-  const smartFurnitureHookup = mapStore.findSmartFurnitureHookup(
-    smartFurnitureHookupId,
-  );
+  const smartFurnitureHookup =
+    await interactiveMapStore.findSmartFurnitureHookup(smartFurnitureHookupId);
 
   if (!smartFurnitureHookup) return;
 
   loadSmartFurnitureHookupForEdit(smartFurnitureHookup);
 }
 
-function handleDeleteSmartFurnitureHookup(smartFurnitureHookupId) {
+async function handleDeleteSmartFurnitureHookup(smartFurnitureHookupId) {
   confirm.require(
-    deleteSmartFurnitureHookupDialog(() => {
-      mapStore.deleteSmartFurnitureHookup(smartFurnitureHookupId);
+    deleteSmartFurnitureHookupDialog(async () => {
+      await interactiveMapStore.deleteSmartFurnitureHookup(
+        smartFurnitureHookupId,
+      );
 
-      if (mapStore.smartFurnitureHookupsCount === 0) {
+      if (interactiveMapStore.smartFurnitureHookupsCount === 0) {
         onboardingStore.uncompleteStep();
       }
 
@@ -189,7 +210,11 @@ function handleDeleteSmartFurnitureHookup(smartFurnitureHookupId) {
 }
 
 onBeforeMount(() => {
-  mapStore.viewMap();
+  interactiveMapStore.viewMap();
+});
+
+onMounted(() => {
+  interactiveMapStore.setLocalMode(true);
 });
 </script>
 
@@ -199,12 +224,12 @@ onBeforeMount(() => {
     subtitle="Create smart furniture hookups and position them on the floor plan"
   >
     <template #content>
-      <interactive-map-layout>
+      <interactive-map-editor-layout>
         <template #actions>
           <map-editor-action-buttons
-            :isViewMode="mapStore.isViewMode"
-            :isDrawMode="mapStore.isDrawMode"
-            :isEditMode="mapStore.isEditMode"
+            :isViewMode="interactiveMapStore.isViewMode"
+            :isDrawMode="interactiveMapStore.isDrawMode"
+            :isEditMode="interactiveMapStore.isEditMode"
           >
             <template #viewActions>
               <Button
@@ -217,7 +242,7 @@ onBeforeMount(() => {
                 label="Edit hookups"
                 severity="secondary"
                 icon="pi pi-arrows-alt"
-                :disabled="!mapStore.hasSmartFurnitureHookups"
+                :disabled="!interactiveMapStore.hasSmartFurnitureHookups"
                 @click="handleStartEditing"
               />
             </template>
@@ -244,17 +269,17 @@ onBeforeMount(() => {
           </map-editor-action-buttons>
         </template>
         <template #floor-plan>
-          <interactive-map
-            :floor-plan-svg="mapStore.svgData"
+          <interactive-map-layout
+            :floor-plan-svg="interactiveMapStore.svgData"
             :cursor="cursorStyle"
             @interactiveMapClick="handleFloorPlanClick"
             @interactiveMapMouseMove="handleDragMove"
-            @mouseup="stopDrag"
-            @mouseleave="stopDrag"
+            @mouseup="handleStopSmartFurnitureHookupDrag"
+            @mouseleave="handleStopSmartFurnitureHookupDrag"
           >
             <template #zones>
               <zone
-                v-for="zone in mapStore.zones"
+                v-for="zone in interactiveMapStore.zones"
                 :key="zone.id"
                 :zone="zone"
                 :editModeActive="false"
@@ -265,7 +290,7 @@ onBeforeMount(() => {
               <smart-furniture-hookup
                 @smartFurnitureHookupClick="startDragSmartFurnitureHookup"
                 v-if="
-                  mapStore.isDrawMode &&
+                  interactiveMapStore.isDrawMode &&
                   isSmartFurnitureHookupOnDrawMode &&
                   isPositioned
                 "
@@ -274,26 +299,26 @@ onBeforeMount(() => {
               />
 
               <smart-furniture-hookup
-                v-for="sfh in mapStore.smartFurnitureHookups"
+                v-for="sfh in interactiveMapStore.smartFurnitureHookups"
                 :key="sfh.id"
-                :editModeActive="mapStore.isEditMode"
+                :editModeActive="interactiveMapStore.isEditMode"
                 @smartFurnitureHookupClick="startDragSmartFurnitureHookup"
                 :smartFurnitureHookup="sfh"
               />
             </template>
-          </interactive-map>
+          </interactive-map-layout>
         </template>
         <template #sidebar>
           <floor-plan-tree-sidebar
             :tree="tree"
-            :hasZones="mapStore.hasZones"
+            :hasZones="interactiveMapStore.hasZones"
             :hasSmartFurnitureHookupActions="true"
-            :disableActionsSmartFurnitureHookup="mapStore.isDrawMode"
+            :disableActionsSmartFurnitureHookup="interactiveMapStore.isDrawMode"
             @editSmartFurnitureHookup="handleEditSmartFurnitureHookup"
             @deleteSmartFurnitureHookup="handleDeleteSmartFurnitureHookup"
           />
         </template>
-      </interactive-map-layout>
+      </interactive-map-editor-layout>
     </template>
     <template #dialogs>
       <smart-furniture-hookup-information-dialog

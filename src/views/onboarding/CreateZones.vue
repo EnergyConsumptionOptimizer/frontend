@@ -2,10 +2,8 @@
 import { computed, onBeforeMount, onMounted, watch } from "vue";
 import { useConfirm, useToast } from "primevue";
 
-import InteractiveMapLayout from "@/layout/InteractiveMapLayout.vue";
+import InteractiveMapEditorLayout from "@/layout/InteractiveMapEditorLayout.vue";
 import OnboardingStepLayout from "@/layout/OnboardingStepLayout.vue";
-
-import InteractiveMap from "@/components/InteractiveMap.vue";
 import Zone from "@/components/interactiveMap/Zone.vue";
 import SmartFurnitureHookup from "@/components/interactiveMap/SmartFurnitureHookup.vue";
 import IncompletePolygon from "@/components/interactiveMap/IncompletePolygon.vue";
@@ -14,7 +12,6 @@ import MapEditorActionButtons from "@/components/interactiveMap/MapEditorActionB
 import ZoneInformationDialog from "@/components/interactiveMap/ZoneInformationDialog.vue";
 
 import { useOnboardingStore } from "@/stores/onboarding";
-import { useInteractiveMap } from "@/stores/interactiveMap";
 
 import { useZoneEditor } from "@/composables/interactiveMap/useZoneEditor.js";
 import { useZoneDrag } from "@/composables/interactiveMap/useZoneDrag.js";
@@ -23,20 +20,25 @@ import { computeFloorPlanTree } from "@/utils/floorPlanTree.js";
 import { deleteZoneDialog } from "@/utils/ui/deleteZoneDialog.js";
 import { collisionZoneToast } from "@/utils/ui/collisionZoneToast.js";
 import { deleteZoneToast } from "@/utils/ui/deleteZoneToast.js";
+import InteractiveMapLayout from "@/layout/InteractiveMapLayout.vue";
+import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
 
 const onboardingStore = useOnboardingStore();
-const mapStore = useInteractiveMap();
+const interactiveMapStore = useInteractiveMapStore();
 
 const confirm = useConfirm();
 const toast = useToast();
 
-const existingZones = computed(() => mapStore.zones);
+const existingZones = computed(() => interactiveMapStore.zones);
 const existingSmartFurnitureHookups = computed(
-  () => mapStore.smartFurnitureHookups,
+  () => interactiveMapStore.smartFurnitureHookups,
 );
 
 const tree = computed(() =>
-  computeFloorPlanTree(mapStore.zones, mapStore.smartFurnitureHookups),
+  computeFloorPlanTree(
+    interactiveMapStore.zones,
+    interactiveMapStore.smartFurnitureHookups,
+  ),
 );
 
 const {
@@ -60,35 +62,35 @@ const {
   hideZoneDialog,
 } = useZoneEditor(existingZones);
 
-const { startDragZone, startDragVertex, handleDragMove, stopDrag } =
+const { dragState, startDragZone, startDragVertex, handleDragMove, stopDrag } =
   useZoneDrag(existingZones, existingSmartFurnitureHookups);
 
 const collision = useZoneCollision();
 
 const cursorStyle = computed(() => {
-  if (mapStore.isDrawMode && !isPolygonClosed.value) {
+  if (interactiveMapStore.isDrawMode && !isPolygonClosed.value) {
     return "cursor-crosshair";
   }
   return "cursor-default";
 });
 
 function handleStartDrawing() {
-  mapStore.startDrawing();
+  interactiveMapStore.startDrawing();
   startDrawing();
 }
 
 function handleStopDrawing() {
-  mapStore.viewMap();
+  interactiveMapStore.viewMap();
   stopDrawing();
 }
 
 function handleInteractiveMapClick(point) {
-  if (mapStore.isDrawMode) {
+  if (interactiveMapStore.isDrawMode) {
     addPoint(point);
   }
 }
 
-function handleSaveZone() {
+async function handleSaveZone() {
   const name = draftZone.value.name.trim();
 
   if (!name) {
@@ -97,15 +99,15 @@ function handleSaveZone() {
 
   if (isZoneOnDrawMode.value) {
     const newZone = finalizeZone();
-    mapStore.addZone(newZone);
+    await interactiveMapStore.addZone(newZone);
 
-    for (const sfh of existingSmartFurnitureHookups.value) {
+    for (const sfh of interactiveMapStore.smartFurnitureHookups) {
       if (collision.isPointInPolygon(sfh.position, newZone.points)) {
         sfh.zone = newZone.id;
       }
     }
   } else if (isZoneOnEditMode.value) {
-    mapStore.updateZone(draftZone.value.id, {
+    await interactiveMapStore.updateZone(draftZone.value.id, {
       name: name,
       color: displayColor.value,
     });
@@ -114,30 +116,42 @@ function handleSaveZone() {
   }
 }
 
-function handleEditZone(zoneId) {
-  if (mapStore.isDrawMode) {
+async function handleEditZone(zoneId) {
+  if (interactiveMapStore.isDrawMode) {
     handleStopDrawing();
   }
 
-  const zone = mapStore.findZone(zoneId);
+  const zone = await interactiveMapStore.findZone(zoneId);
 
   if (!zone) return;
 
   loadZoneForEdit(zone);
 }
 
+async function handleStopZoneDrag() {
+  if (!dragState.value.isDragging) return;
+
+  const draggedZone = stopDrag();
+
+  if (!draggedZone.id) return;
+
+  await interactiveMapStore.updateZonePosition(draggedZone.id, {
+    points: draggedZone.points,
+  });
+}
+
 function handleStartEditing() {
-  mapStore.startEditing();
+  interactiveMapStore.startEditing();
 }
 
 function handleStopEditing() {
-  mapStore.viewMap();
+  interactiveMapStore.viewMap();
 }
 
 function handleDeleteZone(zoneId) {
   confirm.require(
-    deleteZoneDialog(() => {
-      mapStore.deleteZone(zoneId);
+    deleteZoneDialog(async () => {
+      await interactiveMapStore.deleteZone(zoneId);
 
       toast.add(deleteZoneToast);
     }),
@@ -152,11 +166,13 @@ watch(collisionError, (error) => {
 });
 
 onBeforeMount(() => {
-  mapStore.viewMap();
+  interactiveMapStore.viewMap();
 });
 
 onMounted(() => {
   onboardingStore.completeStep();
+  interactiveMapStore.viewMap();
+  interactiveMapStore.setLocalMode(true);
 });
 </script>
 
@@ -166,12 +182,12 @@ onMounted(() => {
     subtitle="Draw polygons on the floor plan to create new zones"
   >
     <template #content>
-      <interactive-map-layout>
+      <interactive-map-editor-layout>
         <template #actions>
           <map-editor-action-buttons
-            :isViewMode="mapStore.isViewMode"
-            :isDrawMode="mapStore.isDrawMode"
-            :isEditMode="mapStore.isEditMode"
+            :isViewMode="interactiveMapStore.isViewMode"
+            :isDrawMode="interactiveMapStore.isDrawMode"
+            :isEditMode="interactiveMapStore.isEditMode"
           >
             <template #viewActions>
               <Button
@@ -184,7 +200,7 @@ onMounted(() => {
                 label="Edit zones"
                 severity="secondary"
                 icon="pi pi-arrows-alt"
-                :disabled="!mapStore.hasZones"
+                :disabled="!interactiveMapStore.hasZones"
                 @click="handleStartEditing"
               />
             </template>
@@ -211,16 +227,16 @@ onMounted(() => {
           </map-editor-action-buttons>
         </template>
         <template #floor-plan>
-          <interactive-map
-            :floor-plan-svg="mapStore.svgData"
+          <interactive-map-layout
+            :floor-plan-svg="interactiveMapStore.svgData"
             :cursor="cursorStyle"
             @interactiveMapClick="handleInteractiveMapClick"
             @interactiveMapMouseMove="handleDragMove"
-            @mouseup="stopDrag"
-            @mouseleave="stopDrag"
+            @mouseup="handleStopZoneDrag"
+            @mouseleave="handleStopZoneDrag"
           >
             <template #zones>
-              <g v-if="mapStore.isDrawMode && isZoneOnDrawMode">
+              <g v-if="interactiveMapStore.isDrawMode && isZoneOnDrawMode">
                 <incomplete-polygon
                   v-if="!isPolygonClosed"
                   :points="draftZone.points"
@@ -237,10 +253,10 @@ onMounted(() => {
               </g>
 
               <zone
-                v-for="zone in mapStore.zones"
+                v-for="zone in interactiveMapStore.zones"
                 :key="zone.id"
                 :zone="zone"
-                :editModeActive="mapStore.isEditMode"
+                :editModeActive="interactiveMapStore.isEditMode"
                 @zoneClick="startDragZone"
                 @zoneVerticeClick="startDragVertex"
               />
@@ -248,25 +264,25 @@ onMounted(() => {
 
             <template #hookups>
               <smart-furniture-hookup
-                v-for="sfh in mapStore.smartFurnitureHookups"
+                v-for="sfh in interactiveMapStore.smartFurnitureHookups"
                 :key="sfh.id"
                 :editModeActive="false"
                 :smartFurnitureHookup="sfh"
               />
             </template>
-          </interactive-map>
+          </interactive-map-layout>
         </template>
         <template #sidebar>
           <floor-plan-tree-sidebar
             :tree="tree"
-            :hasZones="mapStore.hasZones"
+            :hasZones="interactiveMapStore.hasZones"
             :hasZoneActions="true"
-            :disableActionsZone="mapStore.isDrawMode"
+            :disableActionsZone="interactiveMapStore.isDrawMode"
             @editZone="handleEditZone"
             @deleteZone="handleDeleteZone"
           />
         </template>
-      </interactive-map-layout>
+      </interactive-map-editor-layout>
     </template>
     <template #dialogs>
       <zone-information-dialog

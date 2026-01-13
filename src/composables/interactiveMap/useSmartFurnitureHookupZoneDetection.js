@@ -10,7 +10,6 @@ export function useSmartFurnitureHookupZoneDetection(existingZones) {
 
     for (const zone of existingZones.value) {
       if (collision.isPointInPolygon(hookup.position, zone.points)) {
-        console.log(zone.id);
         return zone.id;
       }
     }

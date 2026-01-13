@@ -76,7 +76,6 @@ export function useZoneDrag(existingZones, existingSmartFurnitureHookups) {
         point.y += dy;
       });
 
-      // Prevent attaching hookups to a non-final zone
       if (dragState.value.zone.id) {
         existingSmartFurnitureHookups.value
           .filter((sfh) => sfh.zone === dragState.value.zone.id)
@@ -93,15 +92,7 @@ export function useZoneDrag(existingZones, existingSmartFurnitureHookups) {
   function stopDrag() {
     if (!dragState.value.isDragging) return;
 
-    for (const sfh of existingSmartFurnitureHookups.value) {
-      if (
-        collision.isPointInPolygon(sfh.position, dragState.value.zone.points)
-      ) {
-        sfh.zone = dragState.value.zone.id;
-      } else if (sfh.zone && sfh.zone === dragState.value.zone.id) {
-        sfh.zone = null;
-      }
-    }
+    const draggedZone = dragState.value.zone;
 
     dragState.value = {
       isDragging: false,
@@ -109,9 +100,13 @@ export function useZoneDrag(existingZones, existingSmartFurnitureHookups) {
       vertexIndex: null,
       startPosition: null,
     };
+
+    return draggedZone;
   }
 
   return {
+    dragState,
+
     startDragZone,
     startDragVertex,
     handleDragMove,

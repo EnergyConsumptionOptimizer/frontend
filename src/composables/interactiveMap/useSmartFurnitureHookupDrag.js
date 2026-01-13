@@ -7,14 +7,14 @@ export function useSmartFurnitureHookupDrag(existingZones) {
 
   const dragState = ref({
     isDragging: false,
-    hookup: null,
+    smartFurnitureHookup: null,
     startPosition: null,
   });
 
-  function startDragSmartFurnitureHookup(hookup, position) {
+  function startDragSmartFurnitureHookup(smartFurnitureHookup, position) {
     dragState.value = {
       isDragging: true,
-      hookup: hookup,
+      smartFurnitureHookup: smartFurnitureHookup,
       startPosition: { ...position },
     };
   }
@@ -27,8 +27,8 @@ export function useSmartFurnitureHookupDrag(existingZones) {
     const dx = currentPosition.x - dragState.value.startPosition.x;
     const dy = currentPosition.y - dragState.value.startPosition.y;
 
-    dragState.value.hookup.position.x += dx;
-    dragState.value.hookup.position.y += dy;
+    dragState.value.smartFurnitureHookup.position.x += dx;
+    dragState.value.smartFurnitureHookup.position.y += dy;
 
     dragState.value.startPosition = { ...currentPosition };
   }
@@ -36,20 +36,24 @@ export function useSmartFurnitureHookupDrag(existingZones) {
   function stopDrag() {
     if (!dragState.value.isDragging) return;
 
-    if (dragState.value.hookup.id) {
-      dragState.value.hookup.zone = findZoneForSmartFurnitureHookup(
-        dragState.value.hookup,
-      );
+    if (dragState.value.smartFurnitureHookup.id) {
+      dragState.value.smartFurnitureHookup.zone =
+        findZoneForSmartFurnitureHookup(dragState.value.smartFurnitureHookup);
     }
+
+    const draggedSmartFurnitureHookup = dragState.value.smartFurnitureHookup;
 
     dragState.value = {
       isDragging: false,
-      hookup: null,
+      smartFurnitureHookup: null,
       startPosition: null,
     };
+
+    return draggedSmartFurnitureHookup;
   }
 
   return {
+    dragState,
     startDragSmartFurnitureHookup,
     handleDragMove,
     stopDrag,
