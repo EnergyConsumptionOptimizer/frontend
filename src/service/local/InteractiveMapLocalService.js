@@ -33,6 +33,11 @@ export const InteractiveMapLocalService = {
       svgFileName,
     });
 
+    updateStore({
+      zones: [],
+      smartFurnitureHookups: [],
+    });
+
     return {
       svgData,
       svgFileName,

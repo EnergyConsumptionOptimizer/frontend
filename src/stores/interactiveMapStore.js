@@ -4,7 +4,7 @@ import { useAsyncAction } from "@/composables/utils/asyncAction.js";
 import { InteractiveMapLocalService } from "@/service/local/InteractiveMapLocalService.js";
 import { InteractiveMapService } from "@/service/InteractiveMapService.js";
 
-export const useInteractiveMapStore = defineStore("interactiveMap2", () => {
+export const useInteractiveMapStore = defineStore("interactiveMap", () => {
   const mapMode = {
     VIEW: "view",
     DRAW: "draw",
@@ -66,6 +66,8 @@ export const useInteractiveMapStore = defineStore("interactiveMap2", () => {
 
   const uploadSvg = async (file, filename) => {
     const result = await activeService.value.uploadSvg(file, filename);
+    zones.value = [];
+    smartFurnitureHookups.value = [];
     svgData.value = result.svgData;
     svgFileName.value = result.svgFileName;
   };
