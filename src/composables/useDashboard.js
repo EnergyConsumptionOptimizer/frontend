@@ -1,23 +1,18 @@
-import { ref, onMounted } from "vue";
-import { UserApiService } from "@/service/UserApiService";
+import { ref, computed, onMounted } from "vue";
+import { useUserStore } from "@/stores/userStore";
 
 export function useDashboardContext() {
-  const usersList = ref([{ label: "All Users", value: "all" }]);
+  const userStore = useUserStore();
+
+  const usersList = computed(() => [
+    { label: "All Users", value: "all" },
+    ...userStore.users.map((u) => ({ label: u.username, value: u.id })),
+  ]);
   const zonesList = ref([{ label: "All Zones", value: "a" }]);
 
-  const loadContext = async () => {
-    try {
-      const [users] = await Promise.all([UserApiService.getUsers()]);
-      usersList.value = [
-        { label: "All Users", value: "all" },
-        ...users.map((u) => ({ label: u.username, value: u._id })),
-      ];
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  onMounted(loadContext);
+  onMounted(() => {
+    userStore.fetchUsers();
+  });
 
   return { usersList, zonesList };
 }

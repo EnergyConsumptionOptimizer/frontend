@@ -23,6 +23,7 @@ const submitted = ref(false);
 
 onMounted(() => {
   thresholdStore.setLocalMode(props.isLocalMode);
+  thresholdStore.fetchThresholds();
 });
 
 const statusOptions = computed(() => {

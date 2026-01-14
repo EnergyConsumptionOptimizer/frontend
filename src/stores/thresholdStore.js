@@ -22,8 +22,6 @@ export const useThresholdStore = defineStore("threshold", () => {
 
   const setLocalMode = (active) => {
     isLocalMode.value = active;
-    thresholds.value = [];
-    fetchThresholds();
   };
 
   const fetchThresholds = () =>

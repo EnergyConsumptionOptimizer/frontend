@@ -36,8 +36,10 @@ export const useAlertStore = defineStore("alert", () => {
     }
   };
 
-  const sync = () =>
-    perform(async () => {
+  const sync = () => {
+    if (isLoading.value) return;
+
+    return perform(async () => {
       await Promise.all([
         AlertService.getAlerts(),
         AlertService.getUnreadCount(),
@@ -46,6 +48,7 @@ export const useAlertStore = defineStore("alert", () => {
         unreadCount.value = countData;
       });
     });
+  };
 
   const markAsRead = (id) =>
     perform(async () => {

@@ -47,8 +47,6 @@ export const useUserStore = defineStore("user", () => {
 
   const setLocalMode = (active) => {
     isLocalMode.value = active;
-    users.value = [];
-    fetchUsers();
   };
 
   const syncAndFinalize = () =>
