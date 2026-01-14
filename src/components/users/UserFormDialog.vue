@@ -1,4 +1,8 @@
 <script setup>
+import { computed, toRef } from "vue";
+import { useUserStore } from "@/stores/userStore";
+import { useNameValidation } from "@/composables/common/useNameValidation";
+
 const visible = defineModel("visible");
 const user = defineModel("user", { required: true });
 
@@ -14,8 +18,25 @@ defineProps({
 });
 
 const emit = defineEmits(["save", "cancel"]);
-</script>
 
+const userStore = useUserStore();
+
+const usernameRef = computed(() => user.value.username);
+const userIdRef = computed(() => user.value.id);
+
+const { validationError, isValid: isNameValid } = useNameValidation(
+  usernameRef,
+  toRef(userStore, "users"),
+  userIdRef,
+  "username",
+);
+
+const onSave = () => {
+  if (isNameValid.value) {
+    emit("save");
+  }
+};
+</script>
 <template>
   <Dialog
     v-model:visible="visible"
@@ -24,11 +45,7 @@ const emit = defineEmits(["save", "cancel"]);
     modal
     class="p-fluid"
   >
-    <form
-      id="userForm"
-      @submit.prevent="emit('save')"
-      class="flex flex-col gap-4"
-    >
+    <form id="userForm" @submit.prevent="onSave" class="flex flex-col gap-4">
       <div>
         <label for="username" class="font-bold block mb-2">Username</label>
         <InputText
@@ -36,14 +53,15 @@ const emit = defineEmits(["save", "cancel"]);
           v-model.trim="user.username"
           required
           autofocus
-          :invalid="submitted && !user.username"
-          aria-describedby="username-error"
+          :invalid="!!validationError || (submitted && !user.username)"
           fluid
         />
+        <small v-if="validationError" class="text-red-500 block mt-1">
+          {{ validationError }}
+        </small>
         <small
-          v-if="submitted && !user.username"
-          id="username-error"
-          class="text-red-500"
+          v-else-if="submitted && !user.username"
+          class="text-red-500 block mt-1"
         >
           Username is required.
         </small>

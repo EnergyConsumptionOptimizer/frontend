@@ -1,5 +1,7 @@
 <script setup>
-import { computed } from "vue";
+import { computed, toRef } from "vue";
+import { useThresholdStore } from "@/stores/thresholdStore";
+import { useNameValidation } from "@/composables/common/useNameValidation";
 
 const props = defineProps({
   visible: { type: Boolean, required: true },
@@ -17,10 +19,28 @@ const threshold = defineModel("threshold", { required: true });
 
 const emit = defineEmits(["update:visible", "save", "cancel", "type-change"]);
 
+const thresholdStore = useThresholdStore();
+
+const nameRef = computed(() => threshold.value.name);
+const idRef = computed(() => threshold.value.id);
+
+const { validationError, isValid: isNameValid } = useNameValidation(
+  nameRef,
+  toRef(thresholdStore, "thresholds"),
+  idRef,
+  "name",
+);
+
 const dialogVisible = computed({
   get: () => props.visible,
   set: (value) => emit("update:visible", value),
 });
+
+const onSave = () => {
+  if (isNameValid.value) {
+    emit("save");
+  }
+};
 </script>
 
 <template>
@@ -33,7 +53,7 @@ const dialogVisible = computed({
   >
     <form
       id="thresholdForm"
-      @submit.prevent="$emit('save')"
+      @submit.prevent="onSave"
       class="flex flex-col gap-4"
     >
       <div>
@@ -43,14 +63,15 @@ const dialogVisible = computed({
           v-model.trim="threshold.name"
           required
           autofocus
-          :invalid="submitted && !threshold.name"
-          aria-describedby="name-error"
+          :invalid="!!validationError || (submitted && !threshold.name)"
           fluid
         />
+        <small v-if="validationError" class="text-red-500 block mt-1">
+          {{ validationError }}
+        </small>
         <small
-          v-if="submitted && !threshold.name"
-          id="name-error"
-          class="text-red-500"
+          v-else-if="submitted && !threshold.name"
+          class="text-red-500 block mt-1"
         >
           Name is required.
         </small>
