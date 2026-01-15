@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ONBOARDING_STEPS } from "@/config/onboardingSteps.js";
-import { MapService } from "@/service/MapService.js";
+import { InteractiveMapService } from "@/service/InteractiveMapService.js";
 
 export const useOnboardingStore = defineStore("onboarding", {
   state: () => ({
@@ -70,11 +70,16 @@ export const useOnboardingStore = defineStore("onboarding", {
       if (status === "completed") {
         this.isComplete = true;
       } else {
-        const floorPlan = await MapService.getFloorPlan();
-
-        if (floorPlan) {
-          this.finishOnboarding();
-        } else this.isComplete = false;
+        try {
+          const floorPlan = await InteractiveMapService.fetchFloorPlan();
+          if (floorPlan) {
+            this.finishOnboarding();
+          } else this.isComplete = false;
+        } catch {
+          console.error("Cannot init the onboarding!");
+          this.isInitialized = false;
+          return;
+        }
       }
 
       this.isInitialized = true;
