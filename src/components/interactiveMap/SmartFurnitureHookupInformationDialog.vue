@@ -1,6 +1,12 @@
 <script setup>
 import Dialog from "primevue/dialog";
-import { computed } from "vue";
+import InputText from "primevue/inputtext";
+import Button from "primevue/button";
+import Message from "primevue/message";
+import { computed, ref } from "vue";
+import { storeToRefs } from "pinia";
+import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
+import { useNameValidation } from "@/composables/common/useNameValidation";
 
 const props = defineProps({
   isOnDrawMode: Boolean,
@@ -8,8 +14,8 @@ const props = defineProps({
 
 const smartFurnitureHookup = defineModel("smartFurnitureHookup", {
   type: Object,
+  required: true,
 });
-
 const visible = defineModel("visible", { type: Boolean, default: false });
 const loading = defineModel("loading", { type: Boolean });
 
@@ -21,25 +27,58 @@ const emit = defineEmits([
   "endpointUpdated",
 ]);
 
-const dialogTitle = computed(() =>
-  props.isOnDrawMode
-    ? "Create new smart furniture hookup"
-    : "Edit smart furniture hookup",
+const interactiveMapStore = useInteractiveMapStore();
+const { smartFurnitureHookups } = storeToRefs(interactiveMapStore);
+
+const submitted = ref(false);
+const endpointRef = computed(() => smartFurnitureHookup.value?.endpoint);
+const nameRef = computed(() => smartFurnitureHookup.value?.name);
+const idRef = computed(() => smartFurnitureHookup.value?.id);
+
+const { validationError: endpointError, isValid: isEndpointValid } =
+  useNameValidation(endpointRef, smartFurnitureHookups, idRef, "endpoint");
+
+const { validationError: nameError, isValid: isNameValid } = useNameValidation(
+  nameRef,
+  smartFurnitureHookups,
+  idRef,
+  "name",
 );
+
+const isFormValid = computed(() => {
+  return (
+    !!smartFurnitureHookup.value?.endpoint?.trim() &&
+    !!smartFurnitureHookup.value?.name?.trim() &&
+    isEndpointValid.value &&
+    isNameValid.value
+  );
+});
 
 const utilityTypeLabel = computed(() => {
   const type = smartFurnitureHookup.value?.utilityType;
-
   if (type) {
     return type;
   }
   return "Sync the information to see the utility type";
 });
 
-function endpointUpdated() {
-  emit("endpointUpdated");
-  if (!props.isOnDrawMode) emit("endpointUpdated");
+function onSave() {
+  submitted.value = true;
+  if (!isFormValid.value) return;
+
+  emit("save", {
+    id: smartFurnitureHookup.value.id ?? null,
+    name: smartFurnitureHookup.value.name.trim(),
+    endpoint: smartFurnitureHookup.value.endpoint.trim(),
+    utilityType: smartFurnitureHookup.value.utilityType ?? null,
+  });
 }
+
+const dialogTitle = computed(() =>
+  props.isOnDrawMode
+    ? "Create new smart furniture hookup"
+    : "Edit smart furniture hookup",
+);
 </script>
 
 <template>
@@ -59,17 +98,20 @@ function endpointUpdated() {
       <label
         for="smartFurnitureHookupEndpoint"
         class="flex items-center col-span-12 md:col-span-2 md:mb-0 font-semibold"
-        >Endpoint</label
       >
+        Endpoint
+      </label>
       <div class="col-span-12 md:col-span-10 w-full flex space-x-4">
         <InputText
           id="smartFurnitureHookupEndpoint"
           autocomplete="off"
           type="text"
           class="w-full"
-          v-model="smartFurnitureHookup.endpoint"
-          :invalid="!smartFurnitureHookup.endpoint"
-          @update:modelValue="endpointUpdated"
+          v-model.trim="smartFurnitureHookup.endpoint"
+          :invalid="
+            !!endpointError || (submitted && !smartFurnitureHookup.endpoint)
+          "
+          @update:modelValue="emit('endpointUpdated')"
         />
         <Button
           :disabled="!smartFurnitureHookup.endpoint"
@@ -79,15 +121,17 @@ function endpointUpdated() {
           severity="secondary"
           class="col-span-12 md:col-span-10"
           @click="emit('fetchInfo')"
+          v-tooltip="'Sync Utility Info'"
         />
       </div>
       <Message
         class="col-span-12"
-        v-show="!smartFurnitureHookup.endpoint"
+        v-if="endpointError || (submitted && !smartFurnitureHookup.endpoint)"
         severity="error"
         variant="simple"
         size="small"
-        >Endpoint is required
+      >
+        {{ endpointError || "Endpoint is required" }}
       </Message>
     </div>
 
@@ -95,25 +139,37 @@ function endpointUpdated() {
       <label
         for="smartFurnitureHookupName"
         class="flex items-center col-span-12 md:col-span-2 md:mb-0 font-semibold"
-        >Name</label
       >
+        Name
+      </label>
       <div class="col-span-12 md:col-span-10 w-full flex space-x-4">
         <InputText
           id="smartFurnitureHookupName"
           autocomplete="off"
           type="text"
           class="w-full"
-          v-model="smartFurnitureHookup.name"
+          v-model.trim="smartFurnitureHookup.name"
+          :invalid="!!nameError || (submitted && !smartFurnitureHookup.name)"
         />
       </div>
+      <Message
+        class="col-span-12"
+        v-if="nameError || (submitted && !smartFurnitureHookup.name)"
+        severity="error"
+        variant="simple"
+        size="small"
+      >
+        {{ nameError || "Name is required" }}
+      </Message>
     </div>
 
     <div class="grid grid-cols-12 gap-2 mb-4">
       <label
         for="smartFurnitureHookupUtilityType"
         class="flex items-center col-span-12 md:col-span-2 md:mb-0 font-semibold"
-        >Utility type</label
       >
+        Utility type
+      </label>
       <div class="col-span-12 md:col-span-10 w-full flex space-x-4">
         <span>{{ utilityTypeLabel }}</span>
       </div>
@@ -129,8 +185,8 @@ function endpointUpdated() {
       <Button
         type="button"
         label="Save"
-        @click="emit('save')"
-        :disabled="!smartFurnitureHookup.endpoint"
+        @click="onSave"
+        :disabled="!isFormValid"
       />
     </div>
   </Dialog>

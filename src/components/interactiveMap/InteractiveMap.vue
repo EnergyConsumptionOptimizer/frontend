@@ -1,45 +1,40 @@
 <script setup>
-import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
 import { computed, onBeforeMount, onMounted, ref, watch } from "vue";
-import FloorPlanTreeSidebar from "@/components/interactiveMap/FloorPlanTreeSidebar.vue";
+import { storeToRefs } from "pinia";
+import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
+
+import { useZoneEditor } from "@/composables/interactiveMap/useZoneEditor.js";
+import { useZoneDrag } from "@/composables/interactiveMap/useZoneDrag.js";
+import { useSmartFurnitureHookupEditor } from "@/composables/interactiveMap/useSmartFurnitureHookupEditor.js";
+import { useSmartFurnitureHookupDrag } from "@/composables/interactiveMap/useSmartFurnitureHookupDrag.js";
+import { useSmartFurnitureHookupZoneDetection } from "@/composables/interactiveMap/useSmartFurnitureHookupZoneDetection.js";
+import { computeFloorPlanTree } from "@/utils/floorPlanTree.js";
+
+import InteractiveMapEditorLayout from "@/layout/InteractiveMapEditorLayout.vue";
+import InteractiveMapLayout from "@/layout/InteractiveMapLayout.vue";
 import MapEditorActionButtons from "@/components/interactiveMap/MapEditorActionButtons.vue";
+import FloorPlanTreeSidebar from "@/components/interactiveMap/FloorPlanTreeSidebar.vue";
 import Zone from "@/components/interactiveMap/Zone.vue";
 import IncompletePolygon from "@/components/interactiveMap/IncompletePolygon.vue";
 import SmartFurnitureHookup from "@/components/interactiveMap/SmartFurnitureHookup.vue";
-import InteractiveMapLayout from "@/layout/InteractiveMapLayout.vue";
-import InteractiveMapEditorLayout from "@/layout/InteractiveMapEditorLayout.vue";
-import { useZoneEditor } from "@/composables/interactiveMap/useZoneEditor.js";
-import { useZoneDrag } from "@/composables/interactiveMap/useZoneDrag.js";
-import { computeFloorPlanTree } from "@/utils/floorPlanTree.js";
-import { useSmartFurnitureHookupEditor } from "@/composables/interactiveMap/useSmartFurnitureHookupEditor.js";
-import { useSmartFurnitureHookupDrag } from "@/composables/interactiveMap/useSmartFurnitureHookupDrag.js";
 import ZoneInformationDialog from "@/components/interactiveMap/ZoneInformationDialog.vue";
+import SmartFurnitureHookupInformationDialog from "@/components/interactiveMap/SmartFurnitureHookupInformationDialog.vue";
 
 import { useConfirm, useToast } from "primevue";
+import axios from "axios";
 import { deleteZoneDialog } from "@/utils/ui/deleteZoneDialog.js";
 import { deleteZoneToast } from "@/utils/ui/deleteZoneToast.js";
 import { collisionZoneToast } from "@/utils/ui/collisionZoneToast.js";
-import axios from "axios";
 import { cannotFetchSmartFurnitureHookupInfoToast } from "@/utils/ui/cannotFetchSmartFurnitureHookupInfoToast.js";
-import SmartFurnitureHookupInformationDialog from "@/components/interactiveMap/SmartFurnitureHookupInformationDialog.vue";
-import { useSmartFurnitureHookupZoneDetection } from "@/composables/interactiveMap/useSmartFurnitureHookupZoneDetection.js";
 import { deleteSmartFurnitureHookupDialog } from "@/utils/ui/deleteSmartFurnitureHookupDialog.js";
 import { deleteSmartFurnitureHookupTost } from "@/utils/ui/deleteSmartFurnitureHookupTost.js";
 
 const props = defineProps({
-  isLocalMode: {
-    type: Boolean,
-    default: false,
-  },
-  manageZones: {
-    type: Boolean,
-    default: true,
-  },
-  manageSmartFurnitureHookups: {
-    type: Boolean,
-    default: true,
-  },
+  isLocalMode: { type: Boolean, default: false },
+  manageZones: { type: Boolean, default: true },
+  manageSmartFurnitureHookups: { type: Boolean, default: true },
 });
+
 const emit = defineEmits([
   "zone-created",
   "zone-deleted",
@@ -48,26 +43,28 @@ const emit = defineEmits([
 ]);
 
 const interactiveMapStore = useInteractiveMapStore();
+const {
+  zones,
+  smartFurnitureHookups,
+  svgData,
+  isViewMode,
+  isDrawMode,
+  isEditMode,
+  hasZones,
+} = storeToRefs(interactiveMapStore);
+
 const drawingType = ref(null);
-
-const existingZones = computed(() => interactiveMapStore.zones);
-const existingSmartFurnitureHookups = computed(
-  () => interactiveMapStore.smartFurnitureHookups,
-);
-
 const confirm = useConfirm();
 const toast = useToast();
 const endpointLoading = ref(false);
 
 const {
   draftZone,
-  colorInput,
   isPolygonClosed,
   polygonPath,
   displayColor,
   collisionError,
   zoneDialog,
-
   startDrawing: startDrawingZone,
   stopDrawing: stopDrawingZone,
   addPoint,
@@ -78,7 +75,7 @@ const {
   isZoneOnDrawMode,
   isZoneOnEditMode,
   hideZoneDialog,
-} = useZoneEditor(existingZones);
+} = useZoneEditor(zones);
 
 const {
   dragState: zonedDagState,
@@ -86,7 +83,7 @@ const {
   startDragVertex,
   handleDragMove: handleZoneDragMove,
   stopDrag: stopZoneDrag,
-} = useZoneDrag(existingZones, existingSmartFurnitureHookups);
+} = useZoneDrag(zones, smartFurnitureHookups);
 
 const {
   draftSmartFurnitureHookup,
@@ -110,25 +107,22 @@ const {
   handleDragMove: handleSmartFurnitureHookupDragMove,
   stopDrag: stopSmartFurnitureHookupDrag,
   dragState: smartFurnitureHookupDragState,
-} = useSmartFurnitureHookupDrag(existingZones);
+} = useSmartFurnitureHookupDrag(zones);
 
 const { findZoneForSmartFurnitureHookup } =
-  useSmartFurnitureHookupZoneDetection(existingZones);
+  useSmartFurnitureHookupZoneDetection(zones);
 
 const tree = computed(() =>
-  computeFloorPlanTree(
-    interactiveMapStore.zones,
-    interactiveMapStore.smartFurnitureHookups,
-  ),
+  computeFloorPlanTree(zones.value, smartFurnitureHookups.value),
 );
+
 const cursorStyle = computed(() => {
   if (
-    interactiveMapStore.isDrawMode &&
+    isDrawMode.value &&
     (!isPolygonClosed.value || !isSmartFurnitureHookupPositioned.value)
   ) {
     return "cursor-crosshair";
   }
-
   return "cursor-default";
 });
 
@@ -146,11 +140,9 @@ function handleStartDrawingSmartFurnitureHookup() {
 
 function handleStopDrawing() {
   interactiveMapStore.viewMap();
-
   if (drawingType.value === "zone") stopDrawingZone();
   if (drawingType.value === "smart-furniture-hookup")
     stopDrawingSmartFurnitureHookup();
-
   drawingType.value = null;
 }
 
@@ -162,49 +154,20 @@ function handleStopEditing() {
   interactiveMapStore.viewMap();
 }
 
-async function handleSaveZone() {
-  const name = draftZone.value.name.trim();
-
-  if (!name) {
-    return;
-  }
-
+async function handleSaveZone(payload) {
   if (isZoneOnDrawMode.value) {
     const newZone = finalizeZone();
+    Object.assign(newZone, payload);
+
     await interactiveMapStore.addZone(newZone);
-
-    emit("zone-created", interactiveMapStore.zones.length);
+    emit("zone-created", zones.value.length);
   } else if (isZoneOnEditMode.value) {
-    await interactiveMapStore.updateZone(draftZone.value.id, {
-      name: name,
-      color: displayColor.value,
+    await interactiveMapStore.updateZone(payload.id, {
+      name: payload.name,
+      color: payload.color,
     });
-
     doneEditingZone();
   }
-}
-
-async function handleEditZone(zoneId) {
-  if (interactiveMapStore.isDrawMode) {
-    handleStopDrawing();
-  }
-
-  const zone = await interactiveMapStore.findZone(zoneId);
-
-  if (!zone) return;
-
-  loadZoneForEdit(zone);
-}
-
-function handleDeleteZone(zoneId) {
-  confirm.require(
-    deleteZoneDialog(async () => {
-      await interactiveMapStore.deleteZone(zoneId);
-
-      emit("zone-deleted", interactiveMapStore.zones.length);
-      toast.add(deleteZoneToast);
-    }),
-  );
 }
 
 async function fetchAndConfigSmartFurnitureHookupInfo() {
@@ -214,16 +177,14 @@ async function fetchAndConfigSmartFurnitureHookupInfo() {
 
     if (!response.data || !(response.data.name || response.data.utilityType)) {
       toast.add(cannotFetchSmartFurnitureHookupInfoToast);
-      return;
+      return false;
     }
 
     isSmartFurnitureHookupEndpointConfigured.value = true;
-
-    if (!draftSmartFurnitureHookup.value.name)
+    if (!draftSmartFurnitureHookup.value.name) {
       draftSmartFurnitureHookup.value.name = response.data.name;
-
+    }
     draftSmartFurnitureHookup.value.utilityType = response.data.node_type;
-
     return true;
   } catch (error) {
     toast.add(cannotFetchSmartFurnitureHookupInfoToast);
@@ -233,70 +194,68 @@ async function fetchAndConfigSmartFurnitureHookupInfo() {
   }
 }
 
-async function handleSaveSmartFurnitureHookup() {
+async function handleSaveSmartFurnitureHookup(payload) {
   if (
     !isSmartFurnitureHookupEndpointConfigured.value &&
-    !(await fetchAndConfigSmartFurnitureHookupInfo())
+    !draftSmartFurnitureHookup.value.utilityType
   ) {
-    return;
-  }
-
-  const name = draftSmartFurnitureHookup.value.name.trim();
-  const endpoint = draftSmartFurnitureHookup.value.endpoint.trim();
-  const utilityType = draftSmartFurnitureHookup.value.utilityType;
-
-  if (!name || !endpoint || !utilityType) {
-    return;
+    const success = await fetchAndConfigSmartFurnitureHookupInfo();
+    if (!success) return;
   }
 
   if (isSmartFurnitureHookupOnDrawMode.value) {
     const newSmartFurnitureHookup = finalizeSmartFurnitureHookup();
-
     newSmartFurnitureHookup.zone = findZoneForSmartFurnitureHookup(
       newSmartFurnitureHookup,
     );
 
-    await interactiveMapStore.addSmartFurnitureHookup(newSmartFurnitureHookup);
-    emit(
-      "smart-furniture-hookup-created",
-      interactiveMapStore.smartFurnitureHookups.length,
-    );
-  } else if (isSmartFurnitureHookupOnEditMode.value) {
-    await interactiveMapStore.updateSmartFurnitureHookup(
-      draftSmartFurnitureHookup.value.id,
-      {
-        name: name,
-        endpoint: draftSmartFurnitureHookup.value.endpoint,
-        utilityType: draftSmartFurnitureHookup.value.utilityType,
-      },
-    );
+    Object.assign(newSmartFurnitureHookup, payload);
+    if (!newSmartFurnitureHookup.utilityType) {
+      newSmartFurnitureHookup.utilityType =
+        draftSmartFurnitureHookup.value.utilityType;
+    }
 
+    await interactiveMapStore.addSmartFurnitureHookup(newSmartFurnitureHookup);
+    emit("smart-furniture-hookup-created", smartFurnitureHookups.value.length);
+  } else if (isSmartFurnitureHookupOnEditMode.value) {
+    await interactiveMapStore.updateSmartFurnitureHookup(payload.id, {
+      name: payload.name,
+      endpoint: payload.endpoint,
+      utilityType: payload.utilityType,
+    });
     doneEditingSmartFurnitureHookup();
   }
 }
 
-async function handleEditSmartFurnitureHookup(smartFurnitureHookupId) {
-  if (interactiveMapStore.isDrawMode) {
-    handleStopDrawing();
-  }
-
-  const smartFurnitureHookup =
-    await interactiveMapStore.findSmartFurnitureHookup(smartFurnitureHookupId);
-
-  if (!smartFurnitureHookup) return;
-
-  loadSmartFurnitureHookupForEdit(smartFurnitureHookup);
+async function handleEditZone(zoneId) {
+  if (isDrawMode.value) handleStopDrawing();
+  const zone = await interactiveMapStore.findZone(zoneId);
+  if (zone) loadZoneForEdit(zone);
 }
 
-async function handleDeleteSmartFurnitureHookup(smartFurnitureHookupId) {
+function handleDeleteZone(zoneId) {
+  confirm.require(
+    deleteZoneDialog(async () => {
+      await interactiveMapStore.deleteZone(zoneId);
+      emit("zone-deleted", zones.value.length);
+      toast.add(deleteZoneToast);
+    }),
+  );
+}
+
+async function handleEditSmartFurnitureHookup(id) {
+  if (isDrawMode.value) handleStopDrawing();
+  const hookup = await interactiveMapStore.findSmartFurnitureHookup(id);
+  if (hookup) loadSmartFurnitureHookupForEdit(hookup);
+}
+
+async function handleDeleteSmartFurnitureHookup(id) {
   confirm.require(
     deleteSmartFurnitureHookupDialog(async () => {
-      await interactiveMapStore.deleteSmartFurnitureHookup(
-        smartFurnitureHookupId,
-      );
+      await interactiveMapStore.deleteSmartFurnitureHookup(id);
       emit(
         "smart-furniture-hookup-deleted",
-        interactiveMapStore.smartFurnitureHookups.length,
+        smartFurnitureHookups.value.length,
       );
       toast.add(deleteSmartFurnitureHookupTost);
     }),
@@ -304,7 +263,7 @@ async function handleDeleteSmartFurnitureHookup(smartFurnitureHookupId) {
 }
 
 function handleInteractiveMapClick(point) {
-  if (!interactiveMapStore.isDrawMode) return;
+  if (!isDrawMode.value) return;
 
   if (drawingType.value === "zone" && props.manageZones) {
     addPoint(point);
@@ -323,9 +282,10 @@ function handleStartDragZone(zone, position) {
 function handleStartDragVertex(zone, vertexIndex, position) {
   if (props.manageZones) startDragVertex(zone, vertexIndex, position);
 }
-function handleStartDragSmartFurnitureHookup(smartFurnitureHookup, position) {
+
+function handleStartDragSmartFurnitureHookup(sfh, position) {
   if (props.manageSmartFurnitureHookups)
-    startDragSmartFurnitureHookup(smartFurnitureHookup, position);
+    startDragSmartFurnitureHookup(sfh, position);
 }
 
 function handleDragMove(event) {
@@ -335,58 +295,45 @@ function handleDragMove(event) {
 
 async function handleStopDrag() {
   if (zonedDagState.value.isDragging) await handleStopZoneDrag();
-
   if (smartFurnitureHookupDragState.value.isDragging)
     await handleStopSmartFurnitureHookupDrag();
 }
 
 async function handleStopZoneDrag() {
   const draggedZone = stopZoneDrag();
-
   if (!draggedZone.id) return;
-
   await interactiveMapStore.updateZonePosition(draggedZone.id, {
     points: draggedZone.points,
   });
 }
 
 async function handleStopSmartFurnitureHookupDrag() {
-  const draggedSmartFurnitureHookup = stopSmartFurnitureHookupDrag();
-
-  if (!draggedSmartFurnitureHookup.id) return;
-
-  await interactiveMapStore.updateSmartFurnitureHookup(
-    draggedSmartFurnitureHookup.id,
-    {
-      position: draggedSmartFurnitureHookup.position,
-      zone: draggedSmartFurnitureHookup.zone,
-    },
-  );
+  const dragged = stopSmartFurnitureHookupDrag();
+  if (!dragged.id) return;
+  await interactiveMapStore.updateSmartFurnitureHookup(dragged.id, {
+    position: dragged.position,
+    zone: dragged.zone,
+  });
 }
 
 watch(collisionError, (error) => {
   if (error) {
     toast.add(collisionZoneToast(error));
+    collisionError.value = null;
   }
-  collisionError.value = null;
 });
 
-onBeforeMount(() => {
-  interactiveMapStore.viewMap();
-});
-
-onMounted(() => {
-  interactiveMapStore.setLocalMode(props.isLocalMode);
-});
+onBeforeMount(() => interactiveMapStore.viewMap());
+onMounted(() => interactiveMapStore.setLocalMode(props.isLocalMode));
 </script>
 
 <template>
   <interactive-map-editor-layout class="!2xl:w-[1200px]">
     <template #actions>
       <map-editor-action-buttons
-        :isViewMode="interactiveMapStore.isViewMode"
-        :isDrawMode="interactiveMapStore.isDrawMode"
-        :isEditMode="interactiveMapStore.isEditMode"
+        :isViewMode="isViewMode"
+        :isDrawMode="isDrawMode"
+        :isEditMode="isEditMode"
       >
         <template #viewActions>
           <Button
@@ -407,7 +354,7 @@ onMounted(() => {
             label="Edit"
             severity="secondary"
             icon="pi pi-arrows-alt"
-            :disabled="!interactiveMapStore.hasZones"
+            :disabled="!hasZones"
             @click="handleStartEditing"
           />
         </template>
@@ -449,9 +396,10 @@ onMounted(() => {
         </template>
       </map-editor-action-buttons>
     </template>
+
     <template #floor-plan>
       <interactive-map-layout
-        :floor-plan-svg="interactiveMapStore.svgData"
+        :floor-plan-svg="svgData"
         :cursor="cursorStyle"
         @interactiveMapClick="handleInteractiveMapClick"
         @interactiveMapMouseMove="handleDragMove"
@@ -459,13 +407,7 @@ onMounted(() => {
         @mouseleave="handleStopDrag"
       >
         <template #zones>
-          <g
-            v-if="
-              props.manageZones &&
-              interactiveMapStore.isDrawMode &&
-              isZoneOnDrawMode
-            "
-          >
+          <g v-if="props.manageZones && isDrawMode && isZoneOnDrawMode">
             <incomplete-polygon
               v-if="!isPolygonClosed"
               :points="draftZone.points"
@@ -482,12 +424,10 @@ onMounted(() => {
           </g>
 
           <zone
-            v-for="zone in interactiveMapStore.zones"
+            v-for="zone in zones"
             :key="zone.id"
             :zone="zone"
-            :editModeActive="
-              props.manageZones && interactiveMapStore.isEditMode
-            "
+            :editModeActive="props.manageZones && isEditMode"
             @zoneClick="handleStartDragZone"
             @zoneVerticeClick="handleStartDragVertex"
           />
@@ -498,7 +438,7 @@ onMounted(() => {
             @smartFurnitureHookupClick="startDragSmartFurnitureHookup"
             v-if="
               props.manageSmartFurnitureHookups &&
-              interactiveMapStore.isDrawMode &&
+              isDrawMode &&
               isSmartFurnitureHookupOnDrawMode &&
               isSmartFurnitureHookupPositioned
             "
@@ -507,23 +447,24 @@ onMounted(() => {
           />
 
           <smart-furniture-hookup
-            v-for="sfh in interactiveMapStore.smartFurnitureHookups"
+            v-for="sfh in smartFurnitureHookups"
             :key="sfh.id"
-            :editModeActive="interactiveMapStore.isEditMode"
+            :editModeActive="isEditMode"
             @smartFurnitureHookupClick="handleStartDragSmartFurnitureHookup"
             :smartFurnitureHookup="sfh"
           />
         </template>
       </interactive-map-layout>
     </template>
+
     <template #sidebar>
       <floor-plan-tree-sidebar
         :tree="tree"
-        :hasZones="interactiveMapStore.hasZones"
+        :hasZones="hasZones"
         :hasZoneActions="props.manageZones"
         :hasSmartFurnitureHookupActions="props.manageSmartFurnitureHookups"
-        :disableActionsZone="interactiveMapStore.isDrawMode"
-        :disableActionsSmartFurnitureHookup="interactiveMapStore.isDrawMode"
+        :disableActionsZone="isDrawMode"
+        :disableActionsSmartFurnitureHookup="isDrawMode"
         @editZone="handleEditZone"
         @deleteZone="handleDeleteZone"
         @editSmartFurnitureHookup="handleEditSmartFurnitureHookup"
@@ -531,20 +472,22 @@ onMounted(() => {
       />
     </template>
   </interactive-map-editor-layout>
+
   <zone-information-dialog
-    :isOnDrawMode="isZoneOnDrawMode"
     v-model:visible="zoneDialog"
-    v-model:colorInput="colorInput"
     v-model:zone="draftZone"
+    :isOnDrawMode="isZoneOnDrawMode"
+    :default-color="displayColor"
     @hide="hideZoneDialog"
     @cancel="hideZoneDialog"
     @save="handleSaveZone"
   />
+
   <smart-furniture-hookup-information-dialog
-    :isOnDrawMode="isSmartFurnitureHookupOnDrawMode"
     v-model:visible="smartFurnitureHookupDialog"
+    v-model:smart-furniture-hookup="draftSmartFurnitureHookup"
     v-model:loading="endpointLoading"
-    v-model:smartFurnitureHookup="draftSmartFurnitureHookup"
+    :isOnDrawMode="isSmartFurnitureHookupOnDrawMode"
     @save="handleSaveSmartFurnitureHookup"
     @hide="hideSmartFurnitureHookupDialog"
     @cancel="hideSmartFurnitureHookupDialog"
