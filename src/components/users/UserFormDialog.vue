@@ -1,52 +1,74 @@
 <script setup>
-import { computed, toRef } from "vue";
+import { computed, ref } from "vue";
+import { storeToRefs } from "pinia";
 import { useUserStore } from "@/stores/userStore";
 import { useNameValidation } from "@/composables/common/useNameValidation";
 
-const visible = defineModel("visible");
-const user = defineModel("user", { required: true });
+import Dialog from "primevue/dialog";
+import InputText from "primevue/inputtext";
+import Password from "primevue/password";
+import Button from "primevue/button";
+import Message from "primevue/message";
 
 defineProps({
-  submitted: {
-    type: Boolean,
-    default: false,
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
+  loading: { type: Boolean, default: false },
 });
+
+const user = defineModel("user", { required: true });
+const visible = defineModel("visible", { type: Boolean, default: false });
 
 const emit = defineEmits(["save", "cancel"]);
 
 const userStore = useUserStore();
+const { users } = storeToRefs(userStore);
 
-const usernameRef = computed(() => user.value.username);
-const userIdRef = computed(() => user.value.id);
+const submitted = ref(false);
 
-const { validationError, isValid: isNameValid } = useNameValidation(
+const usernameRef = computed(() => user.value?.username);
+const userIdRef = computed(() => user.value?.id);
+
+const { validationError, isValid: isNameUnique } = useNameValidation(
   usernameRef,
-  toRef(userStore, "users"),
+  users,
   userIdRef,
   "username",
 );
 
-const onSave = () => {
-  if (isNameValid.value) {
-    emit("save");
-  }
-};
+const isFormValid = computed(() => {
+  const hasUsername = !!user.value?.username?.trim();
+  const isUnique = isNameUnique.value;
+  const isPasswordValid = !!user.value?.id || !!user.value?.password?.trim();
+
+  return hasUsername && isUnique && isPasswordValid;
+});
+
+function onSave() {
+  submitted.value = true;
+  if (!isFormValid.value) return;
+
+  emit("save", {
+    id: user.value.id,
+    username: user.value.username.trim(),
+    password: user.value.password,
+    role: user.value.role,
+  });
+}
+
+const dialogTitle = computed(() => (user.value?.id ? "Edit User" : "New User"));
 </script>
+
 <template>
   <Dialog
     v-model:visible="visible"
     :style="{ width: '450px' }"
-    header="User Details"
+    :header="dialogTitle"
     modal
     class="p-fluid"
+    @hide="emit('cancel')"
+    @after-hide="submitted = false"
   >
-    <form id="userForm" @submit.prevent="onSave" class="flex flex-col gap-4">
-      <div>
+    <form id="user-form" @submit.prevent="onSave" class="flex flex-col gap-4">
+      <div class="field">
         <label for="username" class="font-bold block mb-2">Username</label>
         <InputText
           id="username"
@@ -56,17 +78,17 @@ const onSave = () => {
           :invalid="!!validationError || (submitted && !user.username)"
           fluid
         />
-        <small v-if="validationError" class="text-red-500 block mt-1">
-          {{ validationError }}
-        </small>
-        <small
-          v-else-if="submitted && !user.username"
-          class="text-red-500 block mt-1"
+        <Message
+          v-if="validationError || (submitted && !user.username)"
+          severity="error"
+          variant="simple"
+          size="small"
         >
-          Username is required.
-        </small>
+          {{ validationError || "Username is required." }}
+        </Message>
       </div>
-      <div v-if="!user.id">
+
+      <div v-if="!user.id" class="field">
         <label for="password" class="font-bold block mb-2">Password</label>
         <Password
           id="password"
@@ -74,26 +96,28 @@ const onSave = () => {
           toggleMask
           :feedback="false"
           :invalid="submitted && !user.password"
-          aria-describedby="password-error"
           fluid
         />
-        <small
+        <Message
           v-if="submitted && !user.password"
-          id="password-error"
-          class="text-red-500"
+          severity="error"
+          variant="simple"
+          size="small"
         >
           Password is required.
-        </small>
+        </Message>
       </div>
     </form>
+
     <template #footer>
       <Button label="Cancel" icon="pi pi-times" text @click="emit('cancel')" />
       <Button
         label="Save"
         icon="pi pi-check"
         type="submit"
-        form="userForm"
+        form="user-form"
         :loading="loading"
+        :disabled="!isFormValid"
       />
     </template>
   </Dialog>

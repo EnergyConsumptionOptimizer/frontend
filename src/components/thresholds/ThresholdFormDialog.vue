@@ -1,11 +1,17 @@
 <script setup>
-import { computed, toRef } from "vue";
+import { computed, ref } from "vue";
+import { storeToRefs } from "pinia";
 import { useThresholdStore } from "@/stores/thresholdStore";
 import { useNameValidation } from "@/composables/common/useNameValidation";
 
+import Dialog from "primevue/dialog";
+import InputText from "primevue/inputtext";
+import InputNumber from "primevue/inputnumber";
+import Select from "primevue/select";
+import Button from "primevue/button";
+import Message from "primevue/message";
+
 const props = defineProps({
-  visible: { type: Boolean, required: true },
-  submitted: { type: Boolean, default: false },
   loading: { type: Boolean, default: false },
   options: {
     type: Object,
@@ -16,47 +22,66 @@ const props = defineProps({
 });
 
 const threshold = defineModel("threshold", { required: true });
+const visible = defineModel("visible", { type: Boolean, default: false });
 
-const emit = defineEmits(["update:visible", "save", "cancel", "type-change"]);
+const emit = defineEmits(["save", "cancel", "type-change"]);
 
 const thresholdStore = useThresholdStore();
+const { thresholds } = storeToRefs(thresholdStore);
 
-const nameRef = computed(() => threshold.value.name);
-const idRef = computed(() => threshold.value.id);
+const submitted = ref(false);
 
-const { validationError, isValid: isNameValid } = useNameValidation(
+const nameRef = computed(() => threshold.value?.name);
+const idRef = computed(() => threshold.value?.id);
+
+const { validationError, isValid: isNameUnique } = useNameValidation(
   nameRef,
-  toRef(thresholdStore, "thresholds"),
+  thresholds,
   idRef,
   "name",
 );
 
-const dialogVisible = computed({
-  get: () => props.visible,
-  set: (value) => emit("update:visible", value),
+const isFormValid = computed(() => {
+  const t = threshold.value;
+  if (!t) return false;
+
+  const validName = !!t.name?.trim() && isNameUnique.value;
+  const validUtility = !!t.utilityType;
+  const validType = !!t.thresholdType;
+  const validValue = t.value !== null && t.value !== undefined && t.value > 0;
+  const validPeriod = props.isPeriodDisabled || !!t.periodType;
+
+  return validName && validUtility && validType && validValue && validPeriod;
 });
 
-const onSave = () => {
-  if (isNameValid.value) {
-    emit("save");
-  }
-};
+function onSave() {
+  submitted.value = true;
+  if (!isFormValid.value) return;
+
+  emit("save", {
+    ...threshold.value,
+    name: threshold.value.name.trim(),
+    periodType: props.isPeriodDisabled ? "" : threshold.value.periodType,
+  });
+}
 </script>
 
 <template>
   <Dialog
-    v-model:visible="dialogVisible"
+    v-model:visible="visible"
     :style="{ width: '450px' }"
     header="Threshold Details"
     modal
     class="p-fluid"
+    @hide="emit('cancel')"
+    @after-hide="submitted = false"
   >
     <form
-      id="thresholdForm"
+      id="threshold-form"
       @submit.prevent="onSave"
       class="flex flex-col gap-4"
     >
-      <div>
+      <div class="field">
         <label for="name" class="font-bold block mb-2">Name</label>
         <InputText
           id="name"
@@ -66,18 +91,17 @@ const onSave = () => {
           :invalid="!!validationError || (submitted && !threshold.name)"
           fluid
         />
-        <small v-if="validationError" class="text-red-500 block mt-1">
-          {{ validationError }}
-        </small>
-        <small
-          v-else-if="submitted && !threshold.name"
-          class="text-red-500 block mt-1"
+        <Message
+          v-if="validationError || (submitted && !threshold.name)"
+          severity="error"
+          variant="simple"
+          size="small"
         >
-          Name is required.
-        </small>
+          {{ validationError || "Name is required." }}
+        </Message>
       </div>
 
-      <div>
+      <div class="field">
         <label for="utility" class="font-bold block mb-2">Utility</label>
         <Select
           id="utility"
@@ -85,19 +109,19 @@ const onSave = () => {
           :options="options.utilities"
           placeholder="Select Utility"
           :invalid="submitted && !threshold.utilityType"
-          aria-describedby="utility-error"
           fluid
         />
-        <small
+        <Message
           v-if="submitted && !threshold.utilityType"
-          id="utility-error"
-          class="text-red-500"
+          severity="error"
+          variant="simple"
+          size="small"
         >
           Utility is required.
-        </small>
+        </Message>
       </div>
 
-      <div>
+      <div class="field">
         <label for="type" class="font-bold block mb-2">Threshold Type</label>
         <Select
           id="type"
@@ -105,39 +129,39 @@ const onSave = () => {
           :options="options.types"
           placeholder="Select Type"
           :invalid="submitted && !threshold.thresholdType"
-          aria-describedby="type-error"
           fluid
           @change="$emit('type-change')"
         />
-        <small
+        <Message
           v-if="submitted && !threshold.thresholdType"
-          id="type-error"
-          class="text-red-500"
+          severity="error"
+          variant="simple"
+          size="small"
         >
           Type is required.
-        </small>
+        </Message>
       </div>
 
-      <div>
+      <div class="field">
         <label for="value" class="font-bold block mb-2">Value</label>
         <InputNumber
           id="value"
           v-model.number="threshold.value"
           :min="0"
           :invalid="submitted && (!threshold.value || threshold.value <= 0)"
-          aria-describedby="value-error"
           fluid
         />
-        <small
+        <Message
           v-if="submitted && (!threshold.value || threshold.value <= 0)"
-          id="value-error"
-          class="text-red-500"
+          severity="error"
+          variant="simple"
+          size="small"
         >
           Value must be a positive number.
-        </small>
+        </Message>
       </div>
 
-      <div>
+      <div class="field">
         <label for="periodType" class="font-bold block mb-2">Period Type</label>
         <Select
           id="periodType"
@@ -145,11 +169,20 @@ const onSave = () => {
           :options="options.periods"
           placeholder="Select Period"
           :disabled="isPeriodDisabled"
+          :invalid="submitted && !isPeriodDisabled && !threshold.periodType"
           fluid
         />
+        <Message
+          v-if="submitted && !isPeriodDisabled && !threshold.periodType"
+          severity="error"
+          variant="simple"
+          size="small"
+        >
+          Period is required for this type.
+        </Message>
       </div>
 
-      <div>
+      <div class="field">
         <label for="status" class="font-bold block mb-2">State</label>
         <Select
           id="status"
@@ -162,13 +195,14 @@ const onSave = () => {
     </form>
 
     <template #footer>
-      <Button label="Cancel" icon="pi pi-times" text @click="$emit('cancel')" />
+      <Button label="Cancel" icon="pi pi-times" text @click="emit('cancel')" />
       <Button
         label="Save"
         icon="pi pi-check"
         type="submit"
-        form="thresholdForm"
+        form="threshold-form"
         :loading="loading"
+        :disabled="!isFormValid"
       />
     </template>
   </Dialog>

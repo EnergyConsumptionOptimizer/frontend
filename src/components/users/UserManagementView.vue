@@ -19,7 +19,6 @@ const userStore = useUserStore();
 const userDialog = ref(false);
 const user = ref({});
 const selectedUsers = ref([]);
-const submitted = ref(false);
 
 onMounted(() => {
   userStore.setLocalMode(props.isLocalMode);
@@ -28,13 +27,11 @@ onMounted(() => {
 
 const openNew = () => {
   user.value = {};
-  submitted.value = false;
   userDialog.value = true;
 };
 
 const hideDialog = () => {
   userDialog.value = false;
-  submitted.value = false;
 };
 
 const editUser = (prod) => {
@@ -42,18 +39,15 @@ const editUser = (prod) => {
   userDialog.value = true;
 };
 
-const saveUser = async () => {
-  submitted.value = true;
-  if (user.value.username?.trim()) {
-    let success = false;
-    if (user.value.id) {
-      success = await userStore.updateUser(user.value.id, user.value.username);
-    } else {
-      if (!user.value.password?.trim()) return;
-      success = await userStore.createUser(user.value);
-    }
-    if (success) hideDialog();
+const saveUser = async (payload) => {
+  let success;
+  if (payload.id) {
+    success = await userStore.updateUser(payload.id, payload.username);
+  } else {
+    success = await userStore.createUser(payload);
   }
+
+  if (success) hideDialog();
 };
 
 const confirmDeleteUser = (prod) => {
@@ -105,7 +99,6 @@ const confirmDeleteSelected = () => {
     <UserFormDialog
       v-model:visible="userDialog"
       v-model:user="user"
-      :submitted="submitted"
       :loading="userStore.isLoading"
       @save="saveUser"
       @cancel="hideDialog"

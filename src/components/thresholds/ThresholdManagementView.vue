@@ -19,7 +19,6 @@ const thresholdStore = useThresholdStore();
 const dialog = ref(false);
 const threshold = ref({});
 const selectedThresholds = ref([]);
-const submitted = ref(false);
 
 onMounted(() => {
   thresholdStore.setLocalMode(props.isLocalMode);
@@ -38,13 +37,11 @@ const isPeriodDisabled = computed(
 
 const openNew = () => {
   threshold.value = { thresholdState: "ENABLED" };
-  submitted.value = false;
   dialog.value = true;
 };
 
 const hideDialog = () => {
   dialog.value = false;
-  submitted.value = false;
 };
 
 const openEdit = (item) => {
@@ -58,26 +55,8 @@ const handleTypeChange = () => {
   }
 };
 
-const saveThreshold = async () => {
-  submitted.value = true;
-  const { name, utilityType, thresholdType, value: tValue } = threshold.value;
-
-  if (
-    !name?.trim() ||
-    !utilityType ||
-    !thresholdType ||
-    tValue == null ||
-    Number(tValue) <= 0
-  ) {
-    return;
-  }
-
-  const payload = { ...threshold.value };
-  if (payload.thresholdType === "ACTUAL" || !payload.periodType) {
-    payload.periodType = "";
-  }
-
-  let success = false;
+const saveThreshold = async (payload) => {
+  let success;
   if (payload.id) {
     success = await thresholdStore.updateThreshold(payload.id, payload);
   } else {
@@ -149,7 +128,6 @@ const confirmDeleteSelected = () => {
     <ThresholdFormDialog
       v-model:visible="dialog"
       v-model:threshold="threshold"
-      :submitted="submitted"
       :loading="thresholdStore.isLoading"
       :options="thresholdStore.staticOptions"
       :status-options="statusOptions"
