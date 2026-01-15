@@ -16,18 +16,18 @@ const collision = useZoneCollision();
 
 export const InteractiveMapLocalService = {
   async fetchFloorPlan() {
-    return getStore().svgData ?? "";
+    return getStore()?.svgData ?? "";
   },
   async fetchZones() {
-    return getStore().zones ?? [];
+    return getStore()?.zones ?? [];
   },
   async fetchSmartFurnitureHookups() {
-    return getStore().smartFurnitureHookups ?? [];
+    return getStore()?.smartFurnitureHookups ?? [];
   },
   async getSvgFileName() {
-    return getStore().svgFileName ?? "";
+    return getStore()?.svgFileName ?? "";
   },
-  async uploadSvg(svgData, svgFileName) {
+  async saveFloorPlan(svgData, svgFileName) {
     updateStore({
       svgData,
       svgFileName,
@@ -43,6 +43,7 @@ export const InteractiveMapLocalService = {
       svgFileName,
     };
   },
+
   async findZone(id) {
     const zones = await this.fetchZones();
     return zones.find((zone) => zone.id === id);
@@ -50,12 +51,30 @@ export const InteractiveMapLocalService = {
   async addZone(zone) {
     const zones = await this.fetchZones();
 
-    zones.push(zone);
+    const newZone = {
+      ...zone,
+      id: Date.now().toString(),
+    };
+
+    const smartFurnitureHookups = await this.fetchSmartFurnitureHookups();
+
+    for (const sfh of smartFurnitureHookups) {
+      if (collision.isPointInPolygon(sfh.position, newZone.points)) {
+        sfh.zone = newZone.id;
+      }
+    }
+
+    zones.push(newZone);
+
     updateStore({
       zones,
     });
 
-    return zone;
+    updateStore({
+      smartFurnitureHookups,
+    });
+
+    return newZone;
   },
   async updateZone(id, payload) {
     const zones = await this.fetchZones();
@@ -66,30 +85,29 @@ export const InteractiveMapLocalService = {
       throw Error("Invalid zone id");
     }
 
-    const newZone = { ...zones[index], ...payload };
-    zones[index] = newZone;
+    const updatedZone = { ...zones[index], ...payload };
+    zones[index] = updatedZone;
 
     updateStore({
       zones,
     });
 
-    if (!payload.points) return newZone;
+    if (!payload.points) return updatedZone;
 
     const smartFurnitureHookups = await this.fetchSmartFurnitureHookups();
 
     for (const sfh of smartFurnitureHookups) {
       if (collision.isPointInPolygon(sfh.position, payload.points)) {
-        await this.updateSmartFurnitureHookup(sfh.id, {
-          zone: id,
-        });
+        sfh.zone = id;
       } else if (sfh.zone && sfh.zone === id) {
-        await this.updateSmartFurnitureHookup(sfh.id, {
-          zone: null,
-        });
+        sfh.zone = null;
       }
     }
+    updateStore({
+      smartFurnitureHookups,
+    });
 
-    return newZone;
+    return updatedZone;
   },
   async deleteZone(id) {
     let zones = await this.fetchZones();
@@ -97,6 +115,18 @@ export const InteractiveMapLocalService = {
 
     updateStore({
       zones,
+    });
+
+    const smartFurnitureHookups = await this.fetchSmartFurnitureHookups();
+
+    smartFurnitureHookups
+      .filter((sfh) => sfh.zone === id)
+      .forEach((sfh) => {
+        sfh.zone = null;
+      });
+
+    updateStore({
+      smartFurnitureHookups,
     });
   },
 
@@ -127,6 +157,7 @@ export const InteractiveMapLocalService = {
       ...smartFurnitureHookups[index],
       ...payload,
     };
+
     smartFurnitureHookups[index] = newSmartFurnitureHookup;
 
     updateStore({
@@ -135,7 +166,7 @@ export const InteractiveMapLocalService = {
 
     return newSmartFurnitureHookup;
   },
-  async updateSmartFurnitureHookups(smartFurnitureHookupsToUpdate) {
+  async updateSmartFurnitureHookupsPosition(smartFurnitureHookupsToUpdate) {
     const smartFurnitureHookups = await this.fetchSmartFurnitureHookups();
 
     const updatesMap = new Map(
@@ -157,5 +188,8 @@ export const InteractiveMapLocalService = {
     updateStore({
       smartFurnitureHookups,
     });
+  },
+  clear() {
+    localStorage.removeItem(STORAGE_KEY);
   },
 };
