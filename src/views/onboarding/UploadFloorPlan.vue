@@ -42,7 +42,7 @@ function reuploadFloorPlan(event) {
 }
 
 onMounted(async () => {
-  interactiveMapStore.setLocalMode(true).then(() => {});
+  interactiveMapStore.setLocalMode(true);
 });
 </script>
 
