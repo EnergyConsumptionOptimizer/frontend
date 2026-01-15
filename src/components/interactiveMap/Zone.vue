@@ -71,7 +71,7 @@ const zoneClick = (event, zone, pointID = null) => {
       "
       text-anchor="middle"
       fill="#000"
-      font-size="28"
+      font-size="38"
       font-weight="bold"
       pointer-events="none"
     >

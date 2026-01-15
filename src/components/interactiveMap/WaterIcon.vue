@@ -6,6 +6,8 @@ const props = defineProps({ color: String });
   <path
     d="M12,20a6,6,0,0,1-6-6c0-4,6-10.8,6-10.8S18,10,18,14A6,6,0,0,1,12,20Z"
     :fill="props.color"
+    stroke="#a3a3a3"
+    stroke-width="1"
   />
 </template>
 
