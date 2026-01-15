@@ -10,7 +10,6 @@ const onboardingStore = useOnboardingStore();
 
 onMounted(() => {
   thresholdStore.setLocalMode(true);
-  thresholdStore.fetchThresholds();
   onboardingStore.completeStep();
 });
 </script>
@@ -22,7 +21,7 @@ onMounted(() => {
   >
     <template #content>
       <div class="w-full mt-4">
-        <ThresholdManagementView :is-local-mode="true" />
+        <ThresholdManagementView />
       </div>
     </template>
   </onboarding-step-layout>

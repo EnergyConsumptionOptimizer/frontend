@@ -6,13 +6,6 @@ import UserListTable from "@/components/users/UserListTable.vue";
 import UserFormDialog from "@/components/users/UserFormDialog.vue";
 import { confirmDeleteDialog } from "@/utils/ui/confirmPresets.js";
 
-const props = defineProps({
-  isLocalMode: {
-    type: Boolean,
-    default: false,
-  },
-});
-
 const confirm = useConfirm();
 const userStore = useUserStore();
 
@@ -21,7 +14,6 @@ const user = ref({});
 const selectedUsers = ref([]);
 
 onMounted(() => {
-  userStore.setLocalMode(props.isLocalMode);
   userStore.fetchUsers();
 });
 

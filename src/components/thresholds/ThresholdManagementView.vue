@@ -6,13 +6,6 @@ import ThresholdListTable from "@/components/thresholds/ThresholdListTable.vue";
 import ThresholdFormDialog from "@/components/thresholds/ThresholdFormDialog.vue";
 import { confirmDeleteDialog } from "@/utils/ui/confirmPresets.js";
 
-const props = defineProps({
-  isLocalMode: {
-    type: Boolean,
-    default: false,
-  },
-});
-
 const confirm = useConfirm();
 const thresholdStore = useThresholdStore();
 
@@ -21,7 +14,6 @@ const threshold = ref({});
 const selectedThresholds = ref([]);
 
 onMounted(() => {
-  thresholdStore.setLocalMode(props.isLocalMode);
   thresholdStore.fetchThresholds();
 });
 

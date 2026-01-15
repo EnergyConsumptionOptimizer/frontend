@@ -10,7 +10,6 @@ const onboardingStore = useOnboardingStore();
 
 onMounted(() => {
   userStore.setLocalMode(true);
-  userStore.fetchUsers();
   onboardingStore.completeStep();
 });
 </script>
@@ -22,7 +21,7 @@ onMounted(() => {
   >
     <template #content>
       <div class="w-full mt-4">
-        <UserManagementView :is-local-mode="true" />
+        <UserManagementView />
       </div>
     </template>
   </onboarding-step-layout>
