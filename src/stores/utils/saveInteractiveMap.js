@@ -1,25 +1,35 @@
-export async function saveInteractiveMap(store) {
-  const savedHookups = [];
+import { InteractiveMapService } from "@/service/InteractiveMapService.js";
+
+export async function saveInteractiveMap(
+  svgData,
+  zones,
+  smartFurnitureHookups,
+) {
+  const savedSmartFurnitureHookups = [];
   const savedZones = [];
 
   try {
-    await saveZones(store, savedZones);
+    await saveZones(zones, savedZones, smartFurnitureHookups);
 
-    await saveSmartFurnitureHookups(store, savedHookups);
+    await saveSmartFurnitureHookups(
+      smartFurnitureHookups,
+      savedSmartFurnitureHookups,
+    );
 
-    await store.mapService.saveFloorPlan(store.svgData);
+    await InteractiveMapService.saveFloorPlan(svgData);
   } catch (error) {
-    await rollback(store, savedZones, savedHookups);
+    await rollback(savedZones, savedSmartFurnitureHookups);
     throw error;
   }
 }
 
-async function saveZones(store, savedZones) {
+async function saveZones(zones, savedZones, smartFurnitureHookups) {
   const results = await Promise.allSettled(
-    store.zones.map(async (zone) => {
-      const savedZone = await store.mapService.saveZone(zone);
+    zones.map(async (zone) => {
+      const savedZone = await InteractiveMapService.addZone(zone);
+
       if (savedZone) {
-        updateZoneReferences(store, zone, savedZone);
+        updateZoneReferences(zone, savedZone, smartFurnitureHookups);
         savedZones.push(savedZone);
       }
     }),
@@ -28,12 +38,15 @@ async function saveZones(store, savedZones) {
   checkForFailures(results, "Zone save failed");
 }
 
-async function saveSmartFurnitureHookups(store, savedHookups) {
+async function saveSmartFurnitureHookups(
+  smartFurnitureHookups,
+  savedSmartFurnitureHookups,
+) {
   const results = await Promise.allSettled(
-    store.smartFurnitureHookups.map(async (sfh) => {
-      const saved = await store.mapService.saveSmartFurnitureHookup(sfh);
+    smartFurnitureHookups.map(async (sfh) => {
+      const saved = await InteractiveMapService.addSmartFurnitureHookup(sfh);
       if (saved) {
-        savedHookups.push(saved);
+        savedSmartFurnitureHookups.push(saved);
       }
     }),
   );
@@ -41,8 +54,8 @@ async function saveSmartFurnitureHookups(store, savedHookups) {
   checkForFailures(results, "Smart furniture hookup save failed");
 }
 
-function updateZoneReferences(store, zone, savedZone) {
-  store.smartFurnitureHookups.forEach((sfh) => {
+function updateZoneReferences(zone, savedZone, smartFurnitureHookups) {
+  smartFurnitureHookups.forEach((sfh) => {
     if (String(sfh.zone) === zone.id) {
       sfh.zone = savedZone.id;
     }
@@ -59,11 +72,14 @@ function checkForFailures(results, errorPrefix) {
   }
 }
 
-async function rollback(store, savedZones, savedHookups) {
+async function rollback(savedZones, savedSmartFurnitureHookups) {
   await Promise.allSettled([
-    ...savedZones.map((z) => store.mapService.deleteZone(z.id)),
-    ...savedHookups.map((sfh) =>
-      store.mapService.deleteSmartFurnitureHookup(sfh.id),
+    ...savedZones.map(
+      async (z) => await InteractiveMapService.deleteZone(z.id),
+    ),
+    ...savedSmartFurnitureHookups.map(
+      async (sfh) =>
+        await InteractiveMapService.deleteSmartFurnitureHookup(sfh.id),
     ),
   ]);
 }
