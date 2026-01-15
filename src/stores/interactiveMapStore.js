@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import { useAsyncAction } from "@/composables/utils/asyncAction.js";
 import { InteractiveMapLocalService } from "@/service/local/InteractiveMapLocalService.js";
 import { InteractiveMapService } from "@/service/InteractiveMapService.js";
+import { saveInteractiveMap } from "@/stores/utils/saveInteractiveMap.js";
 
 export const useInteractiveMapStore = defineStore("interactiveMap", () => {
   const mapMode = {
@@ -64,8 +65,29 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
     ]);
   };
 
+  const syncAndFinalize = () =>
+    perform(async () => {
+      if (!isLocalMode.value) return;
+      await fetchMapElements();
+
+      await saveInteractiveMap(
+        svgData.value,
+        zones.value,
+        smartFurnitureHookups.value,
+      );
+
+      isLocalMode.value = false;
+      zones.value = [];
+      smartFurnitureHookups.value = [];
+
+      await fetchMapElements();
+
+      InteractiveMapLocalService.clear();
+
+      return true;
+    });
   const uploadSvg = async (file, filename) => {
-    const result = await activeService.value.uploadSvg(file, filename);
+    const result = await activeService.value.saveFloorPlan(file, filename);
     zones.value = [];
     smartFurnitureHookups.value = [];
     svgData.value = result.svgData;
@@ -100,6 +122,7 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
   const viewMap = () => {
     mode.value = mapMode.VIEW;
   };
+
   const findZone = async (id) => {
     const zone = zones.value.find((z) => z.id === id);
     return zone ?? (await activeService.value.findZone(id));
@@ -108,6 +131,9 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
   const addZone = async (zone) => {
     const newZone = await activeService.value.addZone(zone);
     zones.value.push(newZone);
+
+    smartFurnitureHookups.value =
+      await activeService.value.fetchSmartFurnitureHookups();
   };
 
   const updateZone = async (id, payload) => {
@@ -126,7 +152,7 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
   };
 
   const updateZonePosition = async (id, payload) => {
-    await activeService.value.updateSmartFurnitureHookups(
+    await activeService.value.updateSmartFurnitureHookupsPosition(
       smartFurnitureHookups.value.filter((sfh) => sfh.zone === id),
     );
 
@@ -138,11 +164,8 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
 
     zones.value = zones.value.filter((zone) => zone.id !== id);
 
-    smartFurnitureHookups.value
-      .filter((sfh) => sfh.zone === id)
-      .forEach((sfh) => {
-        sfh.zone = null;
-      });
+    smartFurnitureHookups.value =
+      await activeService.value.fetchSmartFurnitureHookups();
   };
   const findSmartFurnitureHookup = async (id) => {
     const smartFurnitureHookup = smartFurnitureHookups.value.find(
@@ -191,6 +214,7 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
     isDrawMode,
     isEditMode,
 
+    syncAndFinalize,
     setLocalMode,
     uploadSvg,
     getSvgFileName,
