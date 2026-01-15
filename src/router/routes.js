@@ -40,7 +40,7 @@ export const routes = [
       {
         path: "mapeditor",
         name: "mapeditor",
-        component: () => import("@/views/pages/Empty.vue"),
+        component: () => import("@/views/pages/MapEditor.vue"),
         meta: { roles: ["ADMIN"] },
       },
       {
@@ -76,7 +76,7 @@ export const routes = [
     path: "/reset-password",
     name: "reset-password",
     component: () => import("@/views/auth/ResetPassword.vue"),
-    meta: { guest: true },
+    meta: { guestOnly: true },
   },
   {
     path: "/auth",
