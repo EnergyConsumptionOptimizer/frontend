@@ -91,7 +91,6 @@ export function useZoneEditor(existingZones) {
 
   function finalizeZone() {
     const newZone = {
-      id: Date.now().toString(),
       name: draftZone.value.name.trim(),
       points: [...draftZone.value.points],
       color: displayColor.value,
