@@ -12,6 +12,11 @@ import { DOMAIN_COLORS } from "@/config/chartPalette";
 import { useDashboardContext } from "@/composables/useDashboard";
 import { useRealTimeChart } from "@/composables/useRealTime";
 import { useChartData } from "@/composables/charts/useChartData";
+import { onBeforeMount, onMounted } from "vue";
+import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
+import StaticMap from "@/components/interactiveMap/StaticMap.vue";
+
+const interactiveMapStore = useInteractiveMapStore();
 
 const CONFIG = {
   utilities: ["Electricity", "Gas", "Water"],
@@ -35,6 +40,7 @@ const CONFIG = {
 };
 
 const { usersList, zonesList } = useDashboardContext();
+
 const rtChart = useRealTimeChart();
 const histChart = useChartData();
 const filtChart = useChartData();
@@ -62,6 +68,14 @@ const statsCards = [
     icon: IconWater,
   },
 ];
+
+onBeforeMount(() => {
+  interactiveMapStore.viewMap();
+});
+
+onMounted(() => {
+  interactiveMapStore.setLocalMode(false);
+});
 </script>
 
 <template>
@@ -97,7 +111,6 @@ const statsCards = [
         @filter-change="rtChart.startPolling"
       />
     </div>
-
     <div class="col-span-12 xl:col-span-6">
       <ChartHistorical
         :users="usersList"
@@ -110,7 +123,18 @@ const statsCards = [
         @filter-change="histChart.fetchData"
       />
     </div>
-
+    <div class="col-span-12 xl:col-span-6">
+      <div class="card h-full flex flex-col">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold m-0">Interactive Map</h3>
+        </div>
+        <static-map
+          :zones="interactiveMapStore.zones"
+          :smart-furniture-hookups="interactiveMapStore.smartFurnitureHookups"
+          :floor-plan-svg="interactiveMapStore.svgData"
+        />
+      </div>
+    </div>
     <div class="col-span-12 xl:col-span-6">
       <ChartFiltered
         :users="usersList"
