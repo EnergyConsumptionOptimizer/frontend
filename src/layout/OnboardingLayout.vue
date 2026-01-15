@@ -6,21 +6,22 @@ import { useToast } from "primevue/usetoast";
 import router from "@/router/index.js";
 import { useAuthStore } from "@/stores/authsStore.js";
 import { useUserStore } from "@/stores/userStore";
-import { useInteractiveMap } from "@/stores/interactiveMap.js";
 import { useThresholdStore } from "@/stores/thresholdStore";
 import { errorToast } from "@/utils/ui/toastPresets.js";
-import { InteractiveMapService } from "@/service/InteractiveMapService.js";
+import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
 
 const route = useRoute();
 
 const loading = ref(false);
+const storesMounted = ref(false);
 
 const toast = useToast();
 
 const onboardingStore = useOnboardingStore();
-const userStore = useUserStore();
-const interactiveMapStore = useInteractiveMap();
-const thresholdStore = useThresholdStore();
+
+let userStore = null;
+let interactiveMapStore = null;
+let thresholdStore = null;
 
 const step = computed(() => {
   return route.meta.step ?? 1;
@@ -65,11 +66,24 @@ async function syncStep(step, syncFn) {
   }
 }
 
+function mountStores() {
+  if (!storesMounted.value) {
+    userStore = useUserStore();
+    interactiveMapStore = useInteractiveMapStore();
+    thresholdStore = useThresholdStore();
+
+    userStore.setLocalMode?.(true);
+    interactiveMapStore.setLocalMode?.(true);
+    thresholdStore.setLocalMode?.(true);
+
+    storesMounted.value = true;
+  }
+}
+
 async function completeOnboarding() {
   loading.value = true;
+  mountStores();
   try {
-    interactiveMapStore.initializeWithService(InteractiveMapService);
-
     await syncStep("interactive map", () =>
       interactiveMapStore.syncAndFinalize(),
     );
@@ -80,7 +94,6 @@ async function completeOnboarding() {
 
     router.push({ name: "dashboard" });
   } catch (error) {
-    interactiveMapStore.removeService();
     console.error("Error during onboarding completion:", error);
     toast.add(
       errorToast({
@@ -153,40 +166,42 @@ onMounted(() => {
         </template>
       </Card>
     </div>
-    <div
-      class="pt-4 pl-4 pr-4 pb-4 p w-full bg-white border-t border-gray-200 flex justify-between"
-    >
-      <div>
-        <Button
-          :loading="loading"
-          v-if="onboardingStore.hasPreviousStep(step)"
-          label="Back"
-          @click="goToPreviousStep"
-          severity="secondary"
-          icon="pi pi-arrow-left"
-        />
-      </div>
-      <div>
-        <Button
-          :loading="loading"
-          v-if="onboardingStore.hasNextStep(step)"
-          label="Next"
-          @click="goToNextStep"
-          :disabled="!canProceed"
-          icon="pi pi-arrow-right"
-          iconPos="right"
-        />
-        <Button
-          :loading="loading"
-          v-else
-          label="Complete"
-          icon="pi pi-arrow-right"
-          iconPos="right"
-          :disabled="!canProceed"
-          @click="completeOnboarding"
-        />
-      </div>
-    </div>
+    <Card class="mb-4">
+      <template #content>
+        <div class="w-full flex justify-between">
+          <div>
+            <Button
+              :loading="loading"
+              v-if="onboardingStore.hasPreviousStep(step)"
+              label="Back"
+              @click="goToPreviousStep"
+              severity="secondary"
+              icon="pi pi-arrow-left"
+            />
+          </div>
+          <div>
+            <Button
+              :loading="loading"
+              v-if="onboardingStore.hasNextStep(step)"
+              label="Next"
+              @click="goToNextStep"
+              :disabled="!canProceed"
+              icon="pi pi-arrow-right"
+              iconPos="right"
+            />
+            <Button
+              :loading="loading"
+              v-else
+              label="Complete"
+              icon="pi pi-arrow-right"
+              iconPos="right"
+              :disabled="!canProceed"
+              @click="completeOnboarding"
+            />
+          </div>
+        </div>
+      </template>
+    </Card>
   </div>
   <Toast />
   <ConfirmDialog />
