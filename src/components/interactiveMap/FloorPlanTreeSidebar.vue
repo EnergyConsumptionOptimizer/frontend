@@ -40,7 +40,7 @@ const expandedKeys = computed(() =>
 </script>
 
 <template>
-  <div class="space-y-6 border rounded-lg p-4">
+  <Panel>
     <h5>Floor Plan Zones</h5>
 
     <Tree
@@ -122,7 +122,7 @@ const expandedKeys = computed(() =>
         }}
       </template>
     </Tree>
-  </div>
+  </Panel>
 </template>
 
 <style scoped></style>
