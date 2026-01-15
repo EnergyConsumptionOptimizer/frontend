@@ -46,7 +46,7 @@ const transform = computed(() => {
     :class="{ 'cursor-move': props.editModeActive }"
     :transform="`translate(${props.smartFurnitureHookup.position.x}, ${props.smartFurnitureHookup.position.y})`"
   >
-    <g :transform="`scale(2)`">
+    <g :transform="`scale(3)`">
       <electricity-icon
         v-if="
           props.smartFurnitureHookup.utilityType === utilityType.ELECTRICITY
