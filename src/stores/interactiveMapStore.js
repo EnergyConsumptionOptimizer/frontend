@@ -48,6 +48,19 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
   };
 
   const fetchMapElements = async () => {
+    if (
+      !svgData.value &&
+      zones.value.length === 0 &&
+      smartFurnitureHookups.value.length === 0
+    ) {
+      const data = await activeService.value.fetchHouseMap();
+      svgData.value = data.svgData ?? "";
+      zones.value = data.zones ?? [];
+      smartFurnitureHookups.value = data.smartFurnitureHookups ?? [];
+
+      return;
+    }
+
     await Promise.allSettled([
       perform(async () => {
         if (svgData.value === null)

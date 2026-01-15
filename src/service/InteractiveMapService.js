@@ -4,6 +4,25 @@ import { SmartFurnitureHookupService } from "@/service/SmartFurnitureService.js"
 const BASE_URL = "/house-map";
 
 export const InteractiveMapService = {
+  async fetchHouseMap() {
+    const { data } = await apiClient.get(`${BASE_URL}/house-map`);
+    const svgData = data.floorPlan.svgContent ?? "";
+    const zones = data.zones.map((z) => this.zoneDTO(z));
+    const smartFurnitureHookupsMap = data.smartFurnitureHookups ?? [];
+
+    const req1 = await SmartFurnitureHookupService.fetchSmartFurnitureHookups();
+    const infoData = req1.data.smartFurnitureHookups;
+    const smartFurnitureHookups = this.mergeSmartFurnitureHookupsDataDTO(
+      infoData,
+      smartFurnitureHookupsMap,
+    );
+
+    return {
+      svgData,
+      zones,
+      smartFurnitureHookups,
+    };
+  },
   async fetchFloorPlan() {
     try {
       const { data } = await apiClient.get(`${BASE_URL}/floor-plan`);
@@ -13,17 +32,29 @@ export const InteractiveMapService = {
     }
   },
   async fetchZones() {
-    console.log("fetch");
     const { data } = await apiClient.get(`${BASE_URL}/zones`);
-    return data.map((z) => {
+    return data.zones.map((z) => {
       return {
         ...z,
         points: z.vertices,
       };
     });
   },
+  mergeSmartFurnitureHookupsDataDTO(infos, mapInfos) {
+    return infos.map((info) => {
+      const mapItem = mapInfos.find((map) => map.id === info.id);
+      return this.smartFurnitureHookupDTO(info, mapItem);
+    });
+  },
+  zoneDTO(data) {
+    return {
+      id: data.id,
+      name: data.name,
+      color: data.color,
+      points: data.vertices,
+    };
+  },
   smartFurnitureHookupDTO(info, mapInfo) {
-    console.log(info, mapInfo);
     return {
       ...info,
       utilityType: info.utilityType.toUpperCase(),
@@ -37,12 +68,9 @@ export const InteractiveMapService = {
     const infoData = req1.data.smartFurnitureHookups;
 
     const req2 = await apiClient.get(`${BASE_URL}/smart-furniture-hookups`);
-    const mapData = req2.data;
+    const mapData = req2.data.smartFurnitureHookups;
 
-    return infoData.map((info) => {
-      const mapItem = mapData.find((map) => map.id === info.id);
-      return this.smartFurnitureHookupDTO(info, mapItem);
-    });
+    return this.mergeSmartFurnitureHookupsDataDTO(infoData, mapData);
   },
 
   async saveFloorPlan(svgData) {
@@ -51,15 +79,6 @@ export const InteractiveMapService = {
     });
 
     return data;
-  },
-
-  zoneDTO(data) {
-    return {
-      id: data.id,
-      name: data.name,
-      color: data.color,
-      points: data.vertices,
-    };
   },
   async findZone(id) {
     const { data } = await apiClient.get(`${BASE_URL}/zones/${id}`);

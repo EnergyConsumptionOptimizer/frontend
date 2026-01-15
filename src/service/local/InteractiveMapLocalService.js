@@ -15,6 +15,17 @@ const updateStore = (partial) => {
 const collision = useZoneCollision();
 
 export const InteractiveMapLocalService = {
+  async fetchHouseMap() {
+    const svgData = getStore()?.svgData ?? "";
+    const zones = getStore()?.zones ?? [];
+    const smartFurnitureHookups = getStore()?.smartFurnitureHookups ?? [];
+
+    return {
+      svgData,
+      zones,
+      smartFurnitureHookups,
+    };
+  },
   async fetchFloorPlan() {
     return getStore()?.svgData ?? "";
   },
