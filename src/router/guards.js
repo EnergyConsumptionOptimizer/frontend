@@ -43,7 +43,7 @@ export const createOnboardingGuard = async (to) => {
 };
 
 export const createAuthGuard = async (to) => {
-  const { useAuthStore } = await import("@/stores/auth");
+  const { useAuthStore } = await import("@/stores/authsStore.js");
   const authStore = useAuthStore();
 
   if (!authStore.isInitialized) {
