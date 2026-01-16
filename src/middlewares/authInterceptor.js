@@ -7,9 +7,9 @@ const apiClient = axios.create({
 });
 
 const AUTH_ROUTES = [
-  "/user/auth/login",
-  "/user/auth/refresh",
-  "/user/auth/logout",
+  "/user/api/auth/login",
+  "/user/api/auth/refresh",
+  "/user/api/auth/logout",
 ];
 
 let refreshPromise = null;
