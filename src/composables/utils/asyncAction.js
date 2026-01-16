@@ -1,23 +1,28 @@
 import { ref } from "vue";
+import { useToast } from "primevue/usetoast";
+import { normalizeError } from "@/utils/errorParser.js";
+import { errorToast } from "@/utils/ui/toastPresets.js";
 
 export function useAsyncAction() {
   const isLoading = ref(false);
   const error = ref(null);
+  const toast = useToast();
 
-  /**
-   * Executes an async action with automatic loading and error state management.
-   * @param {Function} actionFn - The async function to run.
-   * @returns {Promise<boolean>} - True if successful, False otherwise.
-   */
   const perform = async (actionFn) => {
     isLoading.value = true;
     error.value = null;
+
     try {
       await actionFn();
       return true;
     } catch (err) {
-      console.error("Action failed:", err);
+      console.error("Async Operation Failed:", err);
       error.value = err;
+      const uiError = normalizeError(err);
+      if (uiError && toast) {
+        toast.add(errorToast(uiError.summary, uiError.detail));
+      }
+
       return false;
     } finally {
       isLoading.value = false;

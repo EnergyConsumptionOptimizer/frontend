@@ -1,21 +1,16 @@
-export function deletedToast(entityLabel) {
-  return {
-    severity: "info",
-    summary: "Deleted",
-    detail: `${entityLabel} deleted successfully`,
-    life: 3000,
-  };
-}
+const BASE_TOAST = { life: 3000 };
 
-export function errorToast({
-  summary = "Error",
-  detail = "Error!",
-  life = 3000,
-} = {}) {
-  return {
-    severity: "error",
-    summary,
-    detail,
-    life,
-  };
-}
+export const deletedToast = (entityLabel) => ({
+  ...BASE_TOAST,
+  severity: "info",
+  summary: "Deleted",
+  detail: `${entityLabel} deleted successfully`,
+});
+
+export const errorToast = (summary = "Error", detail = "Failed") => ({
+  ...BASE_TOAST,
+  life: 5000,
+  severity: "error",
+  summary,
+  detail,
+});
