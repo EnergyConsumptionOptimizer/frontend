@@ -1,6 +1,6 @@
 import apiClient from "@/middlewares/authInterceptor";
 
-const BASE_URL = "/smart-furniture-hookup";
+const BASE_URL = "/hookup/api";
 
 export const SmartFurnitureHookupService = {
   async fetchSmartFurnitureHookups() {

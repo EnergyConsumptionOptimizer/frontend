@@ -1,7 +1,7 @@
 import apiClient from "@/middlewares/authInterceptor";
 import { SmartFurnitureHookupService } from "@/service/SmartFurnitureService.js";
 
-const BASE_URL = "/house-map";
+const BASE_URL = "/map/api";
 
 export const InteractiveMapService = {
   async fetchHouseMap() {

@@ -1,7 +1,7 @@
 import apiClient from "@/middlewares/authInterceptor";
 import { subscribeToSse } from "@/service/sseClient";
 
-const BASE_URL = "/alert/alerts";
+const BASE_URL = "/alert/api/alerts";
 
 export const AlertService = {
   async getAlerts() {

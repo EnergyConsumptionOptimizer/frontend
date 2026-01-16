@@ -1,6 +1,6 @@
 import apiClient from "@/middlewares/authInterceptor";
 
-const BASE_URL = "/threshold/thresholds";
+const BASE_URL = "/threshold/api/thresholds";
 
 export const ThresholdApiService = {
   async getThresholds() {

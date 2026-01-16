@@ -1,6 +1,6 @@
 import apiClient from "@/middlewares/authInterceptor";
 
-const BASE_URL = "/user/auth";
+const BASE_URL = "/user/api/auth";
 
 export const AuthService = {
   async login(credentials) {

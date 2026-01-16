@@ -1,6 +1,6 @@
 import apiClient from "@/middlewares/authInterceptor";
 
-const BASE_URL = "/user/household-users";
+const BASE_URL = "/user/api/household-users";
 
 export const UserApiService = {
   async getAll() {

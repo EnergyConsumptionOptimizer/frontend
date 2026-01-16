@@ -1,6 +1,6 @@
 import apiClient from "@/middlewares/authInterceptor";
 
-const BASE_URL = "/forecast/forecasts";
+const BASE_URL = "/forecast/api/forecasts";
 
 export const ForecastService = {
   async getForecasts() {
