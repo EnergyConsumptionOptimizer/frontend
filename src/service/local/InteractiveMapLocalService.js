@@ -148,10 +148,15 @@ export const InteractiveMapLocalService = {
   async addSmartFurnitureHookup(smartFurnitureHookup) {
     const smartFurnitureHookups = await this.fetchSmartFurnitureHookups();
 
-    smartFurnitureHookups.push(smartFurnitureHookup);
+    const newSmartFurnitureHookups = {
+      ...smartFurnitureHookups,
+      id: Date.now().toString(),
+    };
+
+    smartFurnitureHookups.push(newSmartFurnitureHookups);
 
     updateStore({
-      smartFurnitureHookups,
+      newSmartFurnitureHookups,
     });
 
     return smartFurnitureHookup;
