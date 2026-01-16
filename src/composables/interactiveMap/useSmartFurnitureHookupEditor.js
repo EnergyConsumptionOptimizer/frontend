@@ -46,17 +46,9 @@ export function useSmartFurnitureHookupEditor() {
     isPositioned.value = true;
   }
 
-  function finalizeSmartFurnitureHookup() {
-    const newSmartFurnitureHookup = {
-      ...draftSmartFurnitureHookup.value,
-      id: Date.now().toString(),
-      name: draftSmartFurnitureHookup.value.name.trim(),
-    };
-
+  function doneDrawing() {
     resetState();
     currentMode.value = "create";
-
-    return newSmartFurnitureHookup;
   }
 
   function goToSetup() {
@@ -104,7 +96,7 @@ export function useSmartFurnitureHookupEditor() {
     startDrawing,
     stopDrawing,
     positionSmartFurnitureHookup,
-    finalizeSmartFurnitureHookup,
+    doneDrawing,
     goToSetup,
     loadSmartFurnitureHookupForEdit,
     doneEditingSmartFurnitureHookup,

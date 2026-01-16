@@ -75,7 +75,6 @@ export function useZoneEditor(existingZones) {
     }
 
     draftZone.value.points.push({ x: point.x, y: point.y });
-    console.log(draftZone.value.points);
   }
 
   function findNearbyPoint(point, targetPoint) {
@@ -89,17 +88,9 @@ export function useZoneEditor(existingZones) {
     return distance < 20;
   }
 
-  function finalizeZone() {
-    const newZone = {
-      name: draftZone.value.name.trim(),
-      points: [...draftZone.value.points],
-      color: displayColor.value,
-    };
-
+  function doneDrawing() {
     resetState();
     currentMode.value = "create";
-
-    return newZone;
   }
 
   function goToSetup() {
@@ -150,7 +141,7 @@ export function useZoneEditor(existingZones) {
     stopDrawing,
     doneEditingZone,
     addPoint,
-    finalizeZone,
+    doneDrawing,
     goToSetup,
     loadZoneForEdit,
     hideZoneDialog,
