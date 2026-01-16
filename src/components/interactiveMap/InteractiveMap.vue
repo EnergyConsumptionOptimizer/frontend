@@ -68,7 +68,7 @@ const {
   startDrawing: startDrawingZone,
   stopDrawing: stopDrawingZone,
   addPoint,
-  finalizeZone,
+  doneDrawing: doneDrawingZone,
   doneEditingZone,
   loadZoneForEdit,
   goToSetup: goToZoneSetup,
@@ -95,7 +95,7 @@ const {
   startDrawing: startDrawingSmartFurnitureHookup,
   stopDrawing: stopDrawingSmartFurnitureHookup,
   positionSmartFurnitureHookup,
-  finalizeSmartFurnitureHookup,
+  doneDrawing: doneDrawingSmartFurnitureHookup,
   goToSetup: goToSmartFurnitureHookupSetup,
   loadSmartFurnitureHookupForEdit,
   doneEditingSmartFurnitureHookup,
@@ -154,17 +154,18 @@ function handleStopEditing() {
   interactiveMapStore.viewMap();
 }
 
-async function handleSaveZone(payload) {
+async function handleSaveZone(zoneInfo) {
   if (isZoneOnDrawMode.value) {
-    const newZone = finalizeZone();
-    Object.assign(newZone, payload);
-
-    await interactiveMapStore.addZone(newZone);
+    await interactiveMapStore.addZone({
+      ...draftZone.value,
+      zoneInfo,
+    });
+    doneDrawingZone();
     emit("zone-created", zones.value.length);
   } else if (isZoneOnEditMode.value) {
-    await interactiveMapStore.updateZone(payload.id, {
-      name: payload.name,
-      color: payload.color,
+    await interactiveMapStore.updateZone(draftZone.value.id, {
+      name: zoneInfo.name,
+      color: zoneInfo.color,
     });
     doneEditingZone();
   }
@@ -194,7 +195,7 @@ async function fetchAndConfigSmartFurnitureHookupInfo() {
   }
 }
 
-async function handleSaveSmartFurnitureHookup(payload) {
+async function handleSaveSmartFurnitureHookup(smartFurnitureHookupInfo) {
   if (
     !isSmartFurnitureHookupEndpointConfigured.value &&
     !draftSmartFurnitureHookup.value.utilityType
@@ -204,25 +205,26 @@ async function handleSaveSmartFurnitureHookup(payload) {
   }
 
   if (isSmartFurnitureHookupOnDrawMode.value) {
-    const newSmartFurnitureHookup = finalizeSmartFurnitureHookup();
-    newSmartFurnitureHookup.zone = findZoneForSmartFurnitureHookup(
-      newSmartFurnitureHookup,
+    const zone = findZoneForSmartFurnitureHookup(
+      draftSmartFurnitureHookup.value,
     );
 
-    Object.assign(newSmartFurnitureHookup, payload);
-    if (!newSmartFurnitureHookup.utilityType) {
-      newSmartFurnitureHookup.utilityType =
-        draftSmartFurnitureHookup.value.utilityType;
-    }
-
-    await interactiveMapStore.addSmartFurnitureHookup(newSmartFurnitureHookup);
+    await interactiveMapStore.addSmartFurnitureHookup({
+      ...draftSmartFurnitureHookup.value,
+      smartFurnitureHookupInfo,
+      zone,
+    });
+    doneDrawingSmartFurnitureHookup();
     emit("smart-furniture-hookup-created", smartFurnitureHookups.value.length);
   } else if (isSmartFurnitureHookupOnEditMode.value) {
-    await interactiveMapStore.updateSmartFurnitureHookup(payload.id, {
-      name: payload.name,
-      endpoint: payload.endpoint,
-      utilityType: payload.utilityType,
-    });
+    await interactiveMapStore.updateSmartFurnitureHookup(
+      draftSmartFurnitureHookup.value.id,
+      {
+        name: smartFurnitureHookupInfo.name,
+        endpoint: smartFurnitureHookupInfo.endpoint,
+        utilityType: smartFurnitureHookupInfo.utilityType,
+      },
+    );
     doneEditingSmartFurnitureHookup();
   }
 }
