@@ -114,6 +114,7 @@ export function normalizeError(err) {
   }
 
   // 4. Code/Application Errors
+  console.error("Unhandled application error", err);
   return {
     summary: "Application Error",
     detail: err.message || "Something went wrong internally.",
