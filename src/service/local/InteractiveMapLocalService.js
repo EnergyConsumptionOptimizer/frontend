@@ -149,14 +149,14 @@ export const InteractiveMapLocalService = {
     const smartFurnitureHookups = await this.fetchSmartFurnitureHookups();
 
     const newSmartFurnitureHookups = {
-      ...smartFurnitureHookups,
+      ...smartFurnitureHookup,
       id: Date.now().toString(),
     };
 
     smartFurnitureHookups.push(newSmartFurnitureHookups);
 
     updateStore({
-      newSmartFurnitureHookups,
+      smartFurnitureHookups,
     });
 
     return smartFurnitureHookup;
