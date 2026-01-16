@@ -1,5 +1,4 @@
 import { fileURLToPath, URL } from "node:url";
-
 import { PrimeVueResolver } from "@primevue/auto-import-resolver";
 import tailwindcss from "@tailwindcss/vite";
 import vue from "@vitejs/plugin-vue";
@@ -9,7 +8,10 @@ import svgLoader from "vite-svg-loader";
 
 export default defineConfig({
   optimizeDeps: {
-    noDiscovery: true,
+    include: ["socket.io-client", "debug"],
+  },
+  server: {
+    allowedHosts: true,
   },
   plugins: [
     vue(),
