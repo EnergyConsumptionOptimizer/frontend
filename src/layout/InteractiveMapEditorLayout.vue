@@ -1,24 +1,25 @@
 <script setup></script>
 
 <template>
-  <div
-    class="p-4 md:p-8 w-full xl:w-[1600px] flex flex-col justify-center items-center"
-  >
-    <div class="grid grid-cols-1 xl:grid-cols-4 gap-6 flex-1 w-full">
-      <!-- Main content area (floor plan, draw and edit buttons) -->
-      <div class="col-span-3">
-        <div class="flex flex-col items-center space-y-4 w-full">
+  <div class="w-full flex flex-col h-[calc(100vh-12rem)] min-h-[500px]">
+    <div class="grid grid-cols-1 xl:grid-cols-10 gap-4 w-full h-full">
+      <div
+        class="col-span-1 xl:col-span-7 flex flex-col h-full min-h-0 overflow-hidden order-1"
+      >
+        <div class="mb-2 shrink-0">
           <slot name="actions" />
+        </div>
+
+        <div
+          class="flex-1 w-full relative bg-surface-50 dark:bg-surface-900 rounded-lg border border-surface-200 dark:border-surface-700 overflow-hidden flex items-center justify-center"
+        >
           <slot name="floor-plan" />
         </div>
       </div>
 
-      <!-- Sidebar (Tree structure) -->
-      <div class="xl:col-span-1">
+      <div class="col-span-1 xl:col-span-3 h-full min-h-0 min-w-0 order-2">
         <slot name="sidebar" />
       </div>
     </div>
   </div>
 </template>
-
-<style></style>

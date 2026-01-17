@@ -3,16 +3,17 @@ import InteractiveMap from "@/components/interactiveMap/InteractiveMap.vue";
 </script>
 
 <template>
-  <div class="grid grid-cols-12 gap-8">
-    <div class="col-span-12">
-      <h1 class="text-3xl font-bold mb-2">Map editor</h1>
+  <div class="flex flex-col gap-4 h-full">
+    <div>
+      <h1 class="text-3xl font-bold m-0">Map editor</h1>
     </div>
+
+    <Card class="flex-1">
+      <template #content>
+        <interactive-map />
+      </template>
+    </Card>
   </div>
-  <Card>
-    <template #content>
-      <interactive-map />
-    </template>
-  </Card>
 </template>
 
 <style scoped></style>

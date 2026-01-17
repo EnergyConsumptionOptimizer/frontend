@@ -159,7 +159,7 @@ export const InteractiveMapLocalService = {
       smartFurnitureHookups,
     });
 
-    return smartFurnitureHookup;
+    return newSmartFurnitureHookups;
   },
   async updateSmartFurnitureHookup(id, payload) {
     const smartFurnitureHookups = await this.fetchSmartFurnitureHookups();

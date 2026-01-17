@@ -1,5 +1,5 @@
 <script setup>
-import { inject } from "vue";
+import { inject, computed } from "vue";
 
 const props = defineProps({
   zone: {
@@ -30,6 +30,12 @@ const zoneClick = (event, zone, pointID = null) => {
 
   emit("zoneClick", zone, position);
 };
+
+const truncatedName = computed(() => {
+  const name = props.zone.name;
+  if (!name) return "";
+  return name.length > 25 ? name.substring(0, 25) + "..." : name;
+});
 </script>
 
 <template>
@@ -75,7 +81,7 @@ const zoneClick = (event, zone, pointID = null) => {
       font-weight="bold"
       pointer-events="none"
     >
-      {{ props.zone.name }}
+      {{ truncatedName }}
     </text>
   </g>
 </template>

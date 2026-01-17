@@ -7,10 +7,10 @@ defineProps({
 </script>
 
 <template>
-  <div class="hidden md:flex w-full">
+  <div class="flex w-full">
     <Toolbar class="w-full">
       <template #start>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <template v-if="isViewMode">
             <slot name="viewActions" />
           </template>
