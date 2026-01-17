@@ -1,9 +1,10 @@
-import { defineStore } from "pinia";
+import { defineStore, storeToRefs } from "pinia";
 import { computed, ref } from "vue";
 import { useAsyncAction } from "@/composables/utils/asyncAction.js";
 import { InteractiveMapLocalService } from "@/service/local/InteractiveMapLocalService.js";
 import { InteractiveMapService } from "@/service/InteractiveMapService.js";
 import { saveInteractiveMap } from "@/stores/utils/saveInteractiveMap.js";
+import { useMonitoringStore } from "@/stores/monitoringStore.js";
 
 export const useInteractiveMapStore = defineStore("interactiveMap", () => {
   const mapMode = {
@@ -213,11 +214,37 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
     );
   };
 
+  const monitoringStore = useMonitoringStore();
+  const { activeSmartFurnitureHookups } = storeToRefs(monitoringStore);
+
+  const realTimeSmartFurnitureHookups = computed(() => {
+    if (isLocalMode.value) smartFurnitureHookups.value;
+
+    const activeMap = new Map(
+      activeSmartFurnitureHookups.value.map((a) => [a.id, a]),
+    );
+
+    return smartFurnitureHookups.value.map((sfh) => {
+      const active = activeMap.get(sfh.id);
+
+      if (!active) {
+        return { ...sfh, active: false };
+      }
+
+      return {
+        ...sfh,
+        active: true,
+        utilityConsumption: `${active.utilityConsumption.value}${active.utilityConsumption.utilityConsumptionUnit}`,
+      };
+    });
+  });
+
   return {
     svgData,
     svgFileName,
     zones,
     smartFurnitureHookups,
+    realTimeSmartFurnitureHookups,
     mode,
     hasZones,
     hasSmartFurnitureHookups,
