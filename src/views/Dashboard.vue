@@ -2,7 +2,6 @@
 import StatsCard from "@/components/common/StatsCard.vue";
 import ChartRealTime from "@/components/charts/ConsumptionRealTimeChart.vue";
 import ChartHistorical from "@/components/charts/ConsumptionHistoryChart.vue";
-import ChartFiltered from "@/components/charts/ConsumptionDistributionChart.vue";
 
 import IconElectricity from "@/assets/icons/electricity.svg?component";
 import IconGas from "@/assets/icons/gas.svg?component";
@@ -12,11 +11,11 @@ import { DOMAIN_COLORS } from "@/config/chartPalette";
 import { useDashboardContext } from "@/composables/useDashboard";
 import { useRealTimeChart } from "@/composables/useRealTime";
 import { useChartData } from "@/composables/charts/useChartData";
-import { onBeforeMount, onMounted } from "vue";
-import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
+import { computed, onMounted } from "vue";
 import StaticMap from "@/components/interactiveMap/StaticMap.vue";
+import { useMonitoringStore } from "@/stores/monitoringStore.js";
 
-const interactiveMapStore = useInteractiveMapStore();
+const monitoringStore = useMonitoringStore();
 
 const CONFIG = {
   utilities: ["Electricity", "Gas", "Water"],
@@ -43,43 +42,41 @@ const { usersList, zonesList } = useDashboardContext();
 
 const rtChart = useRealTimeChart();
 const histChart = useChartData();
-const filtChart = useChartData();
 
-const statsCards = [
-  {
-    label: "Electricity",
-    value: "14.41",
-    unit: "kWh",
-    colorVar: DOMAIN_COLORS.electricity,
-    icon: IconElectricity,
-  },
-  {
-    label: "Gas",
-    value: "14.41",
-    unit: "Smc",
-    colorVar: DOMAIN_COLORS.gas,
-    icon: IconGas,
-  },
-  {
-    label: "Water",
-    value: "14.41",
-    unit: "Smc",
-    colorVar: DOMAIN_COLORS.water,
-    icon: IconWater,
-  },
-];
-
-onBeforeMount(() => {
-  interactiveMapStore.viewMap();
+const statsCards = computed(() => {
+  return [
+    {
+      label: "Gas",
+      value: monitoringStore.meters.gas?.value?.toString() || "-",
+      unit: monitoringStore.meters.gas?.utilityConsumptionUnit || "Smc",
+      colorVar: DOMAIN_COLORS.gas,
+      icon: IconGas,
+    },
+    {
+      label: "Water",
+      value: monitoringStore.meters.water?.value?.toString() || "-",
+      unit: monitoringStore.meters.water?.utilityConsumptionUnit || "Smc",
+      colorVar: DOMAIN_COLORS.water,
+      icon: IconWater,
+    },
+    {
+      label: "Electricity",
+      value: monitoringStore.meters.electricity?.value?.toString() || "-",
+      unit: monitoringStore.meters.electricity?.utilityConsumptionUnit || "kWh",
+      colorVar: DOMAIN_COLORS.electricity,
+      icon: IconElectricity,
+    },
+  ];
 });
 
 onMounted(() => {
-  interactiveMapStore.setLocalMode(false);
+  monitoringStore.subscribeToRealTimeMetersUpdates();
 });
 </script>
 
 <template>
   <h1>Dashboard</h1>
+
   <Fluid class="grid grid-cols-12 gap-8">
     <div
       v-for="card in statsCards"
@@ -126,26 +123,10 @@ onMounted(() => {
     <div class="col-span-12 xl:col-span-6">
       <div class="card h-full flex flex-col">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-semibold m-0">Interactive Map</h3>
+          <h3 class="text-xl font-semibold m-0">House Map</h3>
         </div>
-        <static-map
-          :zones="interactiveMapStore.zones"
-          :smart-furniture-hookups="interactiveMapStore.smartFurnitureHookups"
-          :floor-plan-svg="interactiveMapStore.svgData"
-        />
+        <static-map />
       </div>
-    </div>
-    <div class="col-span-12 xl:col-span-6">
-      <ChartFiltered
-        :users="usersList"
-        :zones="zonesList"
-        :utilities="CONFIG.utilities"
-        :time-ranges="CONFIG.timeRanges"
-        :labels="filtChart.data.labels"
-        :values="filtChart.data.values"
-        :loading="filtChart.loading.value"
-        @filter-change="filtChart.fetchData"
-      />
     </div>
   </Fluid>
 </template>
