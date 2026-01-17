@@ -21,13 +21,14 @@ import ZoneInformationDialog from "@/components/interactiveMap/ZoneInformationDi
 import SmartFurnitureHookupInformationDialog from "@/components/interactiveMap/SmartFurnitureHookupInformationDialog.vue";
 
 import { useConfirm, useToast } from "primevue";
-import axios from "axios";
 import { deleteZoneDialog } from "@/utils/ui/deleteZoneDialog.js";
 import { deleteZoneToast } from "@/utils/ui/deleteZoneToast.js";
 import { collisionZoneToast } from "@/utils/ui/collisionZoneToast.js";
 import { cannotFetchSmartFurnitureHookupInfoToast } from "@/utils/ui/cannotFetchSmartFurnitureHookupInfoToast.js";
 import { deleteSmartFurnitureHookupDialog } from "@/utils/ui/deleteSmartFurnitureHookupDialog.js";
 import { deleteSmartFurnitureHookupTost } from "@/utils/ui/deleteSmartFurnitureHookupTost.js";
+import { useAsyncAction } from "@/composables/utils/asyncAction";
+import { SmartFurnitureHookupService } from "@/service/SmartFurnitureService";
 
 const props = defineProps({
   isLocalMode: { type: Boolean, default: false },
@@ -56,7 +57,8 @@ const {
 const drawingType = ref(null);
 const confirm = useConfirm();
 const toast = useToast();
-const endpointLoading = ref(false);
+const { isLoading: endpointLoading, perform: performEndpointCheck } =
+  useAsyncAction();
 
 const {
   draftZone,
@@ -172,27 +174,34 @@ async function handleSaveZone(zoneInfo) {
 }
 
 async function fetchAndConfigSmartFurnitureHookupInfo() {
-  endpointLoading.value = true;
-  try {
-    const response = await axios.get(draftSmartFurnitureHookup.value.endpoint);
-
-    if (!response.data || !(response.data.name || response.data.utilityType)) {
-      toast.add(cannotFetchSmartFurnitureHookupInfoToast);
-      return false;
+  const success = await performEndpointCheck(async () => {
+    const response =
+      await SmartFurnitureHookupService.fetchExternalEndpointInfo(
+        draftSmartFurnitureHookup.value.endpoint,
+      );
+    if (
+      !response.data ||
+      !(
+        response.data.name ||
+        response.data.utilityType ||
+        response.data.node_type
+      )
+    ) {
+      throw new Error("Invalid response format");
     }
 
     isSmartFurnitureHookupEndpointConfigured.value = true;
     if (!draftSmartFurnitureHookup.value.name) {
       draftSmartFurnitureHookup.value.name = response.data.name;
     }
-    draftSmartFurnitureHookup.value.utilityType = response.data.node_type;
-    return true;
-  } catch (error) {
+    draftSmartFurnitureHookup.value.utilityType =
+      response.data.node_type || response.data.utilityType;
+  });
+
+  if (!success) {
     toast.add(cannotFetchSmartFurnitureHookupInfoToast);
-    return false;
-  } finally {
-    endpointLoading.value = false;
   }
+  return success;
 }
 
 async function handleSaveSmartFurnitureHookup(smartFurnitureHookupInfo) {
@@ -330,7 +339,7 @@ onMounted(() => interactiveMapStore.setLocalMode(props.isLocalMode));
 </script>
 
 <template>
-  <interactive-map-editor-layout class="!2xl:w-[1200px]">
+  <interactive-map-editor-layout>
     <template #actions>
       <map-editor-action-buttons
         :isViewMode="isViewMode"

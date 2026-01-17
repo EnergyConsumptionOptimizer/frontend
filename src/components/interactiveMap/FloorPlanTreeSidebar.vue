@@ -1,30 +1,17 @@
 <script setup>
 import { computed } from "vue";
 import Tree from "primevue/tree";
+import Panel from "primevue/panel";
 import FloorPlanTreeSidebarNode from "@/components/interactiveMap/FloorPlanTreeSidebarNode.vue";
+import Button from "primevue/button";
 
 const props = defineProps({
-  tree: {
-    type: Array,
-    required: true,
-  },
+  tree: { type: Array, required: true },
   hasZones: Boolean,
-  hasZoneActions: {
-    type: Boolean,
-    default: false,
-  },
-  disableActionsZone: {
-    type: Boolean,
-    default: false,
-  },
-  hasSmartFurnitureHookupActions: {
-    type: Boolean,
-    default: false,
-  },
-  disableActionsSmartFurnitureHookup: {
-    type: Boolean,
-    default: false,
-  },
+  hasZoneActions: { type: Boolean, default: false },
+  disableActionsZone: { type: Boolean, default: false },
+  hasSmartFurnitureHookupActions: { type: Boolean, default: false },
+  disableActionsSmartFurnitureHookup: { type: Boolean, default: false },
 });
 
 const emit = defineEmits([
@@ -40,26 +27,36 @@ const expandedKeys = computed(() =>
 </script>
 
 <template>
-  <Panel>
-    <h5>Floor Plan Zones</h5>
+  <Panel
+    class="h-full flex flex-col min-w-0 max-w-full"
+    :pt="{
+      header: { class: '!p-3' },
+      toggleableContent: { class: '!flex-1 !overflow-hidden !flex !flex-col' },
+      content: {
+        class:
+          '!p-0 !flex-1 !overflow-y-auto !overflow-x-hidden custom-scrollbar',
+      },
+    }"
+  >
+    <template #header>
+      <span class="font-bold">Floor Plan Zones</span>
+    </template>
 
     <Tree
       :value="tree"
       :expandedKeys="expandedKeys"
-      class="!p-0 !m-0"
       selectionMode="single"
+      class="w-full border-none p-1"
       :pt="{
-        nodeLabel: {
-          class: '!w-full',
+        root: { class: '!w-full' },
+        wrapper: { class: '!w-full' },
+        container: { class: '!w-full' },
+        nodeContent: {
+          class: '!flex !items-center !w-full !overflow-hidden !p-1',
         },
+        nodeLabel: { class: '!flex-1 !min-w-0 !w-0' },
       }"
     >
-      <template #default="slotProps">
-        <div class="flex flex-row space-x-2 items-center">
-          <b>{{ slotProps.node.label }}</b>
-        </div>
-      </template>
-
       <template #zone="slotProps">
         <floor-plan-tree-sidebar-node
           :label="slotProps.node.label"
@@ -69,25 +66,27 @@ const expandedKeys = computed(() =>
           <template #actions v-if="props.hasZoneActions">
             <Button
               icon="pi pi-pencil"
-              outlined
+              text
               rounded
-              class="mr-2"
-              aria-label="Edit"
+              size="small"
+              class="!w-7 !h-7"
               :disabled="disableActionsZone"
-              @click="emit('editZone', slotProps.node.id)"
+              @click.stop="emit('editZone', slotProps.node.id)"
             />
             <Button
               icon="pi pi-trash"
-              outlined
+              text
               rounded
-              aria-label="Delete"
+              size="small"
               severity="danger"
+              class="!w-7 !h-7"
               :disabled="disableActionsZone"
-              @click="emit('deleteZone', slotProps.node.id)"
+              @click.stop="emit('deleteZone', slotProps.node.id)"
             />
           </template>
         </floor-plan-tree-sidebar-node>
       </template>
+
       <template #smart-furniture-hookup="slotProps">
         <floor-plan-tree-sidebar-node
           :label="slotProps.node.label"
@@ -97,32 +96,48 @@ const expandedKeys = computed(() =>
           <template #actions v-if="props.hasSmartFurnitureHookupActions">
             <Button
               icon="pi pi-pencil"
-              outlined
+              text
               rounded
-              class="mr-2"
-              aria-label="Edit"
+              size="small"
+              class="!w-7 !h-7"
               :disabled="disableActionsSmartFurnitureHookup"
-              @click="emit('editSmartFurnitureHookup', slotProps.node.id)"
+              @click.stop="emit('editSmartFurnitureHookup', slotProps.node.id)"
             />
             <Button
               icon="pi pi-trash"
-              outlined
+              text
               rounded
-              aria-label="Delete"
+              size="small"
               severity="danger"
+              class="!w-7 !h-7"
               :disabled="disableActionsSmartFurnitureHookup"
-              @click="emit('deleteSmartFurnitureHookup', slotProps.node.id)"
+              @click.stop="
+                emit('deleteSmartFurnitureHookup', slotProps.node.id)
+              "
             />
           </template>
         </floor-plan-tree-sidebar-node>
       </template>
+
       <template #empty>
-        {{
-          props.hasZones ? "Manage your zones below" : "No zones created yet"
-        }}
+        <div class="p-4 text-surface-500 text-sm text-center">
+          {{
+            props.hasZones ? "Manage your zones below" : "No zones created yet"
+          }}
+        </div>
       </template>
     </Tree>
   </Panel>
 </template>
 
-<style scoped></style>
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+}
+</style>
