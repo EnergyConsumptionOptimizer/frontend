@@ -8,7 +8,7 @@ function createZoneNode(zone, index, smartFurnitureHookups) {
       key: `${index}-${i}`,
       id: sfh.id,
       label: sfh.name,
-      isActive: sfh.isActive,
+      isActive: sfh.active,
       type: "smart-furniture-hookup",
     })),
   };

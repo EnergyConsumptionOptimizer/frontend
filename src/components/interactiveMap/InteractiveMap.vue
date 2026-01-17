@@ -27,6 +27,7 @@ import { collisionZoneToast } from "@/utils/ui/collisionZoneToast.js";
 import { cannotFetchSmartFurnitureHookupInfoToast } from "@/utils/ui/cannotFetchSmartFurnitureHookupInfoToast.js";
 import { deleteSmartFurnitureHookupDialog } from "@/utils/ui/deleteSmartFurnitureHookupDialog.js";
 import { deleteSmartFurnitureHookupTost } from "@/utils/ui/deleteSmartFurnitureHookupTost.js";
+import { useMonitoringStore } from "@/stores/monitoringStore.js";
 import { useAsyncAction } from "@/composables/utils/asyncAction";
 import { SmartFurnitureHookupService } from "@/service/SmartFurnitureService";
 
@@ -44,15 +45,16 @@ const emit = defineEmits([
 ]);
 
 const interactiveMapStore = useInteractiveMapStore();
-const {
-  zones,
-  smartFurnitureHookups,
-  svgData,
-  isViewMode,
-  isDrawMode,
-  isEditMode,
-  hasZones,
-} = storeToRefs(interactiveMapStore);
+const monitoringStore = useMonitoringStore();
+
+const { zones, svgData, isViewMode, isDrawMode, isEditMode, hasZones } =
+  storeToRefs(interactiveMapStore);
+
+const smartFurnitureHookups = computed(() => {
+  return props.isLocalMode
+    ? interactiveMapStore.smartFurnitureHookups
+    : interactiveMapStore.realTimeSmartFurnitureHookups;
+});
 
 const drawingType = ref(null);
 const confirm = useConfirm();
@@ -335,7 +337,13 @@ watch(collisionError, (error) => {
 });
 
 onBeforeMount(() => interactiveMapStore.viewMap());
-onMounted(() => interactiveMapStore.setLocalMode(props.isLocalMode));
+onMounted(() => {
+  interactiveMapStore.setLocalMode(props.isLocalMode);
+
+  if (!props.isLocalMode) {
+    monitoringStore.subscribeToActiveSmartFurnitureHookups();
+  }
+});
 </script>
 
 <template>
