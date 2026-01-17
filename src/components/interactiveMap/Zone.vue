@@ -36,13 +36,17 @@ const truncatedName = computed(() => {
   if (!name) return "";
   return name.length > 25 ? name.substring(0, 25) + "..." : name;
 });
+
+const descId = `zone-desc-${props.zone.id}`;
 </script>
 
 <template>
   <g
+    :aria-labelledby="`${descId}`"
     @mousedown="props.editModeActive ? zoneClick($event, props.zone) : null"
     :class="{ 'cursor-move': props.editModeActive }"
   >
+    <desc :id="descId"> Zone : {{ props.zone.name }} </desc>
     <path
       :d="pointsToPath(props.zone.points)"
       :fill="props.zone.color"

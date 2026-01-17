@@ -1,6 +1,5 @@
 <script setup>
-import { computed } from "vue";
-import { inject } from "vue";
+import { computed, inject } from "vue";
 import { utilityType } from "@/utils/utilityType.js";
 import ElectricityIcon from "@/components/interactiveMap/ElectricityIcon.vue";
 import GasIcon from "@/components/interactiveMap/GasIcon.vue";
@@ -26,18 +25,39 @@ const smartFurnitureHookupClick = (event, hookup = null) => {
 };
 
 const color = computed(() => {
-  return props.smartFurnitureHookup.consumptionValue > 0
-    ? "#008000"
-    : "#808080";
+  return props.smartFurnitureHookup.active ? "#008000" : "#808080";
 });
 
 const transform = computed(() => {
   return "translate(-12, -12)";
 });
+
+const title = computed(() => {
+  const name = props.smartFurnitureHookup.name;
+  const consumption = props.smartFurnitureHookup.utilityConsumption;
+
+  if (!consumption) {
+    return name;
+  }
+
+  return `${name}\nConsumption: ${consumption}`;
+});
+
+const desc = computed(() => {
+  const { name, utilityType, utilityConsumption, zone } =
+    props.smartFurnitureHookup;
+  const consumption = utilityConsumption ?? 0;
+  const inZone = zone ? "Yes" : "No";
+
+  return `${name}, type ${utilityType}, consumption ${consumption}. In a zone: ${inZone}.`;
+});
+const titleId = `hookup-title-${props.smartFurnitureHookup.id}`;
+const descId = `hookup-desc-${props.smartFurnitureHookup.id}`;
 </script>
 
 <template>
   <g
+    :aria-labelledby="`${titleId} ${descId}`"
     @mousedown="
       props.editModeActive
         ? smartFurnitureHookupClick($event, props.smartFurnitureHookup)
@@ -46,6 +66,13 @@ const transform = computed(() => {
     :class="{ 'cursor-move': props.editModeActive }"
     :transform="`translate(${props.smartFurnitureHookup.position.x}, ${props.smartFurnitureHookup.position.y})`"
   >
+    <title :id="titleId">
+      {{ title }}
+    </title>
+    <desc :id="descId">
+      {{ desc }}
+    </desc>
+
     <g :transform="`scale(3)`">
       <electricity-icon
         v-if="
@@ -68,3 +95,4 @@ const transform = computed(() => {
     </g>
   </g>
 </template>
+<style></style>
