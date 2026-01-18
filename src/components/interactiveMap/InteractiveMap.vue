@@ -219,10 +219,7 @@ async function fetchAndConfigSmartFurnitureHookupInfo() {
 }
 
 async function handleSaveSmartFurnitureHookup(smartFurnitureHookupInfo) {
-  if (
-    !isSmartFurnitureHookupEndpointConfigured.value &&
-    !draftSmartFurnitureHookup.value.utilityType
-  ) {
+  if (!isSmartFurnitureHookupEndpointConfigured.value) {
     const success = await fetchAndConfigSmartFurnitureHookupInfo();
     if (!success) return;
   }
