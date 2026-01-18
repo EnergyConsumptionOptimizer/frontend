@@ -42,7 +42,7 @@ const isFormValid = computed(() => {
 const activeColor = computed({
   get: () => zone.value?.color || props.defaultColor,
   set: (val) => {
-    if (zone.value) zone.value.color = val;
+    if (zone.value) zone.value.color = "#" + val;
   },
 });
 
@@ -53,7 +53,7 @@ function onSave() {
   emit("save", {
     id: zone.value?.id ?? null,
     name: zone.value.name.trim(),
-    color: "#" + zone.value?.color || props.defaultColor,
+    color: zone.value?.color || props.defaultColor,
   });
 }
 
