@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from "vue";
+import { ref, watch } from "vue";
 import Tree from "primevue/tree";
 import Panel from "primevue/panel";
 import FloorPlanTreeSidebarNode from "@/components/interactiveMap/FloorPlanTreeSidebarNode.vue";
@@ -21,8 +21,18 @@ const emit = defineEmits([
   "deleteSmartFurnitureHookup",
 ]);
 
-const expandedKeys = computed(() =>
-  Object.fromEntries(props.tree.map((node) => [node.key, true])),
+const expandedKeys = ref(null);
+
+watch(
+  () => props.tree.length,
+  (len) => {
+    if (len) {
+      expandedKeys.value = Object.fromEntries(
+        props.tree.map((node) => [node.key, true]),
+      );
+    }
+  },
+  { once: true },
 );
 </script>
 
@@ -130,14 +140,4 @@ const expandedKeys = computed(() =>
   </Panel>
 </template>
 
-<style scoped>
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  border-radius: 20px;
-}
-</style>
+<style scoped></style>
