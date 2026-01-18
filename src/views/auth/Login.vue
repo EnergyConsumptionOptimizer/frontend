@@ -1,23 +1,25 @@
 <script setup>
 import { useAuthStore } from "@/stores/authsStore.js";
-import { ref, computed } from "vue";
+import { ref, computed, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
+import { useServerFormErrors } from "@/composables/useServerFormErrors";
 import AuthWrapper from "@/components/auth/AuthWrapper.vue";
 import Message from "primevue/message";
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const { error } = storeToRefs(authStore);
+
+const { genericError } = useServerFormErrors(error);
 
 const username = ref("");
 const password = ref("");
 
-const loginFailed = ref(false);
-
 const isFormInvalid = computed(() => !username.value || !password.value);
 
 const handleLogin = async () => {
-  loginFailed.value = false;
   if (isFormInvalid.value) return;
 
   const success = await authStore.login({
@@ -28,15 +30,17 @@ const handleLogin = async () => {
   if (success) {
     const redirectPath = route.query.redirect?.toString() || "/";
     await router.push(redirectPath);
-  } else {
-    if (authStore.error?.response?.status === 401) {
-      loginFailed.value = true;
-    } else {
-      console.error("Login unexpected error:", authStore.error);
-      loginFailed.value = true;
-    }
   }
 };
+
+const clearError = () => {
+  if (authStore.error) authStore.error = null;
+};
+
+// PULIZIA: Quando lasciamo la pagina di login (es. andiamo a Reset Password), resettiamo gli errori.
+onUnmounted(() => {
+  clearError();
+});
 </script>
 
 <template>
@@ -45,6 +49,15 @@ const handleLogin = async () => {
     subtitle="Log in to continue"
   >
     <form @submit.prevent="handleLogin" class="space-y-6" novalidate>
+      <Message
+        v-if="genericError"
+        severity="error"
+        variant="simple"
+        class="mb-4 w-full justify-center"
+      >
+        {{ genericError }}
+      </Message>
+
       <div>
         <label
           for="username"
@@ -57,9 +70,9 @@ const handleLogin = async () => {
           v-model="username"
           placeholder="Username"
           class="w-full"
-          :invalid="loginFailed"
+          :invalid="!!genericError"
           autocomplete="username"
-          @input="loginFailed = false"
+          @input="clearError"
         />
       </div>
 
@@ -76,21 +89,11 @@ const handleLogin = async () => {
           placeholder="Password"
           :toggleMask="true"
           :feedback="false"
-          :invalid="loginFailed"
+          :invalid="!!genericError"
           autocomplete="current-password"
           fluid
-          @input="loginFailed = false"
+          @input="clearError"
         />
-
-        <Message
-          v-if="loginFailed"
-          severity="error"
-          variant="simple"
-          size="small"
-          class="mt-2"
-        >
-          Invalid username or password.
-        </Message>
       </div>
 
       <div class="text-right">

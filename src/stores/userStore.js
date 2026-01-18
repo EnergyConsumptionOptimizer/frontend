@@ -19,19 +19,25 @@ export const useUserStore = defineStore("user", () => {
     });
 
   const createUser = (payload) =>
-    perform(async () => {
-      const newUser = await activeService.value.create(payload);
-      users.value.push(newUser);
-    });
+    perform(
+      async () => {
+        const newUser = await activeService.value.create(payload);
+        users.value.push(newUser);
+      },
+      { suppressToastForCodes: ["CONFLICT", "VALIDATION_ERROR"] },
+    );
 
   const updateUser = (id, username) =>
-    perform(async () => {
-      const updatedUser = await activeService.value.update(id, { username });
-      const index = users.value.findIndex((u) => u.id === id);
-      if (index !== -1) {
-        users.value[index] = { ...users.value[index], ...updatedUser };
-      }
-    });
+    perform(
+      async () => {
+        const updatedUser = await activeService.value.update(id, { username });
+        const index = users.value.findIndex((u) => u.id === id);
+        if (index !== -1) {
+          users.value[index] = { ...users.value[index], ...updatedUser };
+        }
+      },
+      { suppressToastForCodes: ["CONFLICT", "VALIDATION_ERROR"] },
+    );
 
   const deleteUser = (id) =>
     perform(async () => {

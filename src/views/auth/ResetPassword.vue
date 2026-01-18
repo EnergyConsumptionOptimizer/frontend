@@ -1,17 +1,21 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/authsStore.js";
+import { useServerFormErrors } from "@/composables/useServerFormErrors";
 import AuthWrapper from "@/components/auth/AuthWrapper.vue";
 import Message from "primevue/message";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { error } = storeToRefs(authStore);
+
+const { getError: getServerError, genericError } = useServerFormErrors(error);
 
 const resetCode = ref("");
 const newPassword = ref("");
 const confirmPassword = ref("");
-const codeError = ref(false);
 
 const passwordsMatch = computed(() => {
   if (!newPassword.value || !confirmPassword.value) return true;
@@ -19,12 +23,18 @@ const passwordsMatch = computed(() => {
 });
 
 const isValid = computed(() => {
-  return resetCode.value && newPassword.value && passwordsMatch.value;
+  return (
+    resetCode.value?.trim() &&
+    newPassword.value &&
+    confirmPassword.value &&
+    newPassword.value === confirmPassword.value
+  );
 });
+
+const codeError = computed(() => getServerError("resetCode"));
 
 const handleSubmit = async () => {
   if (!isValid.value) return;
-  codeError.value = false;
 
   const success = await authStore.resetPassword(
     resetCode.value,
@@ -33,14 +43,20 @@ const handleSubmit = async () => {
 
   if (success) {
     router.push({ name: "login" });
-  } else {
-    codeError.value = true;
   }
 };
 
 const handleCancel = () => {
   router.push({ name: "login" });
 };
+
+const clearError = () => {
+  if (authStore.error) authStore.error = null;
+};
+
+onUnmounted(() => {
+  clearError();
+});
 </script>
 
 <template>
@@ -49,6 +65,15 @@ const handleCancel = () => {
     subtitle="Enter your code and new password"
   >
     <form @submit.prevent="handleSubmit" class="space-y-6" novalidate>
+      <Message
+        v-if="genericError"
+        severity="error"
+        variant="simple"
+        class="mb-4 w-full justify-center"
+      >
+        {{ genericError }}
+      </Message>
+
       <div>
         <label
           for="resetCode"
@@ -61,9 +86,9 @@ const handleCancel = () => {
           v-model="resetCode"
           placeholder="Reset Code"
           class="w-full"
-          :invalid="codeError"
+          :invalid="!!codeError"
           aria-describedby="code-error"
-          @input="codeError = false"
+          @input="clearError"
         />
         <Message
           id="code-error"
@@ -73,7 +98,7 @@ const handleCancel = () => {
           size="small"
           class="mt-2"
         >
-          Invalid reset code.
+          {{ codeError }}
         </Message>
       </div>
 
@@ -136,7 +161,7 @@ const handleCancel = () => {
           label="Confirm"
           type="submit"
           :loading="authStore.isLoading"
-          :disabled="authStore.isLoading || !passwordsMatch"
+          :disabled="authStore.isLoading || !isValid"
           class="w-full"
         />
       </div>

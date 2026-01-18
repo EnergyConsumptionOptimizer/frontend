@@ -30,19 +30,25 @@ export const useThresholdStore = defineStore("threshold", () => {
     });
 
   const createThreshold = (payload) =>
-    perform(async () => {
-      const result = await activeService.value.createThreshold(payload);
-      thresholds.value.push(result);
-    });
+    perform(
+      async () => {
+        const result = await activeService.value.createThreshold(payload);
+        thresholds.value.push(result);
+      },
+      { suppressToastForCodes: ["CONFLICT", "VALIDATION_ERROR"] },
+    );
 
   const updateThreshold = (id, payload) =>
-    perform(async () => {
-      const result = await activeService.value.updateThreshold(id, payload);
-      const index = thresholds.value.findIndex((t) => t.id === id);
-      if (index !== -1) {
-        thresholds.value[index] = result;
-      }
-    });
+    perform(
+      async () => {
+        const result = await activeService.value.updateThreshold(id, payload);
+        const index = thresholds.value.findIndex((t) => t.id === id);
+        if (index !== -1) {
+          thresholds.value[index] = result;
+        }
+      },
+      { suppressToastForCodes: ["CONFLICT", "VALIDATION_ERROR"] },
+    );
 
   const deleteThreshold = (id) =>
     perform(async () => {

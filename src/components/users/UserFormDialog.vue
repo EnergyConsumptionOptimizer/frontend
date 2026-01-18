@@ -1,8 +1,9 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useUserStore } from "@/stores/userStore";
 import { useNameValidation } from "@/composables/common/useNameValidation";
+import { useServerFormErrors } from "@/composables/useServerFormErrors";
 
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
@@ -20,26 +21,38 @@ const visible = defineModel("visible", { type: Boolean, default: false });
 const emit = defineEmits(["save", "cancel"]);
 
 const userStore = useUserStore();
-const { users } = storeToRefs(userStore);
+const { users, error } = storeToRefs(userStore);
+
+// Server Errors integration
+const { getError: getServerError } = useServerFormErrors(error);
 
 const submitted = ref(false);
 
 const usernameRef = computed(() => user.value?.username);
 const userIdRef = computed(() => user.value?.id);
 
-const { validationError, isValid: isNameUnique } = useNameValidation(
-  usernameRef,
-  users,
-  userIdRef,
-  "username",
+const { validationError: localValidationError, isValid: isNameUnique } =
+  useNameValidation(usernameRef, users, userIdRef, "username");
+
+// Combined Error (Local + Server)
+const usernameError = computed(
+  () => localValidationError.value || getServerError("username"),
 );
 
 const isFormValid = computed(() => {
   const hasUsername = !!user.value?.username?.trim();
-  const isUnique = isNameUnique.value;
+  const isUnique = isNameUnique.value; // Checks local uniqueness
   const isPasswordValid = !!user.value?.id || !!user.value?.password?.trim();
 
   return hasUsername && isUnique && isPasswordValid;
+});
+
+// Reset logic
+watch(visible, (isOpen) => {
+  if (isOpen) {
+    submitted.value = false;
+    if (error.value) error.value = null;
+  }
 });
 
 function onSave() {
@@ -65,7 +78,6 @@ const dialogTitle = computed(() => (user.value?.id ? "Edit User" : "New User"));
     modal
     class="p-fluid"
     @hide="emit('cancel')"
-    @after-hide="submitted = false"
   >
     <form
       id="user-form"
@@ -80,18 +92,18 @@ const dialogTitle = computed(() => (user.value?.id ? "Edit User" : "New User"));
           v-model.trim="user.username"
           required
           autofocus
-          :invalid="!!validationError || (submitted && !user.username)"
+          :invalid="!!usernameError || (submitted && !user.username)"
           aria-describedby="username-error"
           fluid
         />
         <Message
           id="username-error"
-          v-if="validationError || (submitted && !user.username)"
+          v-if="usernameError || (submitted && !user.username)"
           severity="error"
           variant="simple"
           size="small"
         >
-          {{ validationError || "Username is required." }}
+          {{ usernameError || "Username is required." }}
         </Message>
       </div>
 

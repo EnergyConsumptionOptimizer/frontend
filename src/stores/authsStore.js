@@ -5,6 +5,17 @@ import { useAsyncAction } from "@/composables/utils/asyncAction";
 
 const ROLES = { ADMIN: "admin", HOUSEHOLD: "household" };
 
+// Lista di errori che vogliamo gestire MANUALMENTE nei form di Auth
+const AUTH_MANUAL_ERRORS = [
+  "UNAUTHORIZED",
+  "BAD_REQUEST",
+  "VALIDATION_ERROR",
+  "INTERNAL_ERROR",
+  "INFRASTRUCTURE_ERROR",
+  "NETWORK_ERROR",
+  "TIMEOUT",
+];
+
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
   const isInitialized = ref(false);
@@ -26,11 +37,14 @@ export const useAuthStore = defineStore("auth", () => {
   };
 
   const login = (credentials) =>
-    perform(async () => {
-      const data = await AuthService.login(credentials);
-      setUser(data.user);
-      isInitialized.value = true;
-    });
+    perform(
+      async () => {
+        const data = await AuthService.login(credentials);
+        setUser(data.user);
+        isInitialized.value = true;
+      },
+      { suppressToastForCodes: AUTH_MANUAL_ERRORS },
+    );
 
   const logout = () =>
     perform(async () => {
@@ -42,9 +56,12 @@ export const useAuthStore = defineStore("auth", () => {
     });
 
   const resetPassword = (code, password) =>
-    perform(async () => {
-      await AuthService.resetAdminPassword(code, password);
-    });
+    perform(
+      async () => {
+        await AuthService.resetAdminPassword(code, password);
+      },
+      { suppressToastForCodes: AUTH_MANUAL_ERRORS },
+    );
 
   const init = async () => {
     if (isInitialized.value) return;

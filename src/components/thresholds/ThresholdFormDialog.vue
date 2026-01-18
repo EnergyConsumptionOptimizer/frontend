@@ -1,8 +1,9 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useThresholdStore } from "@/stores/thresholdStore";
 import { useNameValidation } from "@/composables/common/useNameValidation";
+import { useServerFormErrors } from "@/composables/useServerFormErrors";
 
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
@@ -27,19 +28,28 @@ const visible = defineModel("visible", { type: Boolean, default: false });
 const emit = defineEmits(["save", "cancel", "type-change"]);
 
 const thresholdStore = useThresholdStore();
-const { thresholds } = storeToRefs(thresholdStore);
+const { thresholds, error } = storeToRefs(thresholdStore);
+
+// Server Errors
+const { getError: getServerError } = useServerFormErrors(error);
 
 const submitted = ref(false);
 
 const nameRef = computed(() => threshold.value?.name);
 const idRef = computed(() => threshold.value?.id);
 
-const { validationError, isValid: isNameUnique } = useNameValidation(
-  nameRef,
-  thresholds,
-  idRef,
-  "name",
+// Local Validation (Pinia)
+const { validationError: localNameError, isValid: isNameUnique } =
+  useNameValidation(nameRef, thresholds, idRef, "name");
+
+// Combined Errors
+const nameError = computed(
+  () => localNameError.value || getServerError("name"),
 );
+const valueError = computed(() => getServerError("value"));
+const periodError = computed(() => getServerError("periodType"));
+const utilityError = computed(() => getServerError("utilityType"));
+const typeError = computed(() => getServerError("thresholdType"));
 
 const isFormValid = computed(() => {
   const t = threshold.value;
@@ -52,6 +62,14 @@ const isFormValid = computed(() => {
   const validPeriod = props.isPeriodDisabled || !!t.periodType;
 
   return validName && validUtility && validType && validValue && validPeriod;
+});
+
+// Reset State on Open
+watch(visible, (isOpen) => {
+  if (isOpen) {
+    submitted.value = false;
+    if (error.value) error.value = null;
+  }
 });
 
 function onSave() {
@@ -74,7 +92,6 @@ function onSave() {
     modal
     class="p-fluid"
     @hide="emit('cancel')"
-    @after-hide="submitted = false"
   >
     <form
       id="threshold-form"
@@ -89,18 +106,18 @@ function onSave() {
           v-model.trim="threshold.name"
           required
           autofocus
-          :invalid="!!validationError || (submitted && !threshold.name)"
+          :invalid="!!nameError || (submitted && !threshold.name)"
           aria-describedby="name-error"
           fluid
         />
         <Message
           id="name-error"
-          v-if="validationError || (submitted && !threshold.name)"
+          v-if="nameError || (submitted && !threshold.name)"
           severity="error"
           variant="simple"
           size="small"
         >
-          {{ validationError || "Name is required." }}
+          {{ nameError || "Name is required." }}
         </Message>
       </div>
 
@@ -111,18 +128,18 @@ function onSave() {
           v-model="threshold.utilityType"
           :options="options.utilities"
           placeholder="Select Utility"
-          :invalid="submitted && !threshold.utilityType"
+          :invalid="!!utilityError || (submitted && !threshold.utilityType)"
           aria-describedby="utility-error"
           fluid
         />
         <Message
           id="utility-error"
-          v-if="submitted && !threshold.utilityType"
+          v-if="utilityError || (submitted && !threshold.utilityType)"
           severity="error"
           variant="simple"
           size="small"
         >
-          Utility is required.
+          {{ utilityError || "Utility is required." }}
         </Message>
       </div>
 
@@ -133,19 +150,19 @@ function onSave() {
           v-model="threshold.thresholdType"
           :options="options.types"
           placeholder="Select Type"
-          :invalid="submitted && !threshold.thresholdType"
+          :invalid="!!typeError || (submitted && !threshold.thresholdType)"
           aria-describedby="type-error"
           fluid
           @change="$emit('type-change')"
         />
         <Message
           id="type-error"
-          v-if="submitted && !threshold.thresholdType"
+          v-if="typeError || (submitted && !threshold.thresholdType)"
           severity="error"
           variant="simple"
           size="small"
         >
-          Type is required.
+          {{ typeError || "Type is required." }}
         </Message>
       </div>
 
@@ -155,18 +172,24 @@ function onSave() {
           id="value"
           v-model.number="threshold.value"
           :min="0"
-          :invalid="submitted && (!threshold.value || threshold.value <= 0)"
+          :invalid="
+            !!valueError ||
+            (submitted && (!threshold.value || threshold.value <= 0))
+          "
           aria-describedby="value-error"
           fluid
         />
         <Message
           id="value-error"
-          v-if="submitted && (!threshold.value || threshold.value <= 0)"
+          v-if="
+            valueError ||
+            (submitted && (!threshold.value || threshold.value <= 0))
+          "
           severity="error"
           variant="simple"
           size="small"
         >
-          Value must be a positive number.
+          {{ valueError || "Value must be a positive number." }}
         </Message>
       </div>
 
@@ -178,18 +201,24 @@ function onSave() {
           :options="options.periods"
           placeholder="Select Period"
           :disabled="isPeriodDisabled"
-          :invalid="submitted && !isPeriodDisabled && !threshold.periodType"
+          :invalid="
+            !!periodError ||
+            (submitted && !isPeriodDisabled && !threshold.periodType)
+          "
           aria-describedby="period-error"
           fluid
         />
         <Message
           id="period-error"
-          v-if="submitted && !isPeriodDisabled && !threshold.periodType"
+          v-if="
+            periodError ||
+            (submitted && !isPeriodDisabled && !threshold.periodType)
+          "
           severity="error"
           variant="simple"
           size="small"
         >
-          Period is required for this type.
+          {{ periodError || "Period is required for this type." }}
         </Message>
       </div>
 
