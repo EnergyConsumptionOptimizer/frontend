@@ -67,7 +67,12 @@ const dialogTitle = computed(() => (user.value?.id ? "Edit User" : "New User"));
     @hide="emit('cancel')"
     @after-hide="submitted = false"
   >
-    <form id="user-form" @submit.prevent="onSave" class="flex flex-col gap-4">
+    <form
+      id="user-form"
+      @submit.prevent="onSave"
+      class="flex flex-col gap-4"
+      novalidate
+    >
       <div class="field">
         <label for="username" class="font-bold block mb-2">Username</label>
         <InputText
@@ -76,9 +81,11 @@ const dialogTitle = computed(() => (user.value?.id ? "Edit User" : "New User"));
           required
           autofocus
           :invalid="!!validationError || (submitted && !user.username)"
+          aria-describedby="username-error"
           fluid
         />
         <Message
+          id="username-error"
           v-if="validationError || (submitted && !user.username)"
           severity="error"
           variant="simple"
@@ -96,9 +103,11 @@ const dialogTitle = computed(() => (user.value?.id ? "Edit User" : "New User"));
           toggleMask
           :feedback="false"
           :invalid="submitted && !user.password"
+          aria-describedby="password-error"
           fluid
         />
         <Message
+          id="password-error"
           v-if="submitted && !user.password"
           severity="error"
           variant="simple"
@@ -110,14 +119,20 @@ const dialogTitle = computed(() => (user.value?.id ? "Edit User" : "New User"));
     </form>
 
     <template #footer>
-      <Button label="Cancel" icon="pi pi-times" text @click="emit('cancel')" />
+      <Button
+        label="Cancel"
+        icon="pi pi-times"
+        text
+        type="button"
+        @click="emit('cancel')"
+      />
       <Button
         label="Save"
         icon="pi pi-check"
         type="submit"
         form="user-form"
         :loading="loading"
-        :disabled="!isFormValid"
+        :disabled="!isFormValid || loading"
       />
     </template>
   </Dialog>

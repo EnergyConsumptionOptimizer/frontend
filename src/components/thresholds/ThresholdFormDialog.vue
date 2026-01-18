@@ -80,6 +80,7 @@ function onSave() {
       id="threshold-form"
       @submit.prevent="onSave"
       class="flex flex-col gap-4"
+      novalidate
     >
       <div class="field">
         <label for="name" class="font-bold block mb-2">Name</label>
@@ -89,9 +90,11 @@ function onSave() {
           required
           autofocus
           :invalid="!!validationError || (submitted && !threshold.name)"
+          aria-describedby="name-error"
           fluid
         />
         <Message
+          id="name-error"
           v-if="validationError || (submitted && !threshold.name)"
           severity="error"
           variant="simple"
@@ -109,9 +112,11 @@ function onSave() {
           :options="options.utilities"
           placeholder="Select Utility"
           :invalid="submitted && !threshold.utilityType"
+          aria-describedby="utility-error"
           fluid
         />
         <Message
+          id="utility-error"
           v-if="submitted && !threshold.utilityType"
           severity="error"
           variant="simple"
@@ -129,10 +134,12 @@ function onSave() {
           :options="options.types"
           placeholder="Select Type"
           :invalid="submitted && !threshold.thresholdType"
+          aria-describedby="type-error"
           fluid
           @change="$emit('type-change')"
         />
         <Message
+          id="type-error"
           v-if="submitted && !threshold.thresholdType"
           severity="error"
           variant="simple"
@@ -149,9 +156,11 @@ function onSave() {
           v-model.number="threshold.value"
           :min="0"
           :invalid="submitted && (!threshold.value || threshold.value <= 0)"
+          aria-describedby="value-error"
           fluid
         />
         <Message
+          id="value-error"
           v-if="submitted && (!threshold.value || threshold.value <= 0)"
           severity="error"
           variant="simple"
@@ -170,9 +179,11 @@ function onSave() {
           placeholder="Select Period"
           :disabled="isPeriodDisabled"
           :invalid="submitted && !isPeriodDisabled && !threshold.periodType"
+          aria-describedby="period-error"
           fluid
         />
         <Message
+          id="period-error"
           v-if="submitted && !isPeriodDisabled && !threshold.periodType"
           severity="error"
           variant="simple"
@@ -195,14 +206,20 @@ function onSave() {
     </form>
 
     <template #footer>
-      <Button label="Cancel" icon="pi pi-times" text @click="emit('cancel')" />
+      <Button
+        label="Cancel"
+        icon="pi pi-times"
+        text
+        type="button"
+        @click="emit('cancel')"
+      />
       <Button
         label="Save"
         icon="pi pi-check"
         type="submit"
         form="threshold-form"
         :loading="loading"
-        :disabled="!isFormValid"
+        :disabled="!isFormValid || loading"
       />
     </template>
   </Dialog>

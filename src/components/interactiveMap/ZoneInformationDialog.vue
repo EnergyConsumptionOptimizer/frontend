@@ -12,6 +12,7 @@ import { useNameValidation } from "@/composables/common/useNameValidation";
 const props = defineProps({
   isOnDrawMode: Boolean,
   defaultColor: { type: String, default: "#3b82f6" },
+  loading: { type: Boolean, default: false },
 });
 
 const zone = defineModel("zone", { type: Object, required: true });
@@ -70,56 +71,63 @@ const dialogTitle = computed(() =>
     :style="{ width: '25rem' }"
     @hide="emit('hide')"
   >
-    <span class="text-surface-500 dark:text-surface-400 block mb-8"
-      >Zone Information</span
-    >
+    <span class="text-surface-500 dark:text-surface-400 block mb-8">
+      Zone Information
+    </span>
 
-    <div class="flex items-center gap-4 mb-4">
-      <label for="zoneName" class="font-semibold">Name</label>
-      <div class="flex flex-col gap-1 w-full">
-        <InputText
-          id="zoneName"
-          class="flex-auto"
-          autocomplete="off"
-          v-model.trim="zone.name"
-          :invalid="!!validationError || (submitted && !zone.name)"
-          autofocus
-        />
-        <Message
-          v-if="validationError || (submitted && !zone.name)"
-          severity="error"
-          variant="simple"
-          size="small"
-        >
-          {{ validationError || "Zone name is required" }}
-        </Message>
+    <form id="zone-form" @submit.prevent="onSave" novalidate>
+      <div class="flex items-center gap-4 mb-4">
+        <label for="zoneName" class="font-semibold">Name</label>
+        <div class="flex flex-col gap-1 w-full">
+          <InputText
+            id="zoneName"
+            class="flex-auto"
+            autocomplete="off"
+            v-model.trim="zone.name"
+            :invalid="!!validationError || (submitted && !zone.name)"
+            aria-describedby="zoneName-error"
+            autofocus
+          />
+          <Message
+            id="zoneName-error"
+            v-if="validationError || (submitted && !zone.name)"
+            severity="error"
+            variant="simple"
+            size="small"
+          >
+            {{ validationError || "Zone name is required" }}
+          </Message>
+        </div>
       </div>
-    </div>
 
-    <div class="flex items-center gap-4 mb-4">
-      <label for="zoneColor" class="font-semibold">Color</label>
-      <ColorPicker
-        inputId="zoneColor"
-        v-model="activeColor"
-        format="hex"
-        pt:root:class="flex-1 flex !w-full"
-        pt:preview:class="flex-1 !h-8 !w-full"
-      />
-    </div>
+      <div class="flex items-center gap-4 mb-4">
+        <label for="zoneColor" class="font-semibold">Color</label>
+        <ColorPicker
+          inputId="zoneColor"
+          v-model="activeColor"
+          format="hex"
+          pt:root:class="flex-1 flex !w-full"
+          pt:preview:class="flex-1 !h-8 !w-full"
+        />
+      </div>
+    </form>
 
-    <div class="flex justify-end gap-2">
-      <Button
-        type="button"
-        label="Cancel"
-        severity="secondary"
-        @click="emit('cancel')"
-      />
-      <Button
-        type="button"
-        label="Save"
-        @click="onSave"
-        :disabled="!isFormValid"
-      />
-    </div>
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <Button
+          type="button"
+          label="Cancel"
+          severity="secondary"
+          @click="emit('cancel')"
+        />
+        <Button
+          type="submit"
+          form="zone-form"
+          label="Save"
+          :loading="loading"
+          :disabled="!isFormValid || loading"
+        />
+      </div>
+    </template>
   </Dialog>
 </template>

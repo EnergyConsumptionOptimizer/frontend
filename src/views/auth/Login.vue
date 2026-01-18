@@ -3,6 +3,7 @@ import { useAuthStore } from "@/stores/authsStore.js";
 import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import AuthWrapper from "@/components/auth/AuthWrapper.vue";
+import Message from "primevue/message";
 
 const router = useRouter();
 const route = useRoute();
@@ -43,7 +44,7 @@ const handleLogin = async () => {
     title="Energy Consumption Optimizer"
     subtitle="Log in to continue"
   >
-    <form @submit.prevent="handleLogin" class="space-y-6">
+    <form @submit.prevent="handleLogin" class="space-y-6" novalidate>
       <div>
         <label
           for="username"
@@ -81,9 +82,15 @@ const handleLogin = async () => {
           @input="loginFailed = false"
         />
 
-        <small v-if="loginFailed" class="text-red-500 block mt-2 font-medium">
+        <Message
+          v-if="loginFailed"
+          severity="error"
+          variant="simple"
+          size="small"
+          class="mt-2"
+        >
           Invalid username or password.
-        </small>
+        </Message>
       </div>
 
       <div class="text-right">

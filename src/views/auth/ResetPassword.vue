@@ -3,6 +3,7 @@ import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/authsStore.js";
 import AuthWrapper from "@/components/auth/AuthWrapper.vue";
+import Message from "primevue/message";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -47,7 +48,7 @@ const handleCancel = () => {
     title="Reset Admin Password"
     subtitle="Enter your code and new password"
   >
-    <form @submit.prevent="handleSubmit" class="space-y-6">
+    <form @submit.prevent="handleSubmit" class="space-y-6" novalidate>
       <div>
         <label
           for="resetCode"
@@ -61,8 +62,19 @@ const handleCancel = () => {
           placeholder="Reset Code"
           class="w-full"
           :invalid="codeError"
+          aria-describedby="code-error"
           @input="codeError = false"
         />
+        <Message
+          id="code-error"
+          v-if="codeError"
+          severity="error"
+          variant="simple"
+          size="small"
+          class="mt-2"
+        >
+          Invalid reset code.
+        </Message>
       </div>
 
       <div>
@@ -96,25 +108,35 @@ const handleCancel = () => {
           :toggleMask="true"
           :feedback="false"
           :invalid="!passwordsMatch"
+          aria-describedby="match-error"
           fluid
         />
 
-        <small v-if="!passwordsMatch" class="text-red-500 block mt-1">
+        <Message
+          id="match-error"
+          v-if="!passwordsMatch"
+          severity="error"
+          variant="simple"
+          size="small"
+          class="mt-1"
+        >
           Passwords do not match
-        </small>
-
-        <small v-if="codeError" class="text-red-500 block mt-2 font-medium">
-          Invalid reset code.
-        </small>
+        </Message>
       </div>
 
       <div class="flex gap-4 pt-2">
-        <Button label="Cancel" text @click="handleCancel" class="w-full" />
+        <Button
+          label="Cancel"
+          text
+          type="button"
+          @click="handleCancel"
+          class="w-full"
+        />
         <Button
           label="Confirm"
           type="submit"
           :loading="authStore.isLoading"
-          :disabled="!isValid"
+          :disabled="authStore.isLoading || !passwordsMatch"
           class="w-full"
         />
       </div>

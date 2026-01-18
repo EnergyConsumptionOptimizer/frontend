@@ -47,8 +47,15 @@ const emit = defineEmits([
 const interactiveMapStore = useInteractiveMapStore();
 const monitoringStore = useMonitoringStore();
 
-const { zones, svgData, isViewMode, isDrawMode, isEditMode, hasZones } =
-  storeToRefs(interactiveMapStore);
+const {
+  zones,
+  svgData,
+  isViewMode,
+  isDrawMode,
+  isEditMode,
+  hasZones,
+  isLoading,
+} = storeToRefs(interactiveMapStore);
 
 const smartFurnitureHookups = computed(() => {
   return props.isLocalMode
@@ -221,7 +228,6 @@ async function handleSaveSmartFurnitureHookup(smartFurnitureHookupInfo) {
   }
 
   let success = false;
-
   if (isSmartFurnitureHookupOnDrawMode.value) {
     const zone = findZoneForSmartFurnitureHookup(
       draftSmartFurnitureHookup.value,
@@ -511,6 +517,7 @@ onMounted(() => {
     v-model:zone="draftZone"
     :isOnDrawMode="isZoneOnDrawMode"
     :default-color="displayColor"
+    :loading="isLoading"
     @hide="hideZoneDialog"
     @cancel="hideZoneDialog"
     @save="handleSaveZone"
@@ -520,6 +527,7 @@ onMounted(() => {
     v-model:visible="smartFurnitureHookupDialog"
     v-model:smart-furniture-hookup="draftSmartFurnitureHookup"
     v-model:loading="endpointLoading"
+    :saving="isLoading"
     :isOnDrawMode="isSmartFurnitureHookupOnDrawMode"
     @save="handleSaveSmartFurnitureHookup"
     @hide="hideSmartFurnitureHookupDialog"
