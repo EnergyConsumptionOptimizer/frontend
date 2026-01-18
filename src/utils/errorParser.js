@@ -1,14 +1,3 @@
-const LOCAL_INFRASTRUCTURE_ERRORS = {
-  502: {
-    summary: "Service Unavailable",
-    detail: "Backend service unreachable (Bad Gateway).",
-  },
-  504: {
-    summary: "Request Timeout",
-    detail: "Server took too long to respond (Gateway Timeout).",
-  },
-};
-
 const STATUS_TITLES = {
   400: "Invalid Request",
   401: "Authentication Required",
@@ -18,6 +7,7 @@ const STATUS_TITLES = {
   422: "Validation Error",
   429: "Too Many Requests",
   500: "Server Error",
+  502: "Service Unavailable",
 };
 
 const STATUS_TO_CODE = {
@@ -28,6 +18,7 @@ const STATUS_TO_CODE = {
   409: "CONFLICT",
   422: "VALIDATION_ERROR",
   500: "INTERNAL_ERROR",
+  502: "INFRASTRUCTURE_ERROR",
 };
 
 const CODE_TITLES = {
@@ -35,43 +26,8 @@ const CODE_TITLES = {
   CONFLICT: "Conflict",
   RESOURCE_NOT_FOUND: "Not Found",
   INTERNAL_ERROR: "System Error",
+  INFRASTRUCTURE_ERROR: "Infrastructure Error",
 };
-
-function parseDirectMessage(data) {
-  if (typeof data === "string") {
-    return data.trim().startsWith("<") ? null : data;
-  }
-  if (typeof data === "object" && data !== null) {
-    return (
-      data.detail ||
-      data.title ||
-      data.message ||
-      data.error ||
-      data.description ||
-      null
-    );
-  }
-  return null;
-}
-
-function parseValidationErrors(data) {
-  if (!data?.errors) return null;
-  const { errors } = data;
-
-  if (Array.isArray(errors)) {
-    return errors
-      .map((e) =>
-        typeof e === "object" ? e.message || e.msg || JSON.stringify(e) : e,
-      )
-      .join(", ");
-  }
-
-  if (typeof errors === "object") {
-    return Object.values(errors).flat().join(", ");
-  }
-
-  return null;
-}
 
 export function normalizeError(err) {
   if (!err || err.code === "ERR_CANCELED") return null;
@@ -80,9 +36,11 @@ export function normalizeError(err) {
     return {
       code: "NETWORK_ERROR",
       summary: "Connection Failed",
-      detail: "Unable to reach the server.",
-      fields: null,
+      detail:
+        "Unable to reach the server. Please check your internet connection.",
+      fields: {},
       status: 0,
+      isSystemError: true,
     };
   }
 
@@ -90,37 +48,30 @@ export function normalizeError(err) {
     const { status, data } = err.response;
 
     if (data instanceof Blob) {
-      return (
-        LOCAL_INFRASTRUCTURE_ERRORS[status] || {
-          code: "DOWNLOAD_ERROR",
-          summary: "Download Failed",
-          detail: `Server returned error ${status} during download.`,
-          fields: null,
-          status,
-        }
-      );
-    }
-
-    if (LOCAL_INFRASTRUCTURE_ERRORS[status]) {
-      const explicitMsg = parseDirectMessage(data);
-      if (!explicitMsg) {
-        return {
-          ...LOCAL_INFRASTRUCTURE_ERRORS[status],
-          code: "INFRASTRUCTURE_ERROR",
-          fields: null,
-          status,
-        };
-      }
+      return {
+        code: "DOWNLOAD_ERROR",
+        summary: "Download Failed",
+        detail: "File could not be downloaded.",
+        fields: {},
+        status,
+        isSystemError: true,
+      };
     }
 
     const code = data?.code || STATUS_TO_CODE[status] || "UNKNOWN_ERROR";
-    const fields = data?.errors || null;
 
-    const detail =
-      parseDirectMessage(data) ||
-      parseValidationErrors(data) ||
+    const message =
+      data?.message ||
+      data?.detail ||
       err.response.statusText ||
       "An unexpected error occurred.";
+
+    const fields = data?.errors || {};
+
+    const isSystemError =
+      status >= 500 ||
+      code === "INFRASTRUCTURE_ERROR" ||
+      code === "INTERNAL_ERROR";
 
     const summary =
       CODE_TITLES[code] || STATUS_TITLES[status] || `Error ${status}`;
@@ -129,18 +80,21 @@ export function normalizeError(err) {
       code,
       status,
       summary,
-      detail,
+      detail: message,
       fields,
+      isSystemError,
       raw: data,
     };
   }
 
   console.error("Unhandled application error", err);
+
   return {
     code: "APP_ERROR",
     summary: "Application Error",
     detail: err.message || "Something went wrong internally.",
-    fields: null,
+    fields: {},
     status: -1,
+    isSystemError: true,
   };
 }
