@@ -6,7 +6,7 @@ import Message from "primevue/message";
 import { computed, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
-import { useNameValidation } from "@/composables/common/useNameValidation";
+import { useUniqueFieldValidation } from "@/composables/common/useUniqueFieldValidation.js";
 import { useServerFormErrors } from "@/composables/useServerFormErrors";
 
 const props = defineProps({
@@ -40,10 +40,15 @@ const nameRef = computed(() => smartFurnitureHookup.value?.name);
 const idRef = computed(() => smartFurnitureHookup.value?.id);
 
 const { validationError: endpointLocalError, isValid: isEndpointLocalValid } =
-  useNameValidation(endpointRef, smartFurnitureHookups, idRef, "endpoint");
+  useUniqueFieldValidation(
+    endpointRef,
+    smartFurnitureHookups,
+    idRef,
+    "endpoint",
+  );
 
 const { validationError: nameLocalError, isValid: isNameLocalValid } =
-  useNameValidation(nameRef, smartFurnitureHookups, idRef, "name");
+  useUniqueFieldValidation(nameRef, smartFurnitureHookups, idRef, "name");
 
 const endpointError = computed(
   () => getServerError("endpoint") || endpointLocalError.value,

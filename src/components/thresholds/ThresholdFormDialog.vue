@@ -2,7 +2,7 @@
 import { computed, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useThresholdStore } from "@/stores/thresholdStore";
-import { useNameValidation } from "@/composables/common/useNameValidation";
+import { useUniqueFieldValidation } from "@/composables/common/useUniqueFieldValidation.js";
 import { useServerFormErrors } from "@/composables/useServerFormErrors";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
@@ -36,7 +36,7 @@ const nameRef = computed(() => threshold.value?.name);
 const idRef = computed(() => threshold.value?.id);
 
 const { validationError: localNameError, isValid: isNameUnique } =
-  useNameValidation(nameRef, thresholds, idRef, "name");
+  useUniqueFieldValidation(nameRef, thresholds, idRef, "name");
 
 const nameError = computed(
   () => getServerError("name") || localNameError.value,

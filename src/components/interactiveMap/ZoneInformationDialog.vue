@@ -7,7 +7,7 @@ import Message from "primevue/message";
 import { computed, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
-import { useNameValidation } from "@/composables/common/useNameValidation";
+import { useUniqueFieldValidation } from "@/composables/common/useUniqueFieldValidation.js";
 import { useServerFormErrors } from "@/composables/useServerFormErrors";
 
 const props = defineProps({
@@ -31,7 +31,7 @@ const nameRef = computed(() => zone.value?.name);
 const idRef = computed(() => zone.value?.id);
 
 const { validationError: localValidationError, isValid: isNameLocalValid } =
-  useNameValidation(nameRef, zones, idRef, "name");
+  useUniqueFieldValidation(nameRef, zones, idRef, "name");
 
 const nameError = computed(
   () => getServerError("name") || localValidationError.value,

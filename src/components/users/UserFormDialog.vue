@@ -2,7 +2,7 @@
 import { computed, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useUserStore } from "@/stores/userStore";
-import { useNameValidation } from "@/composables/common/useNameValidation";
+import { useUniqueFieldValidation } from "@/composables/common/useUniqueFieldValidation.js";
 import { useServerFormErrors } from "@/composables/useServerFormErrors";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
@@ -29,7 +29,7 @@ const usernameRef = computed(() => user.value?.username);
 const userIdRef = computed(() => user.value?.id);
 
 const { validationError: localValidationError, isValid: isNameUnique } =
-  useNameValidation(usernameRef, users, userIdRef, "username");
+  useUniqueFieldValidation(usernameRef, users, userIdRef, "username");
 
 const usernameError = computed(
   () => getServerError("username") || localValidationError.value,
