@@ -25,7 +25,6 @@ export function useAsyncAction() {
       await Promise.race([actionFn(), timeoutPromise]);
       return true;
     } catch (err) {
-      console.error("Async Operation Failed:", err);
       error.value = err;
 
       let uiError;

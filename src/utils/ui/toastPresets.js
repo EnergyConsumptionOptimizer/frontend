@@ -7,10 +7,23 @@ export const deletedToast = (entityLabel) => ({
   detail: `${entityLabel} deleted successfully`,
 });
 
-export const errorToast = (summary = "Error", detail = "Failed") => ({
-  ...BASE_TOAST,
-  life: 5000,
-  severity: "error",
-  summary,
-  detail,
-});
+export const errorToast = (
+  summaryOrConfig = "Error",
+  detailIfString = "Failed",
+) => {
+  let summary = summaryOrConfig;
+  let detail = detailIfString;
+
+  if (typeof summaryOrConfig === "object" && summaryOrConfig !== null) {
+    summary = summaryOrConfig.summary || "Error";
+    detail = summaryOrConfig.detail || "Failed";
+  }
+
+  return {
+    ...BASE_TOAST,
+    life: 5000,
+    severity: "error",
+    summary,
+    detail,
+  };
+};

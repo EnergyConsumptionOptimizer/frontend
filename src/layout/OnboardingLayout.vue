@@ -2,20 +2,18 @@
 import { useOnboardingStore } from "@/stores/onboarding";
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
-import { useToast } from "primevue/usetoast";
 import router from "@/router/index.js";
 import { useAuthStore } from "@/stores/authsStore.js";
 import { useUserStore } from "@/stores/userStore";
 import { useThresholdStore } from "@/stores/thresholdStore";
-import { errorToast } from "@/utils/ui/toastPresets.js";
 import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
+import { useConfirm } from "primevue/useconfirm";
 
 const route = useRoute();
+const confirm = useConfirm();
 
 const loading = ref(false);
 const storesMounted = ref(false);
-
-const toast = useToast();
 
 const onboardingStore = useOnboardingStore();
 
@@ -57,15 +55,6 @@ function goToNextStep() {
   }
 }
 
-async function syncStep(step, syncFn) {
-  try {
-    await syncFn();
-  } catch (err) {
-    err.failedStep = step;
-    throw err;
-  }
-}
-
 function mountStores() {
   if (!storesMounted.value) {
     userStore = useUserStore();
@@ -80,30 +69,54 @@ function mountStores() {
   }
 }
 
+async function finalizeAndRedirect() {
+  onboardingStore.finishOnboarding();
+  await router.push({ name: "dashboard" });
+}
+
 async function completeOnboarding() {
   loading.value = true;
   mountStores();
-  try {
-    await syncStep("interactive map", () =>
-      interactiveMapStore.syncAndFinalize(),
-    );
-    await syncStep("household user", () => userStore.syncAndFinalize());
-    await syncStep("threshold", () => thresholdStore.syncAndFinalize());
 
-    onboardingStore.finishOnboarding();
+  const mapSuccess = await interactiveMapStore.syncAndFinalize();
 
-    router.push({ name: "dashboard" });
-  } catch (error) {
-    console.error("Error during onboarding completion:", error);
-    toast.add(
-      errorToast({
-        summary: "Error",
-        detail: `There was a problem finalizing ${error.failedStep} step of the configuration. Please try again.`,
-      }),
-    );
-  } finally {
+  if (!mapSuccess) {
     loading.value = false;
+    return;
   }
+
+  const userSuccess = await userStore.syncAndFinalize();
+  const thresholdSuccess = await thresholdStore.syncAndFinalize();
+
+  if (userSuccess && thresholdSuccess) {
+    await finalizeAndRedirect();
+    loading.value = false;
+    return;
+  }
+
+  let errorDetail = "";
+  if (!userSuccess && !thresholdSuccess) {
+    errorDetail = "Users and Thresholds";
+  } else if (!userSuccess) {
+    errorDetail = "Household Users";
+  } else {
+    errorDetail = "Thresholds";
+  }
+
+  confirm.require({
+    header: "Setup Incomplete",
+    message: `There was an error saving: ${errorDetail}. Do you want to proceed to the Dashboard anyway? You can configure them later manually.`,
+    icon: "pi pi-exclamation-triangle",
+    acceptLabel: "Yes, proceed",
+    rejectLabel: "No, stay here",
+    accept: async () => {
+      await finalizeAndRedirect();
+      loading.value = false;
+    },
+    reject: () => {
+      loading.value = false;
+    },
+  });
 }
 
 const handleLogout = async () => {
