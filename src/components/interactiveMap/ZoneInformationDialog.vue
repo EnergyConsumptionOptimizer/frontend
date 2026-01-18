@@ -53,7 +53,7 @@ function onSave() {
   emit("save", {
     id: zone.value?.id ?? null,
     name: zone.value.name.trim(),
-    color: zone.value?.color || props.defaultColor,
+    color: "#" + zone.value?.color || props.defaultColor,
   });
 }
 
