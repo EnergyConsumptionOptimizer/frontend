@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted } from "vue";
+import { onBeforeMount, onMounted } from "vue";
 import { useThresholdStore } from "@/stores/thresholdStore";
 import { useOnboardingStore } from "@/stores/onboarding";
 import OnboardingStepLayout from "@/layout/OnboardingStepLayout.vue";
@@ -8,8 +8,11 @@ import ThresholdManagementView from "@/components/thresholds/ThresholdManagement
 const thresholdStore = useThresholdStore();
 const onboardingStore = useOnboardingStore();
 
-onMounted(() => {
+onBeforeMount(() => {
   thresholdStore.setLocalMode(true);
+});
+
+onMounted(() => {
   onboardingStore.completeStep();
 });
 </script>
