@@ -4,7 +4,6 @@ import { storeToRefs } from "pinia";
 import { useThresholdStore } from "@/stores/thresholdStore";
 import { useNameValidation } from "@/composables/common/useNameValidation";
 import { useServerFormErrors } from "@/composables/useServerFormErrors";
-
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import InputNumber from "primevue/inputnumber";
@@ -24,27 +23,23 @@ const props = defineProps({
 
 const threshold = defineModel("threshold", { required: true });
 const visible = defineModel("visible", { type: Boolean, default: false });
-
 const emit = defineEmits(["save", "cancel", "type-change"]);
 
 const thresholdStore = useThresholdStore();
 const { thresholds, error } = storeToRefs(thresholdStore);
-
-// Server Errors
-const { getError: getServerError } = useServerFormErrors(error);
+const { getError: getServerError, formGlobalError } =
+  useServerFormErrors(error);
 
 const submitted = ref(false);
 
 const nameRef = computed(() => threshold.value?.name);
 const idRef = computed(() => threshold.value?.id);
 
-// Local Validation (Pinia)
 const { validationError: localNameError, isValid: isNameUnique } =
   useNameValidation(nameRef, thresholds, idRef, "name");
 
-// Combined Errors
 const nameError = computed(
-  () => localNameError.value || getServerError("name"),
+  () => getServerError("name") || localNameError.value,
 );
 const valueError = computed(() => getServerError("value"));
 const periodError = computed(() => getServerError("periodType"));
@@ -54,28 +49,28 @@ const typeError = computed(() => getServerError("thresholdType"));
 const isFormValid = computed(() => {
   const t = threshold.value;
   if (!t) return false;
-
   const validName = !!t.name?.trim() && isNameUnique.value;
   const validUtility = !!t.utilityType;
   const validType = !!t.thresholdType;
   const validValue = t.value !== null && t.value !== undefined && t.value > 0;
   const validPeriod = props.isPeriodDisabled || !!t.periodType;
-
   return validName && validUtility && validType && validValue && validPeriod;
 });
 
-// Reset State on Open
 watch(visible, (isOpen) => {
   if (isOpen) {
     submitted.value = false;
-    if (error.value) error.value = null;
+    if (thresholdStore.error) thresholdStore.error = null;
   }
 });
+
+const clearError = () => {
+  if (thresholdStore.error) thresholdStore.error = null;
+};
 
 function onSave() {
   submitted.value = true;
   if (!isFormValid.value) return;
-
   emit("save", {
     ...threshold.value,
     name: threshold.value.name.trim(),
@@ -99,6 +94,15 @@ function onSave() {
       class="flex flex-col gap-4"
       novalidate
     >
+      <Message
+        v-if="formGlobalError"
+        severity="error"
+        variant="simple"
+        class="mb-2"
+      >
+        {{ formGlobalError }}
+      </Message>
+
       <div class="field">
         <label for="name" class="font-bold block mb-2">Name</label>
         <InputText
@@ -109,6 +113,7 @@ function onSave() {
           :invalid="!!nameError || (submitted && !threshold.name)"
           aria-describedby="name-error"
           fluid
+          @input="clearError"
         />
         <Message
           id="name-error"
@@ -131,6 +136,7 @@ function onSave() {
           :invalid="!!utilityError || (submitted && !threshold.utilityType)"
           aria-describedby="utility-error"
           fluid
+          @change="clearError"
         />
         <Message
           id="utility-error"
@@ -153,7 +159,12 @@ function onSave() {
           :invalid="!!typeError || (submitted && !threshold.thresholdType)"
           aria-describedby="type-error"
           fluid
-          @change="$emit('type-change')"
+          @change="
+            (e) => {
+              $emit('type-change');
+              clearError();
+            }
+          "
         />
         <Message
           id="type-error"
@@ -178,6 +189,7 @@ function onSave() {
           "
           aria-describedby="value-error"
           fluid
+          @input="clearError"
         />
         <Message
           id="value-error"
@@ -207,6 +219,7 @@ function onSave() {
           "
           aria-describedby="period-error"
           fluid
+          @change="clearError"
         />
         <Message
           id="period-error"
@@ -248,7 +261,7 @@ function onSave() {
         type="submit"
         form="threshold-form"
         :loading="loading"
-        :disabled="!isFormValid || loading"
+        :disabled="loading"
       />
     </template>
   </Dialog>

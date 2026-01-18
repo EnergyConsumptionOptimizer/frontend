@@ -1,8 +1,8 @@
 <script setup>
-import { useAuthStore } from "@/stores/authsStore.js";
 import { ref, computed, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/stores/authsStore.js";
 import { useServerFormErrors } from "@/composables/useServerFormErrors";
 import AuthWrapper from "@/components/auth/AuthWrapper.vue";
 import Message from "primevue/message";
@@ -12,7 +12,7 @@ const route = useRoute();
 const authStore = useAuthStore();
 const { error } = storeToRefs(authStore);
 
-const { genericError } = useServerFormErrors(error);
+const { formGlobalError } = useServerFormErrors(error);
 
 const username = ref("");
 const password = ref("");
@@ -34,13 +34,10 @@ const handleLogin = async () => {
 };
 
 const clearError = () => {
-  if (authStore.error) authStore.error = null;
+  if (error.value) error.value = null;
 };
 
-// PULIZIA: Quando lasciamo la pagina di login (es. andiamo a Reset Password), resettiamo gli errori.
-onUnmounted(() => {
-  clearError();
-});
+onUnmounted(clearError);
 </script>
 
 <template>
@@ -50,12 +47,12 @@ onUnmounted(() => {
   >
     <form @submit.prevent="handleLogin" class="space-y-6" novalidate>
       <Message
-        v-if="genericError"
+        v-if="formGlobalError"
         severity="error"
         variant="simple"
         class="mb-4 w-full justify-center"
       >
-        {{ genericError }}
+        {{ formGlobalError }}
       </Message>
 
       <div>
@@ -70,7 +67,7 @@ onUnmounted(() => {
           v-model="username"
           placeholder="Username"
           class="w-full"
-          :invalid="!!genericError"
+          :invalid="!!formGlobalError"
           autocomplete="username"
           @input="clearError"
         />
@@ -87,9 +84,9 @@ onUnmounted(() => {
           inputId="password"
           v-model="password"
           placeholder="Password"
-          :toggleMask="true"
+          toggleMask
           :feedback="false"
-          :invalid="!!genericError"
+          :invalid="!!formGlobalError"
           autocomplete="current-password"
           fluid
           @input="clearError"
@@ -108,9 +105,9 @@ onUnmounted(() => {
       <Button
         label="Log In"
         type="submit"
+        class="w-full"
         :loading="authStore.isLoading"
         :disabled="authStore.isLoading || isFormInvalid"
-        class="w-full"
       />
     </form>
   </AuthWrapper>

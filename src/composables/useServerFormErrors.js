@@ -9,12 +9,17 @@ export function useServerFormErrors(errorRef) {
     return errorRef.value?.fields?.[field] || "";
   };
 
-  const genericError = computed(() => {
-    if (errorRef.value && !errorRef.value.fields) {
-      return errorRef.value.detail;
+  const formGlobalError = computed(() => {
+    if (!errorRef.value) return null;
+    const hasFields =
+      errorRef.value.fields && Object.keys(errorRef.value.fields).length > 0;
+
+    if (hasFields) {
+      return null;
     }
-    return null;
+
+    return errorRef.value.detail;
   });
 
-  return { hasError, getError, genericError };
+  return { hasError, getError, formGlobalError };
 }

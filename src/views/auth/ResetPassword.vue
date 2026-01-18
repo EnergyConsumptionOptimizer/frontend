@@ -11,7 +11,8 @@ const router = useRouter();
 const authStore = useAuthStore();
 const { error } = storeToRefs(authStore);
 
-const { getError: getServerError, genericError } = useServerFormErrors(error);
+const { getError: getServerError, formGlobalError } =
+  useServerFormErrors(error);
 
 const resetCode = ref("");
 const newPassword = ref("");
@@ -31,7 +32,18 @@ const isValid = computed(() => {
   );
 });
 
-const codeError = computed(() => getServerError("resetCode"));
+const codeError = computed(() => {
+  const explicitError = getServerError("resetCode");
+  if (explicitError) return explicitError;
+  if (
+    error.value?.code === "RESOURCE_NOT_FOUND" ||
+    error.value?.status === 404
+  ) {
+    return "Invalid reset code";
+  }
+
+  return null;
+});
 
 const handleSubmit = async () => {
   if (!isValid.value) return;
@@ -51,12 +63,10 @@ const handleCancel = () => {
 };
 
 const clearError = () => {
-  if (authStore.error) authStore.error = null;
+  if (error.value) error.value = null;
 };
 
-onUnmounted(() => {
-  clearError();
-});
+onUnmounted(clearError);
 </script>
 
 <template>
@@ -66,12 +76,12 @@ onUnmounted(() => {
   >
     <form @submit.prevent="handleSubmit" class="space-y-6" novalidate>
       <Message
-        v-if="genericError"
+        v-if="formGlobalError && !codeError"
         severity="error"
         variant="simple"
         class="mb-4 w-full justify-center"
       >
-        {{ genericError }}
+        {{ formGlobalError }}
       </Message>
 
       <div>
@@ -91,8 +101,8 @@ onUnmounted(() => {
           @input="clearError"
         />
         <Message
-          id="code-error"
           v-if="codeError"
+          id="code-error"
           severity="error"
           variant="simple"
           size="small"
@@ -113,7 +123,7 @@ onUnmounted(() => {
           inputId="newPassword"
           v-model="newPassword"
           placeholder="New Password"
-          :toggleMask="true"
+          toggleMask
           :feedback="false"
           fluid
         />
@@ -130,16 +140,15 @@ onUnmounted(() => {
           inputId="confirmPassword"
           v-model="confirmPassword"
           placeholder="Confirm Password"
-          :toggleMask="true"
+          toggleMask
           :feedback="false"
           :invalid="!passwordsMatch"
           aria-describedby="match-error"
           fluid
         />
-
         <Message
-          id="match-error"
           v-if="!passwordsMatch"
+          id="match-error"
           severity="error"
           variant="simple"
           size="small"
@@ -154,15 +163,15 @@ onUnmounted(() => {
           label="Cancel"
           text
           type="button"
-          @click="handleCancel"
           class="w-full"
+          @click="handleCancel"
         />
         <Button
           label="Confirm"
           type="submit"
+          class="w-full"
           :loading="authStore.isLoading"
           :disabled="authStore.isLoading || !isValid"
-          class="w-full"
         />
       </div>
     </form>

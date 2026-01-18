@@ -18,13 +18,12 @@ const props = defineProps({
 
 const zone = defineModel("zone", { type: Object, required: true });
 const visible = defineModel("visible", { type: Boolean, default: false });
-
 const emit = defineEmits(["hide", "save", "cancel"]);
 
 const store = useInteractiveMapStore();
 const { zones, error } = storeToRefs(store);
-
-const { getError: getServerError } = useServerFormErrors(error);
+const { getError: getServerError, formGlobalError } =
+  useServerFormErrors(error);
 
 const submitted = ref(false);
 
@@ -35,7 +34,7 @@ const { validationError: localValidationError, isValid: isNameLocalValid } =
   useNameValidation(nameRef, zones, idRef, "name");
 
 const nameError = computed(
-  () => localValidationError.value || getServerError("name"),
+  () => getServerError("name") || localValidationError.value,
 );
 
 const isFormValid = computed(() => {
@@ -53,16 +52,17 @@ const activeColor = computed({
 watch(visible, (isOpen) => {
   if (isOpen) {
     submitted.value = false;
-    if (error.value) {
-      error.value = null;
-    }
+    if (store.error) store.error = null;
   }
 });
+
+const clearError = () => {
+  if (store.error) store.error = null;
+};
 
 function onSave() {
   submitted.value = true;
   if (!isFormValid.value) return;
-
   emit("save", {
     id: zone.value?.id ?? null,
     name: zone.value.name.trim(),
@@ -86,8 +86,16 @@ const dialogTitle = computed(() =>
     <span class="text-surface-500 dark:text-surface-400 block mb-8">
       Zone Information
     </span>
-
     <form id="zone-form" @submit.prevent="onSave" novalidate>
+      <Message
+        v-if="formGlobalError"
+        severity="error"
+        variant="simple"
+        class="mb-2"
+      >
+        {{ formGlobalError }}
+      </Message>
+
       <div class="flex items-center gap-4 mb-4">
         <label for="zoneName" class="font-semibold">Name</label>
         <div class="flex flex-col gap-1 w-full">
@@ -99,6 +107,7 @@ const dialogTitle = computed(() =>
             :invalid="!!nameError || (submitted && !zone.name)"
             aria-describedby="zoneName-error"
             autofocus
+            @input="clearError"
           />
           <Message
             id="zoneName-error"
@@ -137,7 +146,7 @@ const dialogTitle = computed(() =>
           form="zone-form"
           label="Save"
           :loading="loading"
-          :disabled="!isFormValid || loading"
+          :disabled="loading"
         />
       </div>
     </template>

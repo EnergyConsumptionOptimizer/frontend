@@ -4,7 +4,6 @@ import { storeToRefs } from "pinia";
 import { useUserStore } from "@/stores/userStore";
 import { useNameValidation } from "@/composables/common/useNameValidation";
 import { useServerFormErrors } from "@/composables/useServerFormErrors";
-
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import Password from "primevue/password";
@@ -17,14 +16,12 @@ defineProps({
 
 const user = defineModel("user", { required: true });
 const visible = defineModel("visible", { type: Boolean, default: false });
-
 const emit = defineEmits(["save", "cancel"]);
 
 const userStore = useUserStore();
 const { users, error } = storeToRefs(userStore);
-
-// Server Errors integration
-const { getError: getServerError } = useServerFormErrors(error);
+const { getError: getServerError, formGlobalError } =
+  useServerFormErrors(error);
 
 const submitted = ref(false);
 
@@ -34,31 +31,31 @@ const userIdRef = computed(() => user.value?.id);
 const { validationError: localValidationError, isValid: isNameUnique } =
   useNameValidation(usernameRef, users, userIdRef, "username");
 
-// Combined Error (Local + Server)
 const usernameError = computed(
-  () => localValidationError.value || getServerError("username"),
+  () => getServerError("username") || localValidationError.value,
 );
 
 const isFormValid = computed(() => {
   const hasUsername = !!user.value?.username?.trim();
-  const isUnique = isNameUnique.value; // Checks local uniqueness
+  const isUnique = isNameUnique.value;
   const isPasswordValid = !!user.value?.id || !!user.value?.password?.trim();
-
   return hasUsername && isUnique && isPasswordValid;
 });
 
-// Reset logic
 watch(visible, (isOpen) => {
   if (isOpen) {
     submitted.value = false;
-    if (error.value) error.value = null;
+    if (userStore.error) userStore.error = null;
   }
 });
+
+const clearError = () => {
+  if (userStore.error) userStore.error = null;
+};
 
 function onSave() {
   submitted.value = true;
   if (!isFormValid.value) return;
-
   emit("save", {
     id: user.value.id,
     username: user.value.username.trim(),
@@ -85,6 +82,15 @@ const dialogTitle = computed(() => (user.value?.id ? "Edit User" : "New User"));
       class="flex flex-col gap-4"
       novalidate
     >
+      <Message
+        v-if="formGlobalError"
+        severity="error"
+        variant="simple"
+        class="mb-2"
+      >
+        {{ formGlobalError }}
+      </Message>
+
       <div class="field">
         <label for="username" class="font-bold block mb-2">Username</label>
         <InputText
@@ -95,6 +101,7 @@ const dialogTitle = computed(() => (user.value?.id ? "Edit User" : "New User"));
           :invalid="!!usernameError || (submitted && !user.username)"
           aria-describedby="username-error"
           fluid
+          @input="clearError"
         />
         <Message
           id="username-error"
@@ -117,6 +124,7 @@ const dialogTitle = computed(() => (user.value?.id ? "Edit User" : "New User"));
           :invalid="submitted && !user.password"
           aria-describedby="password-error"
           fluid
+          @input="clearError"
         />
         <Message
           id="password-error"
@@ -144,7 +152,7 @@ const dialogTitle = computed(() => (user.value?.id ? "Edit User" : "New User"));
         type="submit"
         form="user-form"
         :loading="loading"
-        :disabled="!isFormValid || loading"
+        :disabled="loading"
       />
     </template>
   </Dialog>

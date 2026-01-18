@@ -20,7 +20,6 @@ const smartFurnitureHookup = defineModel("smartFurnitureHookup", {
 });
 const visible = defineModel("visible", { type: Boolean, default: false });
 const loading = defineModel("loading", { type: Boolean });
-
 const emit = defineEmits([
   "hide",
   "fetchInfo",
@@ -31,10 +30,11 @@ const emit = defineEmits([
 
 const interactiveMapStore = useInteractiveMapStore();
 const { smartFurnitureHookups, error } = storeToRefs(interactiveMapStore);
-
-const { getError: getServerError } = useServerFormErrors(error);
+const { getError: getServerError, formGlobalError } =
+  useServerFormErrors(error);
 
 const submitted = ref(false);
+
 const endpointRef = computed(() => smartFurnitureHookup.value?.endpoint);
 const nameRef = computed(() => smartFurnitureHookup.value?.name);
 const idRef = computed(() => smartFurnitureHookup.value?.id);
@@ -46,10 +46,10 @@ const { validationError: nameLocalError, isValid: isNameLocalValid } =
   useNameValidation(nameRef, smartFurnitureHookups, idRef, "name");
 
 const endpointError = computed(
-  () => endpointLocalError.value || getServerError("endpoint"),
+  () => getServerError("endpoint") || endpointLocalError.value,
 );
 const nameError = computed(
-  () => nameLocalError.value || getServerError("name"),
+  () => getServerError("name") || nameLocalError.value,
 );
 
 const isFormValid = computed(() => {
@@ -69,21 +69,20 @@ const utilityTypeLabel = computed(() => {
   return "Sync the information to see the utility type";
 });
 
-// Reset form state when dialog opens
 watch(visible, (isOpen) => {
   if (isOpen) {
     submitted.value = false;
-    // Pulisce eventuali errori server rimasti nello store dalla precedente operazione
-    if (error.value) {
-      error.value = null;
-    }
+    if (interactiveMapStore.error) interactiveMapStore.error = null;
   }
 });
+
+const clearError = () => {
+  if (interactiveMapStore.error) interactiveMapStore.error = null;
+};
 
 function onSave() {
   submitted.value = true;
   if (!isFormValid.value) return;
-
   emit("save", {
     id: smartFurnitureHookup.value.id ?? null,
     name: smartFurnitureHookup.value.name.trim(),
@@ -111,8 +110,16 @@ const dialogTitle = computed(() =>
       Smart furniture hookup information. Click the button to sync the
       information.
     </span>
-
     <form id="sfh-form" @submit.prevent="onSave" novalidate>
+      <Message
+        v-if="formGlobalError"
+        severity="error"
+        variant="simple"
+        class="mb-2"
+      >
+        {{ formGlobalError }}
+      </Message>
+
       <div class="grid grid-cols-12 gap-2 mb-4">
         <label
           for="smartFurnitureHookupEndpoint"
@@ -132,6 +139,7 @@ const dialogTitle = computed(() =>
             "
             aria-describedby="endpoint-error"
             @update:modelValue="emit('endpointUpdated')"
+            @input="clearError"
           />
           <Button
             :disabled="!smartFurnitureHookup.endpoint"
@@ -173,6 +181,7 @@ const dialogTitle = computed(() =>
             v-model.trim="smartFurnitureHookup.name"
             :invalid="!!nameError || (submitted && !smartFurnitureHookup.name)"
             aria-describedby="name-error"
+            @input="clearError"
           />
         </div>
         <Message
