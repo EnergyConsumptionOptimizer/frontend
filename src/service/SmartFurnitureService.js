@@ -1,4 +1,5 @@
 import apiClient from "@/middlewares/authInterceptor";
+import axios from "axios";
 
 const BASE_URL = "/hookup/api";
 
@@ -24,5 +25,9 @@ export const SmartFurnitureHookupService = {
   },
   async deleteSmartFurnitureHookup(id) {
     return apiClient.delete(`${BASE_URL}/smart-furniture-hookups/${id}`);
+  },
+
+  async fetchExternalEndpointInfo(endpoint) {
+    return axios.get(endpoint);
   },
 };
