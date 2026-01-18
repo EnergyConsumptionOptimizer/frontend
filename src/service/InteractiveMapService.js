@@ -7,7 +7,7 @@ export const InteractiveMapService = {
   async fetchHouseMap() {
     const { data } = await apiClient.get(`${BASE_URL}/house-map`);
     const svgData = data.floorPlan.svgContent ?? "";
-    const zones = data.zones.map((z) => this.zoneDTO(z));
+    const zones = (data.zones ?? []).map((z) => this.zoneDTO(z));
     const smartFurnitureHookupsMap = data.smartFurnitureHookups ?? [];
 
     const req1 = await SmartFurnitureHookupService.fetchSmartFurnitureHookups();

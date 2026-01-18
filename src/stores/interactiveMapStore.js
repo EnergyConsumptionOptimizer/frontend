@@ -100,6 +100,7 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
 
       return true;
     });
+
   const uploadSvg = async (file, filename) => {
     const result = await activeService.value.saveFloorPlan(file, filename);
     zones.value = [];
@@ -142,45 +143,49 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
     return zone ?? (await activeService.value.findZone(id));
   };
 
-  const addZone = async (zone) => {
-    const newZone = await activeService.value.addZone(zone);
-    zones.value.push(newZone);
-
-    smartFurnitureHookups.value =
-      await activeService.value.fetchSmartFurnitureHookups();
-  };
-
-  const updateZone = async (id, payload) => {
-    const updatedZone = await activeService.value.updateZone(id, payload);
-
-    const index = zones.value.findIndex((zone) => zone.id === id);
-
-    if (index !== -1) {
-      zones.value[index] = updatedZone;
-    } else zones.value.push(updatedZone);
-
-    if (payload.points) {
+  const addZone = (zone) =>
+    perform(async () => {
+      const newZone = await activeService.value.addZone(zone);
+      zones.value.push(newZone);
       smartFurnitureHookups.value =
         await activeService.value.fetchSmartFurnitureHookups();
-    }
-  };
+    });
 
-  const updateZonePosition = async (id, payload) => {
-    await activeService.value.updateSmartFurnitureHookupsPosition(
-      smartFurnitureHookups.value.filter((sfh) => sfh.zone === id),
-    );
+  const updateZone = (id, payload) =>
+    perform(async () => {
+      const updatedZone = await activeService.value.updateZone(id, payload);
+      const index = zones.value.findIndex((zone) => zone.id === id);
 
-    await updateZone(id, payload);
-  };
+      if (index !== -1) {
+        zones.value[index] = updatedZone;
+      } else {
+        zones.value.push(updatedZone);
+      }
 
-  const deleteZone = async (id) => {
-    await activeService.value.deleteZone(id);
+      if (payload.points) {
+        smartFurnitureHookups.value =
+          await activeService.value.fetchSmartFurnitureHookups();
+      }
+    });
 
-    zones.value = zones.value.filter((zone) => zone.id !== id);
+  const updateZonePosition = (id, payload) =>
+    perform(async () => {
+      await activeService.value.updateSmartFurnitureHookupsPosition(
+        smartFurnitureHookups.value.filter((sfh) => sfh.zone === id),
+      );
+      const updatedZone = await activeService.value.updateZone(id, payload);
+      const index = zones.value.findIndex((zone) => zone.id === id);
+      if (index !== -1) zones.value[index] = updatedZone;
+    });
 
-    smartFurnitureHookups.value =
-      await activeService.value.fetchSmartFurnitureHookups();
-  };
+  const deleteZone = (id) =>
+    perform(async () => {
+      await activeService.value.deleteZone(id);
+      zones.value = zones.value.filter((zone) => zone.id !== id);
+      smartFurnitureHookups.value =
+        await activeService.value.fetchSmartFurnitureHookups();
+    });
+
   const findSmartFurnitureHookup = async (id) => {
     const smartFurnitureHookup = smartFurnitureHookups.value.find(
       (sfh) => sfh.id === id,
@@ -190,29 +195,37 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
       (await activeService.value.findSmartFurnitureHookup(id))
     );
   };
-  const addSmartFurnitureHookup = async (smartFurnitureHookup) => {
-    const newSmartFurnitureHookup =
-      await activeService.value.addSmartFurnitureHookup(smartFurnitureHookup);
-    smartFurnitureHookups.value.push(newSmartFurnitureHookup);
-  };
-  const updateSmartFurnitureHookup = async (id, payload) => {
-    const updatedSmartFurnitureHookup =
-      await activeService.value.updateSmartFurnitureHookup(id, payload);
 
-    const index = smartFurnitureHookups.value.findIndex((sfh) => sfh.id === id);
+  const addSmartFurnitureHookup = (smartFurnitureHookup) =>
+    perform(async () => {
+      const newSmartFurnitureHookup =
+        await activeService.value.addSmartFurnitureHookup(smartFurnitureHookup);
+      smartFurnitureHookups.value.push(newSmartFurnitureHookup);
+    });
 
-    if (index !== -1) {
-      smartFurnitureHookups.value[index] = updatedSmartFurnitureHookup;
-    } else smartFurnitureHookups.value.push(updatedSmartFurnitureHookup);
-  };
+  const updateSmartFurnitureHookup = (id, payload) =>
+    perform(async () => {
+      const updatedSmartFurnitureHookup =
+        await activeService.value.updateSmartFurnitureHookup(id, payload);
 
-  const deleteSmartFurnitureHookup = async (id) => {
-    await activeService.value.deleteSmartFurnitureHookup(id);
+      const index = smartFurnitureHookups.value.findIndex(
+        (sfh) => sfh.id === id,
+      );
 
-    smartFurnitureHookups.value = smartFurnitureHookups.value.filter(
-      (sfh) => sfh.id !== id,
-    );
-  };
+      if (index !== -1) {
+        smartFurnitureHookups.value[index] = updatedSmartFurnitureHookup;
+      } else {
+        smartFurnitureHookups.value.push(updatedSmartFurnitureHookup);
+      }
+    });
+
+  const deleteSmartFurnitureHookup = (id) =>
+    perform(async () => {
+      await activeService.value.deleteSmartFurnitureHookup(id);
+      smartFurnitureHookups.value = smartFurnitureHookups.value.filter(
+        (sfh) => sfh.id !== id,
+      );
+    });
 
   const monitoringStore = useMonitoringStore();
   const { activeSmartFurnitureHookups } = storeToRefs(monitoringStore);

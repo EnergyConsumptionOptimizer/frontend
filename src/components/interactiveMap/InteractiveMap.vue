@@ -159,19 +159,24 @@ function handleStopEditing() {
 }
 
 async function handleSaveZone(zoneInfo) {
+  let success = false;
   if (isZoneOnDrawMode.value) {
-    await interactiveMapStore.addZone({
+    success = await interactiveMapStore.addZone({
       ...draftZone.value,
       zoneInfo,
     });
-    doneDrawingZone();
-    emit("zone-created", zones.value.length);
+    if (success) {
+      doneDrawingZone();
+      emit("zone-created", zones.value.length);
+    }
   } else if (isZoneOnEditMode.value) {
-    await interactiveMapStore.updateZone(draftZone.value.id, {
+    success = await interactiveMapStore.updateZone(draftZone.value.id, {
       name: zoneInfo.name,
       color: zoneInfo.color,
     });
-    doneEditingZone();
+    if (success) {
+      doneEditingZone();
+    }
   }
 }
 
@@ -215,20 +220,27 @@ async function handleSaveSmartFurnitureHookup(smartFurnitureHookupInfo) {
     if (!success) return;
   }
 
+  let success = false;
+
   if (isSmartFurnitureHookupOnDrawMode.value) {
     const zone = findZoneForSmartFurnitureHookup(
       draftSmartFurnitureHookup.value,
     );
 
-    await interactiveMapStore.addSmartFurnitureHookup({
+    success = await interactiveMapStore.addSmartFurnitureHookup({
       ...draftSmartFurnitureHookup.value,
       smartFurnitureHookupInfo,
       zone,
     });
-    doneDrawingSmartFurnitureHookup();
-    emit("smart-furniture-hookup-created", smartFurnitureHookups.value.length);
+    if (success) {
+      doneDrawingSmartFurnitureHookup();
+      emit(
+        "smart-furniture-hookup-created",
+        smartFurnitureHookups.value.length,
+      );
+    }
   } else if (isSmartFurnitureHookupOnEditMode.value) {
-    await interactiveMapStore.updateSmartFurnitureHookup(
+    success = await interactiveMapStore.updateSmartFurnitureHookup(
       draftSmartFurnitureHookup.value.id,
       {
         name: smartFurnitureHookupInfo.name,
@@ -236,7 +248,9 @@ async function handleSaveSmartFurnitureHookup(smartFurnitureHookupInfo) {
         utilityType: smartFurnitureHookupInfo.utilityType,
       },
     );
-    doneEditingSmartFurnitureHookup();
+    if (success) {
+      doneEditingSmartFurnitureHookup();
+    }
   }
 }
 

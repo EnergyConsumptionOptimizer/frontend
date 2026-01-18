@@ -40,8 +40,10 @@ watch(
   <Panel
     class="h-full flex flex-col min-w-0 max-w-full"
     :pt="{
-      header: { class: '!p-3' },
-      toggleableContent: { class: '!flex-1 !overflow-hidden !flex !flex-col' },
+      header: { class: '!p-3 shrink-0' },
+      toggleableContent: {
+        class: '!flex-1 !min-h-0 !overflow-hidden !flex !flex-col',
+      },
       content: {
         class:
           '!p-0 !flex-1 !overflow-y-auto !overflow-x-hidden custom-scrollbar',
