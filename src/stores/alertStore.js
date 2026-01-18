@@ -37,16 +37,15 @@ export const useAlertStore = defineStore("alert", () => {
   };
 
   const sync = () => {
-    if (isLoading.value) return;
+    if (isLoading.value) return Promise.resolve(false);
 
     return perform(async () => {
-      await Promise.all([
+      const [alertsData, countData] = await Promise.all([
         AlertService.getAlerts(),
         AlertService.getUnreadCount(),
-      ]).then(([alertsData, countData]) => {
-        alerts.value = alertsData;
-        unreadCount.value = countData;
-      });
+      ]);
+      alerts.value = alertsData;
+      unreadCount.value = countData;
     });
   };
 

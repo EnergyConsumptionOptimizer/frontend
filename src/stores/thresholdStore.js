@@ -79,7 +79,6 @@ export const useThresholdStore = defineStore("threshold", () => {
       ThresholdLocalService.clear();
       isLocalMode.value = false;
       thresholds.value = createdThresholds;
-      return true;
     });
 
   return {

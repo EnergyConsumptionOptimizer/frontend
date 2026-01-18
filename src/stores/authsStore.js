@@ -5,7 +5,6 @@ import { useAsyncAction } from "@/composables/utils/asyncAction";
 
 const ROLES = { ADMIN: "admin", HOUSEHOLD: "household" };
 
-// Lista di errori che vogliamo gestire MANUALMENTE nei form di Auth
 const AUTH_MANUAL_ERRORS = [
   "UNAUTHORIZED",
   "BAD_REQUEST",

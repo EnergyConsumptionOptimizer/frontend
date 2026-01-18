@@ -14,15 +14,12 @@ export const useForecastStore = defineStore("forecast", () => {
   });
 
   const fetchAll = async (force = false) => {
-    if (!force && items.value.length > 0) return;
+    if (!force && items.value.length > 0) return true;
 
-    const success = await perform(async () => {
+    return perform(async () => {
       items.value = await ForecastService.getForecasts();
       lastFetched.value = Date.now();
     });
-    if (!success) {
-      items.value = [];
-    }
   };
 
   return {
