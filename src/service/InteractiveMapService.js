@@ -6,12 +6,14 @@ const BASE_URL = "/map/api";
 export const InteractiveMapService = {
   async fetchHouseMap() {
     const { data } = await apiClient.get(`${BASE_URL}/house-map`);
-    const svgData = data.floorPlan.svgContent ?? "";
-    const zones = (data.zones ?? []).map((z) => this.zoneDTO(z));
-    const smartFurnitureHookupsMap = data.smartFurnitureHookups ?? [];
+    const svgData = data?.floorPlan?.svgContent ?? "";
+
+    const zones = (data?.zones ?? []).map((z) => this.zoneDTO(z));
+    const smartFurnitureHookupsMap = data?.smartFurnitureHookups ?? [];
 
     const req1 = await SmartFurnitureHookupService.fetchSmartFurnitureHookups();
-    const infoData = req1.data.smartFurnitureHookups;
+    const infoData = req1.data?.smartFurnitureHookups ?? [];
+
     const smartFurnitureHookups = this.mergeSmartFurnitureHookupsDataDTO(
       infoData,
       smartFurnitureHookupsMap,

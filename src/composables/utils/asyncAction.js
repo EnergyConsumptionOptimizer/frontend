@@ -10,7 +10,9 @@ export function useAsyncAction() {
   const error = ref(null);
   const toast = useToast();
 
-  const perform = async (actionFn) => {
+  const perform = async (actionFn, options = {}) => {
+    const { suppressToastForCodes = [] } = options;
+
     isLoading.value = true;
     error.value = null;
 
@@ -25,20 +27,28 @@ export function useAsyncAction() {
       await Promise.race([actionFn(), timeoutPromise]);
       return true;
     } catch (err) {
-      error.value = err;
-
       let uiError;
+
       if (err.message === "Operation timed out") {
         uiError = {
+          code: "TIMEOUT",
           summary: "Timeout",
           detail: "The server took too long to respond",
+          status: 408,
+          fields: null,
         };
       } else {
         uiError = normalizeError(err);
       }
 
+      error.value = uiError;
+
       if (uiError && toast) {
-        toast.add(errorToast(uiError.summary, uiError.detail));
+        const shouldSuppress = suppressToastForCodes.includes(uiError.code);
+
+        if (!shouldSuppress) {
+          toast.add(errorToast(uiError.summary, uiError.detail));
+        }
       }
 
       return false;

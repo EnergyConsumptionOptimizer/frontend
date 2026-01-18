@@ -1,34 +1,30 @@
 import { computed } from "vue";
 
-/**
- * Validates a string value against specific business rules (Unique, Reserved).
- */
 export function useNameValidation(
   valueRef,
   listRef,
-  currentIdRef,
-  key = "name",
+  idRef,
+  fieldName = "name",
 ) {
   const validationError = computed(() => {
-    const val = valueRef.value?.trim();
-
-    // Let the form handle required validation on submit to avoid double messaging.
-    if (!val) return null;
-
-    const normalized = val.toLowerCase();
-
-    if (normalized === "admin") {
-      return "This name is reserved.";
+    if (!valueRef.value) {
+      return null;
     }
 
-    const isTaken = listRef.value.some(
-      (item) =>
-        item?.[key]?.toLowerCase() === normalized &&
-        item?.id !== currentIdRef.value,
-    );
+    const valueToCheck = valueRef.value.trim().toLowerCase();
 
-    if (isTaken) {
-      return "This name is already in use.";
+    const exists = listRef.value.some((item) => {
+      // Ignora l'elemento corrente se stiamo modificando (check tramite ID)
+      if (idRef.value && item.id === idRef.value) {
+        return false;
+      }
+
+      const itemValue = item[fieldName]?.trim().toLowerCase();
+      return itemValue === valueToCheck;
+    });
+
+    if (exists) {
+      return `The ${fieldName} is already in use`;
     }
 
     return null;
@@ -36,5 +32,8 @@ export function useNameValidation(
 
   const isValid = computed(() => !validationError.value);
 
-  return { validationError, isValid };
+  return {
+    validationError,
+    isValid,
+  };
 }

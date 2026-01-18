@@ -3,10 +3,11 @@ import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import Button from "primevue/button";
 import Message from "primevue/message";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
 import { useNameValidation } from "@/composables/common/useNameValidation";
+import { useServerFormErrors } from "@/composables/useServerFormErrors";
 
 const props = defineProps({
   isOnDrawMode: Boolean,
@@ -29,29 +30,34 @@ const emit = defineEmits([
 ]);
 
 const interactiveMapStore = useInteractiveMapStore();
-const { smartFurnitureHookups } = storeToRefs(interactiveMapStore);
+const { smartFurnitureHookups, error } = storeToRefs(interactiveMapStore);
+
+const { getError: getServerError } = useServerFormErrors(error);
 
 const submitted = ref(false);
 const endpointRef = computed(() => smartFurnitureHookup.value?.endpoint);
 const nameRef = computed(() => smartFurnitureHookup.value?.name);
 const idRef = computed(() => smartFurnitureHookup.value?.id);
 
-const { validationError: endpointError, isValid: isEndpointValid } =
+const { validationError: endpointLocalError, isValid: isEndpointLocalValid } =
   useNameValidation(endpointRef, smartFurnitureHookups, idRef, "endpoint");
 
-const { validationError: nameError, isValid: isNameValid } = useNameValidation(
-  nameRef,
-  smartFurnitureHookups,
-  idRef,
-  "name",
+const { validationError: nameLocalError, isValid: isNameLocalValid } =
+  useNameValidation(nameRef, smartFurnitureHookups, idRef, "name");
+
+const endpointError = computed(
+  () => endpointLocalError.value || getServerError("endpoint"),
+);
+const nameError = computed(
+  () => nameLocalError.value || getServerError("name"),
 );
 
 const isFormValid = computed(() => {
   return (
     !!smartFurnitureHookup.value?.endpoint?.trim() &&
     !!smartFurnitureHookup.value?.name?.trim() &&
-    isEndpointValid.value &&
-    isNameValid.value
+    isEndpointLocalValid.value &&
+    isNameLocalValid.value
   );
 });
 
@@ -61,6 +67,17 @@ const utilityTypeLabel = computed(() => {
     return type;
   }
   return "Sync the information to see the utility type";
+});
+
+// Reset form state when dialog opens
+watch(visible, (isOpen) => {
+  if (isOpen) {
+    submitted.value = false;
+    // Pulisce eventuali errori server rimasti nello store dalla precedente operazione
+    if (error.value) {
+      error.value = null;
+    }
+  }
 });
 
 function onSave() {

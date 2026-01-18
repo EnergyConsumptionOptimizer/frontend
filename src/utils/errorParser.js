@@ -1,4 +1,4 @@
-const INFRASTRUCTURE_ERRORS = {
+const LOCAL_INFRASTRUCTURE_ERRORS = {
   502: {
     summary: "Service Unavailable",
     detail: "Backend service unreachable (Bad Gateway).",
@@ -20,13 +20,25 @@ const STATUS_TITLES = {
   500: "Server Error",
 };
 
-/**
- * Tries to extract a simple string message from various JSON structures.
- * Supports: RFC 7807, standard keys (message, error), and simple strings.
- */
+const STATUS_TO_CODE = {
+  400: "BAD_REQUEST",
+  401: "UNAUTHORIZED",
+  403: "FORBIDDEN",
+  404: "RESOURCE_NOT_FOUND",
+  409: "CONFLICT",
+  422: "VALIDATION_ERROR",
+  500: "INTERNAL_ERROR",
+};
+
+const CODE_TITLES = {
+  VALIDATION_ERROR: "Validation Failed",
+  CONFLICT: "Conflict",
+  RESOURCE_NOT_FOUND: "Not Found",
+  INTERNAL_ERROR: "System Error",
+};
+
 function parseDirectMessage(data) {
   if (typeof data === "string") {
-    // Ignore HTML strings (likely NGINX default pages)
     return data.trim().startsWith("<") ? null : data;
   }
   if (typeof data === "object" && data !== null) {
@@ -42,17 +54,11 @@ function parseDirectMessage(data) {
   return null;
 }
 
-/**
- * Handles complex validation error structures (Arrays or Objects).
- * Flatten them into a single readable string.
- */
 function parseValidationErrors(data) {
   if (!data?.errors) return null;
-
   const { errors } = data;
 
   if (Array.isArray(errors)) {
-    // Handle array of strings or objects with 'message'/'msg' keys
     return errors
       .map((e) =>
         typeof e === "object" ? e.message || e.msg || JSON.stringify(e) : e,
@@ -61,7 +67,6 @@ function parseValidationErrors(data) {
   }
 
   if (typeof errors === "object") {
-    // Handle object map: { email: "Invalid", password: "Too short" }
     return Object.values(errors).flat().join(", ");
   }
 
@@ -69,54 +74,73 @@ function parseValidationErrors(data) {
 }
 
 export function normalizeError(err) {
-  // 1. Ignore cancellations
   if (!err || err.code === "ERR_CANCELED") return null;
 
-  // 2. Network / Offline Errors
   if (err.request && !err.response) {
     return {
+      code: "NETWORK_ERROR",
       summary: "Connection Failed",
       detail: "Unable to reach the server.",
+      fields: null,
+      status: 0,
     };
   }
 
-  // 3. Server Responses
   if (err.response) {
     const { status, data } = err.response;
 
-    // A. Check for Blob (File Download Errors)
     if (data instanceof Blob) {
       return (
-        INFRASTRUCTURE_ERRORS[status] || {
+        LOCAL_INFRASTRUCTURE_ERRORS[status] || {
+          code: "DOWNLOAD_ERROR",
           summary: "Download Failed",
           detail: `Server returned error ${status} during download.`,
+          fields: null,
+          status,
         }
       );
     }
 
-    // B. Check for Infrastructure Errors (NGINX Gateways)
-    if (INFRASTRUCTURE_ERRORS[status]) {
-      // However, if the API explicitly sent a valid JSON message despite 502/503, prefer that.
+    if (LOCAL_INFRASTRUCTURE_ERRORS[status]) {
       const explicitMsg = parseDirectMessage(data);
-      if (!explicitMsg) return INFRASTRUCTURE_ERRORS[status];
+      if (!explicitMsg) {
+        return {
+          ...LOCAL_INFRASTRUCTURE_ERRORS[status],
+          code: "INFRASTRUCTURE_ERROR",
+          fields: null,
+          status,
+        };
+      }
     }
 
-    // C. Extract content from Body (JSON/Validation/Text)
-    const detail = parseDirectMessage(data) || parseValidationErrors(data);
-    const summary = STATUS_TITLES[status] || `Error ${status}`;
+    const code = data?.code || STATUS_TO_CODE[status] || "UNKNOWN_ERROR";
+    const fields = data?.errors || null;
 
-    // Return extracted info or fallback to Status Text
+    const detail =
+      parseDirectMessage(data) ||
+      parseValidationErrors(data) ||
+      err.response.statusText ||
+      "An unexpected error occurred.";
+
+    const summary =
+      CODE_TITLES[code] || STATUS_TITLES[status] || `Error ${status}`;
+
     return {
+      code,
+      status,
       summary,
-      detail:
-        detail || err.response.statusText || "An unexpected error occurred.",
+      detail,
+      fields,
+      raw: data,
     };
   }
 
-  // 4. Code/Application Errors
   console.error("Unhandled application error", err);
   return {
+    code: "APP_ERROR",
     summary: "Application Error",
     detail: err.message || "Something went wrong internally.",
+    fields: null,
+    status: -1,
   };
 }

@@ -197,27 +197,35 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
   };
 
   const addSmartFurnitureHookup = (smartFurnitureHookup) =>
-    perform(async () => {
-      const newSmartFurnitureHookup =
-        await activeService.value.addSmartFurnitureHookup(smartFurnitureHookup);
-      smartFurnitureHookups.value.push(newSmartFurnitureHookup);
-    });
+    perform(
+      async () => {
+        const newSmartFurnitureHookup =
+          await activeService.value.addSmartFurnitureHookup(
+            smartFurnitureHookup,
+          );
+        smartFurnitureHookups.value.push(newSmartFurnitureHookup);
+      },
+      { suppressToastForCodes: ["CONFLICT", "VALIDATION_ERROR"] },
+    );
 
   const updateSmartFurnitureHookup = (id, payload) =>
-    perform(async () => {
-      const updatedSmartFurnitureHookup =
-        await activeService.value.updateSmartFurnitureHookup(id, payload);
+    perform(
+      async () => {
+        const updatedSmartFurnitureHookup =
+          await activeService.value.updateSmartFurnitureHookup(id, payload);
 
-      const index = smartFurnitureHookups.value.findIndex(
-        (sfh) => sfh.id === id,
-      );
+        const index = smartFurnitureHookups.value.findIndex(
+          (sfh) => sfh.id === id,
+        );
 
-      if (index !== -1) {
-        smartFurnitureHookups.value[index] = updatedSmartFurnitureHookup;
-      } else {
-        smartFurnitureHookups.value.push(updatedSmartFurnitureHookup);
-      }
-    });
+        if (index !== -1) {
+          smartFurnitureHookups.value[index] = updatedSmartFurnitureHookup;
+        } else {
+          smartFurnitureHookups.value.push(updatedSmartFurnitureHookup);
+        }
+      },
+      { suppressToastForCodes: ["CONFLICT", "VALIDATION_ERROR"] },
+    );
 
   const deleteSmartFurnitureHookup = (id) =>
     perform(async () => {
