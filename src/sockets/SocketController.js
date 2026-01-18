@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-export class socketController {
+export class SocketController {
   constructor() {
     this.socket = null;
     this.isConnected = false;

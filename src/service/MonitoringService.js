@@ -1,4 +1,4 @@
-import { socketController } from "@/sockets/SocketController.js";
+import { SocketController } from "@/sockets/SocketController.js";
 
 const BASE_URL = "http://10.250.23.192:3004";
 const REAL_TIME_NAMESPACE = "real-time";
@@ -11,7 +11,7 @@ export class MonitoringService {
 
   async _subscribeToRealTimeUpdates() {
     if (!this.realTimeSocket) {
-      this.realTimeSocket = new socketController();
+      this.realTimeSocket = new SocketController();
     }
 
     await this.realTimeSocket.connect(`${BASE_URL}/${REAL_TIME_NAMESPACE}`);
