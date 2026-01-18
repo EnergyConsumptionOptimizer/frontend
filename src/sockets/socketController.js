@@ -21,6 +21,7 @@ export class socketController {
       this.socket = io(url, {
         transports: ["websocket"],
         reconnection: true,
+        withCredentials: true,
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,
       });
