@@ -4,10 +4,11 @@ import InputText from "primevue/inputtext";
 import ColorPicker from "primevue/colorpicker";
 import Button from "primevue/button";
 import Message from "primevue/message";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
 import { useNameValidation } from "@/composables/common/useNameValidation";
+import { useServerFormErrors } from "@/composables/useServerFormErrors";
 
 const props = defineProps({
   isOnDrawMode: Boolean,
@@ -21,23 +22,25 @@ const visible = defineModel("visible", { type: Boolean, default: false });
 const emit = defineEmits(["hide", "save", "cancel"]);
 
 const store = useInteractiveMapStore();
-const { zones } = storeToRefs(store);
+const { zones, error } = storeToRefs(store);
+
+const { getError: getServerError } = useServerFormErrors(error);
 
 const submitted = ref(false);
 
 const nameRef = computed(() => zone.value?.name);
 const idRef = computed(() => zone.value?.id);
 
-const { validationError, isValid: isNameUnique } = useNameValidation(
-  nameRef,
-  zones,
-  idRef,
-  "name",
+const { validationError: localValidationError, isValid: isNameLocalValid } =
+  useNameValidation(nameRef, zones, idRef, "name");
+
+const nameError = computed(
+  () => localValidationError.value || getServerError("name"),
 );
 
 const isFormValid = computed(() => {
   const name = zone.value?.name?.trim();
-  return name && name.length > 0 && isNameUnique.value;
+  return name && name.length > 0 && isNameLocalValid.value;
 });
 
 const activeColor = computed({
@@ -45,6 +48,15 @@ const activeColor = computed({
   set: (val) => {
     if (zone.value) zone.value.color = "#" + val;
   },
+});
+
+watch(visible, (isOpen) => {
+  if (isOpen) {
+    submitted.value = false;
+    if (error.value) {
+      error.value = null;
+    }
+  }
 });
 
 function onSave() {
@@ -84,18 +96,18 @@ const dialogTitle = computed(() =>
             class="flex-auto"
             autocomplete="off"
             v-model.trim="zone.name"
-            :invalid="!!validationError || (submitted && !zone.name)"
+            :invalid="!!nameError || (submitted && !zone.name)"
             aria-describedby="zoneName-error"
             autofocus
           />
           <Message
             id="zoneName-error"
-            v-if="validationError || (submitted && !zone.name)"
+            v-if="nameError || (submitted && !zone.name)"
             severity="error"
             variant="simple"
             size="small"
           >
-            {{ validationError || "Zone name is required" }}
+            {{ nameError || "Zone name is required" }}
           </Message>
         </div>
       </div>

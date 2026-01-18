@@ -144,29 +144,35 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
   };
 
   const addZone = (zone) =>
-    perform(async () => {
-      const newZone = await activeService.value.addZone(zone);
-      zones.value.push(newZone);
-      smartFurnitureHookups.value =
-        await activeService.value.fetchSmartFurnitureHookups();
-    });
-
-  const updateZone = (id, payload) =>
-    perform(async () => {
-      const updatedZone = await activeService.value.updateZone(id, payload);
-      const index = zones.value.findIndex((zone) => zone.id === id);
-
-      if (index !== -1) {
-        zones.value[index] = updatedZone;
-      } else {
-        zones.value.push(updatedZone);
-      }
-
-      if (payload.points) {
+    perform(
+      async () => {
+        const newZone = await activeService.value.addZone(zone);
+        zones.value.push(newZone);
         smartFurnitureHookups.value =
           await activeService.value.fetchSmartFurnitureHookups();
-      }
-    });
+      },
+      { suppressToastForCodes: ["CONFLICT", "VALIDATION_ERROR"] },
+    );
+
+  const updateZone = (id, payload) =>
+    perform(
+      async () => {
+        const updatedZone = await activeService.value.updateZone(id, payload);
+        const index = zones.value.findIndex((zone) => zone.id === id);
+
+        if (index !== -1) {
+          zones.value[index] = updatedZone;
+        } else {
+          zones.value.push(updatedZone);
+        }
+
+        if (payload.points) {
+          smartFurnitureHookups.value =
+            await activeService.value.fetchSmartFurnitureHookups();
+        }
+      },
+      { suppressToastForCodes: ["CONFLICT", "VALIDATION_ERROR"] },
+    );
 
   const updateZonePosition = (id, payload) =>
     perform(async () => {
