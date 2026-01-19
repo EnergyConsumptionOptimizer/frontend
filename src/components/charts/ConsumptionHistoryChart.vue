@@ -10,15 +10,15 @@ const props = defineProps({
   timeFilterConfig: {
     type: Object,
     default: () => {},
-    utilities: { type: Array, default: () => [] },
-    users: { type: Array, default: () => [] },
-    zones: { type: Array, default: () => [] },
-    consumptionSeries: {
-      type: Object,
-      default: () => {},
-    },
-    loading: { type: Boolean, default: false },
   },
+  utilities: { type: Array, default: () => [] },
+  users: { type: Array, default: () => [] },
+  zones: { type: Array, default: () => [] },
+  consumptionSeries: {
+    type: Object,
+    default: () => {},
+  },
+  loading: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["filter-change"]);
