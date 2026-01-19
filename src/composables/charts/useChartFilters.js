@@ -1,30 +1,29 @@
-import { reactive, onMounted } from "vue";
+import { reactive } from "vue";
 
 export function useChartFilters(props, emit) {
+  const firstTimeKey = Object.keys(props.timeFilterConfig)[0];
+  const firstGranularity =
+    props.timeFilterConfig[firstTimeKey]?.granularities?.[0];
+
   const filters = reactive({
-    utility: props.utilities?.[0],
-    time: props.timeRanges?.[0],
-    granularity: props.granularities?.[0],
-    user: props.users?.[0],
-    zone: props.zones?.[0],
+    utility: props.utilities?.[0] || "",
+    time: firstTimeKey || "",
+    granularity: firstGranularity || "",
+    user: props.users?.[0] || "",
+    zone: props.zones?.[0] || "",
   });
 
-  const isDefault = (val, defaults) => val?.value === defaults?.[0]?.value;
-
-  const handleFilterChange = (source) => {
-    if (source === "user" && !isDefault(filters.user, props.users)) {
-      filters.zone = props.zones[0];
-    }
-    if (source === "zone" && !isDefault(filters.zone, props.zones)) {
-      filters.user = props.users[0];
+  const handleFilterChange = (key) => {
+    if (key === "time") {
+      filters.granularity =
+        props.timeFilterConfig[filters.time]?.granularities?.[0];
     }
 
     emit("filter-change", { ...filters });
   };
 
-  onMounted(() => {
-    emit("filter-change", { ...filters });
-  });
-
-  return { filters, handleFilterChange };
+  return {
+    filters,
+    handleFilterChange,
+  };
 }
