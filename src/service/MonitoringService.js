@@ -1,15 +1,18 @@
 import { SocketController } from "@/sockets/SocketController.js";
 
-const BASE_URL = "http://10.250.23.192:3004";
+const BASE_URL = `http://${import.meta.env.VITE_MONITORING_HOST}:${import.meta.env.VITE_MONITORING_PORT}`;
+
 const REAL_TIME_NAMESPACE = "real-time";
+const UTILITY_CONSUMPTION_NAMESPACE = "utility-consumptions";
 
 export class MonitoringService {
   realTimeSocket = null;
+  utilityConsumptionSocket = null;
 
   subscribedToRealTimeMetersUpdates = false;
   subscribedToActiveSmartFurnitureHookupsUpdates = false;
 
-  async _subscribeToRealTimeUpdates() {
+  async #subscribeToRealTimeUpdates() {
     if (!this.realTimeSocket) {
       this.realTimeSocket = new SocketController();
     }
@@ -25,7 +28,7 @@ export class MonitoringService {
       return;
     }
 
-    await this._subscribeToRealTimeUpdates();
+    await this.#subscribeToRealTimeUpdates();
     console.log(`subscribedToRealTimeMetersUpdates`);
 
     this.realTimeSocket?.on("utilityMetersUpdate", (data) => {
@@ -46,7 +49,7 @@ export class MonitoringService {
       return;
     }
 
-    await this._subscribeToRealTimeUpdates();
+    await this.#subscribeToRealTimeUpdates();
     console.log(`subscribeToActiveSmartFurnitureHookups`);
 
     this.realTimeSocket?.on("activeSmartFurnitureHookupsUpdate", (data) => {
@@ -58,5 +61,65 @@ export class MonitoringService {
     this.realTimeSocket?.emit("subscribeActiveSmartFurnitureHookups");
 
     this.subscribedToActiveSmartFurnitureHookupsUpdates = true;
+  }
+
+  async subscribeToUtilityConsumptions(query, onUpdate) {
+    if (!this.utilityConsumptionSocket) {
+      this.utilityConsumptionSocket = new SocketController();
+    }
+    await this.utilityConsumptionSocket.connect(
+      `${BASE_URL}/${UTILITY_CONSUMPTION_NAMESPACE}`,
+    );
+
+    this.utilityConsumptionSocket?.emit("subscribe", query);
+    this.utilityConsumptionSocket?.on("utilityConsumptionsUpdate", (data) => {
+      onUpdate(data);
+    });
+    this.utilityConsumptionSocket?.on(
+      "utilityConsumptionsQueryUpdate",
+      (data) => {
+        onUpdate(data);
+      },
+    );
+  }
+
+  async editUtilityConsumptionQuery(query) {
+    if (!this.utilityConsumptionSocket) {
+      console.warn("Register a query first");
+      return;
+    }
+
+    return new Promise((resolve, reject) => {
+      let timeoutId;
+
+      const cleanup = () => {
+        clearTimeout(timeoutId);
+        this.utilityConsumptionSocket?.off(
+          "utilityConsumptionsQueryUpdate",
+          () => {},
+        );
+      };
+
+      timeoutId = setTimeout(() => {
+        cleanup();
+        reject(
+          new Error(
+            `Timeout: No update received for query label '${query.label}' within 10s`,
+          ),
+        );
+      }, 10000);
+
+      this.utilityConsumptionSocket?.on(
+        "utilityConsumptionsQueryUpdate",
+        (data) => {
+          if (data && data.label === query.label) {
+            cleanup();
+            resolve(data);
+          }
+        },
+      );
+
+      this.utilityConsumptionSocket?.emit("editQuery", query);
+    });
   }
 }
