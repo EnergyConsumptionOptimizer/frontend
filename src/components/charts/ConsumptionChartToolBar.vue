@@ -1,6 +1,4 @@
 <script setup>
-defineOptions({ name: "ConsumptionChartToolBar" });
-
 defineProps({
   utilities: { type: Array, default: () => [] },
   timeRanges: { type: Array, default: () => [] },
@@ -12,6 +10,7 @@ defineProps({
 });
 
 const filters = defineModel("filters", { type: Object, required: true });
+
 const emit = defineEmits(["change"]);
 
 const handleChange = (key) => {
@@ -33,26 +32,33 @@ const handleChange = (key) => {
         :options="utilities"
         :allow-empty="false"
         class="w-full sm:w-auto"
+        :disabled="loading"
         @change="handleChange('utility')"
       />
-
       <div class="flex gap-2 w-full sm:w-auto">
-        <Select
-          v-if="timeRanges.length"
-          v-model="filters.time"
-          :options="timeRanges"
-          optionLabel="label"
-          class="w-1/2 sm:w-32"
-          @change="handleChange('time')"
-        />
-        <Select
-          v-if="granularities.length"
-          v-model="filters.granularity"
-          :options="granularities"
-          optionLabel="label"
-          class="w-1/2 sm:w-36"
-          @change="handleChange('granularity')"
-        />
+        <div v-if="timeRanges.length" class="flex items-center gap-2">
+          <label class="text-gray-400">Time</label>
+          <Select
+            v-model="filters.time"
+            :options="timeRanges"
+            optionLabel="label"
+            optionValue="value"
+            class="w-1/2 sm:w-32"
+            :disabled="loading"
+            @change="handleChange('time')"
+          />
+        </div>
+        <div v-if="granularities.length" class="flex items-center gap-2">
+          <label class="text-gray-400">Granularity</label>
+          <Select
+            v-model="filters.granularity"
+            :options="granularities"
+            optionLabel="label"
+            class="w-1/2 sm:w-36"
+            :disabled="loading"
+            @change="handleChange('granularity')"
+          />
+        </div>
       </div>
     </div>
 
@@ -64,6 +70,7 @@ const handleChange = (key) => {
         optionLabel="label"
         class="w-1/2 sm:w-32"
         placeholder="User"
+        :disabled="loading"
         @change="handleChange('user')"
       />
       <Select
@@ -73,6 +80,7 @@ const handleChange = (key) => {
         optionLabel="label"
         class="w-1/2 sm:w-32"
         placeholder="Zone"
+        :disabled="loading"
         @change="handleChange('zone')"
       />
     </div>
