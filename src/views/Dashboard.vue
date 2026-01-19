@@ -184,7 +184,7 @@ onMounted(async () => {
     </div>
     <div class="col-span-12 xl:col-span-6">
       <div class="card h-full flex flex-col">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex justify-between items-center">
           <h3 class="text-xl font-semibold m-0">House Map</h3>
         </div>
         <static-map />
