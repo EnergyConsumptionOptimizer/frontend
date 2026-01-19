@@ -21,15 +21,15 @@ const props = defineProps({
       :points="props.polygonPath"
       fill="none"
       :stroke="props.color"
-      stroke-width="6"
-      stroke-dasharray="16"
+      stroke-width="12"
+      stroke-dasharray="20"
     />
     <circle
       v-for="(point, i) in props.points"
       :key="i"
       :cx="point.x"
       :cy="point.y"
-      r="10"
+      r="16"
       :fill="props.color"
     />
   </g>

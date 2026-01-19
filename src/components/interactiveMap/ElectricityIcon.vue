@@ -1,12 +1,12 @@
 <script setup>
-const props = defineProps({ color: String });
+const props = defineProps({ color: String, stroke: String });
 </script>
 
 <template>
   <path
     d="M13,9h6L8,22l3-10H5L10,2h7Z"
     :fill="props.color"
-    stroke="#a3a3a3"
+    :stroke="props.stroke"
     stroke-width="1"
   />
 </template>

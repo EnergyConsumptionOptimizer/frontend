@@ -25,7 +25,11 @@ const smartFurnitureHookupClick = (event, hookup = null) => {
 };
 
 const color = computed(() => {
-  return props.smartFurnitureHookup.active ? "#008000" : "#808080";
+  return props.smartFurnitureHookup.active ? "#137937" : "#F5F5F5";
+});
+
+const strokeColor = computed(() => {
+  return props.smartFurnitureHookup.active ? "#0c5225" : "#546E7A";
 });
 
 const transform = computed(() => {
@@ -79,19 +83,22 @@ const descId = `hookup-desc-${props.smartFurnitureHookup.id}`;
           props.smartFurnitureHookup.utilityType === utilityType.ELECTRICITY
         "
         :fill="color"
+        :stroke="strokeColor"
         :transform="transform"
       />
       <gas-icon
         v-else-if="props.smartFurnitureHookup.utilityType === utilityType.GAS"
         :fill="color"
+        :stroke="strokeColor"
         :transform="transform"
       />
       <water-icon
         v-else-if="props.smartFurnitureHookup.utilityType === utilityType.WATER"
         :fill="color"
+        :stroke="strokeColor"
         :transform="transform"
       />
-      <circle v-else r="8" :fill="color" />
+      <circle v-else r="8" :fill="color" :stroke="strokeColor" />
     </g>
   </g>
 </template>
