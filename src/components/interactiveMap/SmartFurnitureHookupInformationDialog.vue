@@ -34,6 +34,8 @@ const { getFieldError: getServerError, globalError } =
   useServerFormErrors(error);
 
 const submitted = ref(false);
+const isSynced = ref(false);
+const syncFailed = ref(false);
 
 const endpointRef = computed(() => smartFurnitureHookup.value?.endpoint);
 const nameRef = computed(() => smartFurnitureHookup.value?.name);
@@ -59,6 +61,7 @@ const nameError = computed(
 
 const isFormValid = computed(() => {
   return (
+    isSynced.value &&
     !!smartFurnitureHookup.value?.endpoint?.trim() &&
     !!smartFurnitureHookup.value?.name?.trim() &&
     isEndpointLocalValid.value &&
@@ -69,13 +72,46 @@ const isFormValid = computed(() => {
 watch(visible, (isOpen) => {
   if (isOpen) {
     submitted.value = false;
+    isSynced.value = !!smartFurnitureHookup.value?.id;
+    syncFailed.value = false;
     if (interactiveMapStore.error) interactiveMapStore.clearError();
   }
 });
 
+watch(
+  () => smartFurnitureHookup.value?.endpoint,
+  (newVal, oldVal) => {
+    if (visible.value && newVal !== oldVal) {
+      isSynced.value = false;
+      syncFailed.value = false;
+    }
+  },
+);
+
+watch(loading, (isLoading, wasLoading) => {
+  if (wasLoading && !isLoading && smartFurnitureHookup.value?.endpoint) {
+    const hasValidData =
+      smartFurnitureHookup.value?.utilityType &&
+      smartFurnitureHookup.value?.name;
+
+    if (!error.value && hasValidData) {
+      isSynced.value = true;
+      syncFailed.value = false;
+    } else {
+      syncFailed.value = true;
+      isSynced.value = false;
+    }
+  }
+});
+
+const clearError = () => {
+  if (interactiveMapStore.error) interactiveMapStore.clearError();
+};
+
 function onSave() {
   submitted.value = true;
   if (!isFormValid.value) return;
+
   emit("save", {
     id: smartFurnitureHookup.value.id ?? null,
     name: smartFurnitureHookup.value.name.trim(),
@@ -85,9 +121,7 @@ function onSave() {
 }
 
 const dialogTitle = computed(() =>
-  props.isOnDrawMode
-    ? "Create new smart furniture hookup"
-    : "Edit smart furniture hookup",
+  props.isOnDrawMode ? "Create Hookup" : "Edit Hookup",
 );
 </script>
 
@@ -102,34 +136,33 @@ const dialogTitle = computed(() =>
     <form
       id="sfh-form"
       @submit.prevent="onSave"
+      class="flex flex-col gap-6"
       novalidate
-      aria-label="Smart furniture hookup information form"
+      aria-label="Smart furniture hookup form"
     >
       <Message
         v-if="globalError"
         severity="error"
         variant="simple"
-        class="mb-4"
+        class="mb-2"
         role="alert"
         aria-live="assertive"
       >
         {{ globalError }}
       </Message>
 
-      <div class="flex flex-col gap-2 mb-6">
-        <label
-          for="smartFurnitureHookupEndpoint"
-          class="font-semibold text-base"
-        >
+      <div class="flex flex-col gap-2">
+        <label for="hookupEndpoint" class="font-semibold text-base">
           Endpoint <span class="text-red-500" aria-hidden="true">*</span>
         </label>
         <div class="flex gap-2">
           <InputText
-            id="smartFurnitureHookupEndpoint"
-            autocomplete="off"
-            type="text"
-            class="flex-1 min-h-11"
+            id="hookupEndpoint"
             v-model.trim="smartFurnitureHookup.endpoint"
+            type="url"
+            autocomplete="off"
+            autofocus
+            class="flex-1 min-h-11"
             :invalid="
               !!endpointError || (submitted && !smartFurnitureHookup.endpoint)
             "
@@ -138,19 +171,19 @@ const dialogTitle = computed(() =>
             "
             aria-describedby="endpoint-error"
             aria-required="true"
-            placeholder="http://endpoint-url"
-            @update:modelValue="emit('endpointUpdated')"
+            placeholder="Enter endpoint URL"
+            fluid
             @input="clearError"
+            @update:modelValue="emit('endpointUpdated')"
           />
           <Button
-            :disabled="!smartFurnitureHookup.endpoint"
-            :loading="loading"
             type="button"
-            icon="pi pi-link"
+            icon="pi pi-sync"
             class="min-w-11 min-h-11"
+            :loading="loading"
+            :disabled="!smartFurnitureHookup.endpoint || loading"
             aria-label="Sync utility information from endpoint"
             @click="emit('fetchInfo')"
-            v-tooltip="'Sync Utility Info'"
           />
         </div>
         <Message
@@ -162,54 +195,77 @@ const dialogTitle = computed(() =>
           role="alert"
           aria-live="polite"
         >
-          {{ endpointError || "Endpoint is required" }}
+          {{ endpointError || "Endpoint is required." }}
         </Message>
-      </div>
-
-      <div class="flex flex-col gap-2 mb-6">
-        <label for="smartFurnitureHookupName" class="font-semibold text-base">
-          Name <span class="text-red-500" aria-hidden="true">*</span>
-        </label>
-        <InputText
-          id="smartFurnitureHookupName"
-          autocomplete="off"
-          type="text"
-          class="w-full min-h-11"
-          v-model.trim="smartFurnitureHookup.name"
-          :invalid="!!nameError || (submitted && !smartFurnitureHookup.name)"
-          :aria-invalid="
-            !!nameError || (submitted && !smartFurnitureHookup.name)
-          "
-          aria-describedby="name-error"
-          aria-required="true"
-          placeholder="Hookup name"
-          @input="clearError"
-        />
         <Message
-          id="name-error"
-          v-if="nameError || (submitted && !smartFurnitureHookup.name)"
+          v-else-if="syncFailed"
           severity="error"
           variant="simple"
           size="small"
           role="alert"
           aria-live="polite"
         >
-          {{ nameError || "Name is required" }}
+          Hookup failed to sync
         </Message>
-      </div>
-
-      <div
-        v-if="smartFurnitureHookup.utilityType"
-        class="flex flex-col gap-2 mb-6"
-      >
-        <label class="font-semibold text-base"> Utility type </label>
-        <p
-          class="text-surface-700 dark:text-surface-300 text-sm sm:text-base px-3 py-2 bg-surface-50 dark:bg-surface-800 rounded"
+        <Message
+          v-else-if="isSynced"
+          severity="success"
+          variant="simple"
+          size="small"
           role="status"
           aria-live="polite"
         >
-          {{ smartFurnitureHookup.utilityType }}
-        </p>
+          Endpoint verified successfully
+        </Message>
+      </div>
+
+      <div v-if="isSynced" class="flex flex-col gap-6">
+        <div class="flex flex-col gap-2">
+          <label for="hookupName" class="font-semibold text-base">
+            Name <span class="text-red-500" aria-hidden="true">*</span>
+          </label>
+          <InputText
+            id="hookupName"
+            v-model.trim="smartFurnitureHookup.name"
+            type="text"
+            autocomplete="off"
+            class="w-full min-h-11"
+            :invalid="!!nameError || (submitted && !smartFurnitureHookup.name)"
+            :aria-invalid="
+              !!nameError || (submitted && !smartFurnitureHookup.name)
+            "
+            aria-describedby="name-error"
+            aria-required="true"
+            placeholder="Enter hookup name"
+            fluid
+            @input="clearError"
+          />
+          <Message
+            id="name-error"
+            v-if="nameError || (submitted && !smartFurnitureHookup.name)"
+            severity="error"
+            variant="simple"
+            size="small"
+            role="alert"
+            aria-live="polite"
+          >
+            {{ nameError || "Name is required." }}
+          </Message>
+        </div>
+
+        <div
+          v-if="smartFurnitureHookup.utilityType"
+          class="flex flex-col gap-2"
+        >
+          <label class="font-semibold text-base">Utility Type</label>
+          <div
+            class="px-3 py-2.5 bg-surface-50 dark:bg-surface-800 rounded-lg border border-surface-200 dark:border-surface-700 text-surface-700 dark:text-surface-300"
+            role="status"
+            aria-live="polite"
+          >
+            {{ smartFurnitureHookup.utilityType }}
+          </div>
+        </div>
       </div>
     </form>
 
@@ -225,6 +281,7 @@ const dialogTitle = computed(() =>
           aria-label="Cancel hookup editing"
         />
         <Button
+          v-if="isSynced"
           type="submit"
           form="sfh-form"
           label="Save"
