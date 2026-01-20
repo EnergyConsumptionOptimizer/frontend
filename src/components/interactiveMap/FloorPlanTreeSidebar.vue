@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import Tree from "primevue/tree";
 import Panel from "primevue/panel";
 import FloorPlanTreeSidebarNode from "@/components/interactiveMap/FloorPlanTreeSidebarNode.vue";
@@ -34,6 +34,12 @@ watch(
   },
   { once: true },
 );
+
+onMounted(() => {
+  expandedKeys.value = Object.fromEntries(
+    props.tree.map((node) => [node.key, true]),
+  );
+});
 </script>
 
 <template>
