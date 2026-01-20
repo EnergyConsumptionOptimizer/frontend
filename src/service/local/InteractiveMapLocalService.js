@@ -114,6 +114,7 @@ export const InteractiveMapLocalService = {
         sfh.zone = null;
       }
     }
+
     updateStore({
       smartFurnitureHookups,
     });

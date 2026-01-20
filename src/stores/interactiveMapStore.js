@@ -176,12 +176,17 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
 
   const updateZonePosition = (id, payload) =>
     perform(async () => {
+      // First update the position of moved hookups
       await activeService.value.updateSmartFurnitureHookupsPosition(
         smartFurnitureHookups.value.filter((sfh) => sfh.zone === id),
       );
+      // Then update the zone
       const updatedZone = await activeService.value.updateZone(id, payload);
+
       const index = zones.value.findIndex((zone) => zone.id === id);
       if (index !== -1) zones.value[index] = updatedZone;
+      smartFurnitureHookups.value =
+        await activeService.value.fetchSmartFurnitureHookups();
     });
 
   const deleteZone = (id) =>
