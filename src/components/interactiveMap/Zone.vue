@@ -1,5 +1,6 @@
 <script setup>
 import { inject, computed } from "vue";
+import { TEXT_LIMITS } from "@/config/uiConstants";
 
 const props = defineProps({
   zone: {
@@ -34,37 +35,53 @@ const zoneClick = (event, zone, pointID = null) => {
 const truncatedName = computed(() => {
   const name = props.zone.name;
   if (!name) return "";
-  return name.length > 25 ? name.substring(0, 25) + "..." : name;
+  return name.length > TEXT_LIMITS.ZONE_NAME_MAX_LENGTH
+    ? name.substring(0, TEXT_LIMITS.ZONE_NAME_MAX_LENGTH) +
+        TEXT_LIMITS.ZONE_NAME_TRUNCATION_SUFFIX
+    : name;
 });
 
+const titleId = `zone-title-${props.zone.id}`;
 const descId = `zone-desc-${props.zone.id}`;
 </script>
 
 <template>
   <g
-    :aria-labelledby="`${descId}`"
+    role="graphics-object"
+    :aria-labelledby="`${titleId} ${descId}`"
     @mousedown="props.editModeActive ? zoneClick($event, props.zone) : null"
     :class="{ 'cursor-move': props.editModeActive }"
   >
-    <desc :id="descId"> Zone : {{ props.zone.name }} </desc>
+    <title :id="titleId">Zone: {{ props.zone.name }}</title>
+    <desc :id="descId">
+      Zone {{ props.zone.name }} with {{ props.zone.points.length }} vertices.
+      {{
+        props.editModeActive
+          ? "Click to move zone, click vertices to adjust shape."
+          : ""
+      }}
+    </desc>
+
     <path
       :d="pointsToPath(props.zone.points)"
       :fill="props.zone.color"
-      fill-opacity="0.4"
+      :fill-opacity="MAP_CONSTANTS.ZONE_FILL_OPACITY"
       :stroke="props.zone.color"
-      stroke-width="2"
+      :stroke-width="MAP_CONSTANTS.ZONE_STROKE_WIDTH"
     />
 
-    <g v-if="props.editModeActive">
+    <g v-if="props.editModeActive" role="list" aria-label="Zone vertices">
       <circle
         v-for="(point, i) in props.zone.points"
         :key="i"
+        role="button"
+        :aria-label="`Vertex ${i + 1} of ${props.zone.points.length}`"
         :cx="point.x"
         :cy="point.y"
-        r="16"
+        :r="MAP_CONSTANTS.VERTEX_RADIUS"
         :fill="props.zone.color"
         stroke="white"
-        stroke-width="3"
+        stroke-width="4"
         style="cursor: pointer"
         @mousedown="zoneClick($event, props.zone, i)"
       />
@@ -84,10 +101,9 @@ const descId = `zone-desc-${props.zone.id}`;
       font-size="38"
       font-weight="bold"
       pointer-events="none"
+      aria-hidden="true"
     >
       {{ truncatedName }}
     </text>
   </g>
 </template>
-
-<style scoped></style>

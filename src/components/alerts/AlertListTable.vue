@@ -1,10 +1,12 @@
 <script setup>
 import { ref } from "vue";
 import { format } from "date-fns";
+import { FilterMatchMode } from "@primevue/core/api";
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Button from "primevue/button";
 import Tag from "primevue/tag";
+import CrudToolbar from "@/components/common/CrudToolbar.vue";
 
 defineProps({
   alerts: {
@@ -17,15 +19,19 @@ defineProps({
   },
 });
 
+const selectedAlerts = defineModel("selection", { default: () => [] });
+
 const emit = defineEmits([
   "mark-read",
   "delete",
-  "refresh",
   "mark-read-bulk",
   "delete-bulk",
+  "refresh",
 ]);
 
-const selectedAlerts = ref([]);
+const filters = ref({
+  global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+});
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
@@ -41,7 +47,7 @@ const getMessage = (alert) => {
 };
 
 const rowClass = (data) => {
-  return [{ "bg-blue-50 dark:bg-blue-900/20": !data.isRead }];
+  return [{ "bg-blue-50/50 dark:bg-blue-900/10": !data.isRead }];
 };
 
 const onBulkAction = (action) => {
@@ -52,96 +58,129 @@ const onBulkAction = (action) => {
 </script>
 
 <template>
-  <div class="card">
+  <div>
+    <CrudToolbar
+      :selected-items="selectedAlerts"
+      delete-label="Mark Read"
+      delete-icon="pi pi-check"
+      delete-severity="success"
+      :show-create="false"
+      @delete-selected="onBulkAction('mark-read-bulk')"
+    >
+      <template #extra-actions>
+        <Button
+          label="Delete"
+          icon="pi pi-trash"
+          severity="danger"
+          :outlined="selectedAlerts.length === 0"
+          class="min-h-11"
+          :disabled="selectedAlerts.length === 0"
+          :aria-label="
+            selectedAlerts.length > 0
+              ? `Delete ${selectedAlerts.length} selected alerts`
+              : 'Delete selected alerts (none selected)'
+          "
+          @click="onBulkAction('delete-bulk')"
+        />
+      </template>
+    </CrudToolbar>
+
     <DataTable
       v-model:selection="selectedAlerts"
       :value="alerts"
       dataKey="id"
       :paginator="true"
       :rows="10"
-      :rowsPerPageOptions="[10, 20, 50]"
+      :rowsPerPageOptions="[5, 10, 20]"
+      :filters="filters"
+      :globalFilterFields="['message', 'details.thresholdName']"
       :loading="loading"
       :rowClass="rowClass"
+      responsiveLayout="scroll"
+      aria-label="Alerts table"
     >
       <template #header>
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <h4 class="m-0">Alerts</h4>
-            <div v-if="selectedAlerts.length > 0" class="flex gap-2 ml-4">
-              <Button
-                label="Mark as Read"
-                icon="pi pi-check"
-                size="small"
-                severity="success"
-                outlined
-                @click="onBulkAction('mark-read-bulk')"
-              />
-              <Button
-                label="Delete Selected"
-                icon="pi pi-trash"
-                size="small"
-                severity="danger"
-                outlined
-                @click="onBulkAction('delete-bulk')"
-              />
-            </div>
-          </div>
-          <Button icon="pi pi-refresh" text rounded @click="$emit('refresh')" />
+        <div
+          class="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between"
+        >
+          <h2 class="m-0 text-xl sm:text-2xl font-semibold">Alerts</h2>
+          <IconField>
+            <InputIcon><i class="pi pi-search" aria-hidden="true" /></InputIcon>
+            <InputText
+              v-model="filters['global'].value"
+              placeholder="Search alerts..."
+              class="min-h-11"
+              aria-label="Search alerts by message or threshold name"
+            />
+          </IconField>
         </div>
       </template>
 
       <template #empty>
-        <span class="text-surface-500 dark:text-surface-400"
-          >No alerts available.</span
-        >
+        <div class="text-center p-4 text-surface-500 dark:text-surface-400">
+          No alerts available.
+        </div>
       </template>
 
-      <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
+      <Column
+        selectionMode="multiple"
+        headerStyle="width: 3rem"
+        :exportable="false"
+      />
 
-      <Column header="Date" sortable field="createdAt" style="width: 14rem">
+      <Column header="Date" sortable field="createdAt" style="min-width: 12rem">
         <template #body="{ data }">
-          <span class="text-sm text-surface-500 dark:text-surface-400">
+          <span class="whitespace-nowrap">
             {{ formatDate(data.createdAt) }}
           </span>
         </template>
       </Column>
 
-      <Column header="Status" field="isRead" sortable style="width: 8rem">
+      <Column header="Status" field="isRead" sortable style="min-width: 8rem">
         <template #body="{ data }">
           <Tag
             :severity="!data.isRead ? 'info' : 'success'"
             :value="!data.isRead ? 'New' : 'Read'"
+            class="uppercase text-xs"
+            :aria-label="!data.isRead ? 'Unread alert' : 'Read alert'"
           />
         </template>
       </Column>
 
-      <Column header="Message">
+      <Column header="Message" style="min-width: 16rem">
         <template #body="{ data }">
-          <span class="text-surface-900 dark:text-surface-0">
+          <span
+            class="text-surface-900 dark:text-surface-0 break-words line-clamp-2"
+            :title="getMessage(data)"
+          >
             {{ getMessage(data) }}
           </span>
         </template>
       </Column>
 
-      <Column header="Actions" style="width: 8rem">
+      <Column header="Actions" style="min-width: 10rem" :exportable="false">
         <template #body="{ data }">
           <div class="flex gap-2">
+            <div class="w-11">
+              <Button
+                v-if="!data.isRead"
+                icon="pi pi-check"
+                rounded
+                severity="success"
+                class="min-w-11 min-h-11"
+                aria-label="Mark as read"
+                v-tooltip.top="'Mark as read'"
+                @click="$emit('mark-read', data)"
+              />
+            </div>
             <Button
               icon="pi pi-trash"
-              text
               rounded
               severity="danger"
+              class="min-w-11 min-h-11"
+              aria-label="Delete alert"
               v-tooltip.top="'Delete'"
               @click="$emit('delete', data)"
-            />
-            <Button
-              v-if="!data.isRead"
-              icon="pi pi-check"
-              text
-              rounded
-              severity="success"
-              v-tooltip.top="'Mark as read'"
-              @click="$emit('mark-read', data)"
             />
           </div>
         </template>

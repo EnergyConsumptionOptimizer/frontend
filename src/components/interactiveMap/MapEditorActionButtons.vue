@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 defineProps({
   isViewMode: Boolean,
   isDrawMode: Boolean,
@@ -27,5 +27,3 @@ defineProps({
     </Toolbar>
   </div>
 </template>
-
-<style scoped></style>

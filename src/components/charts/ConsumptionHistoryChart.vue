@@ -95,9 +95,7 @@ const chartOptions = computed(() => ({
 </script>
 
 <template>
-  <div
-    class="card flex flex-col aspect-square md:aspect-video xl:aspect-auto xl:h-full"
-  >
+  <section class="card h-full flex flex-col" aria-labelledby="hist-chart-title">
     <ConsumptionChartToolBar
       title="Historical Consumptions"
       v-model:filters="filters"
@@ -109,7 +107,13 @@ const chartOptions = computed(() => ({
       @change="handleFilterChange"
     />
 
-    <div class="flex-1 min-h-0 w-full relative">
+    <div
+      class="flex-1 w-full relative"
+      style="min-height: 16rem"
+      role="region"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <empty-consumption-data v-if="!hasData" />
       <div
         v-else
@@ -120,11 +124,13 @@ const chartOptions = computed(() => ({
             type="bar"
             :data="chartData"
             :options="chartOptions"
-            class="h-full w-full"
+            class="h-full w-full transition-opacity"
             :class="{ 'opacity-50': loading }"
+            role="img"
+            :aria-label="`Historical ${filters.utility || 'consumption'} chart`"
           />
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </template>

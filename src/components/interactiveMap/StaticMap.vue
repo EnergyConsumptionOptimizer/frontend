@@ -44,5 +44,3 @@ onMounted(() => {
     </template>
   </interactive-map-layout>
 </template>
-
-<style scoped></style>

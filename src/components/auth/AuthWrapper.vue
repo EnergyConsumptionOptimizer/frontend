@@ -13,23 +13,29 @@ defineProps({
 
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-surface-100 dark:bg-surface-900 p-4"
+    class="min-h-screen flex items-center justify-center bg-surface-50 dark:bg-surface-950 p-4"
   >
     <div class="w-full max-w-md">
       <div
-        class="bg-linear-to-b from-primary-400 to-primary-400 p-1 rounded-[56px]"
+        class="bg-gradient-to-b from-primary-400 to-primary-500 p-1 rounded-3xl sm:rounded-[56px]"
+        aria-hidden="true"
       >
         <div
-          class="bg-surface-0 dark:bg-surface-900 rounded-[53px] p-8 sm:p-12"
+          class="bg-surface-0 dark:bg-surface-900 rounded-3xl sm:rounded-[53px] p-6 sm:p-8 md:p-12"
         >
-          <div class="text-center mb-8">
+          <header class="text-center mb-6 sm:mb-8">
             <h1
-              class="text-3xl font-medium text-surface-900 dark:text-surface-0 mb-2"
+              class="text-2xl sm:text-3xl font-medium text-surface-900 dark:text-surface-0 mb-2"
             >
               {{ title }}
             </h1>
-            <p v-if="subtitle" class="text-muted-color">{{ subtitle }}</p>
-          </div>
+            <p
+              v-if="subtitle"
+              class="text-sm sm:text-base text-surface-600 dark:text-surface-400"
+            >
+              {{ subtitle }}
+            </p>
+          </header>
 
           <slot></slot>
         </div>
@@ -37,10 +43,3 @@ defineProps({
     </div>
   </div>
 </template>
-
-<style scoped>
-:deep(.p-password .p-icon) {
-  transform: scale(1.2);
-  margin-right: 0.5rem;
-}
-</style>

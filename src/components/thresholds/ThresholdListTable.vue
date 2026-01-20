@@ -36,6 +36,7 @@ const filters = ref({
     dataKey="id"
     :paginator="true"
     :rows="10"
+    :rowsPerPageOptions="[5, 10, 20]"
     :filters="filters"
     :loading="loading"
     :globalFilterFields="[
@@ -45,21 +46,33 @@ const filters = ref({
       'periodType',
       'thresholdState',
     ]"
+    responsiveLayout="scroll"
+    aria-label="Threshold management table"
   >
     <template #header>
-      <div class="flex justify-between items-center">
-        <h4 class="m-0">Thresholds</h4>
+      <div
+        class="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between"
+      >
+        <h2 class="m-0 text-xl sm:text-2xl font-semibold">Thresholds</h2>
         <IconField>
-          <InputIcon><i class="pi pi-search" /></InputIcon>
+          <InputIcon><i class="pi pi-search" aria-hidden="true" /></InputIcon>
           <InputText
             v-model="filters['global'].value"
-            placeholder="Search..."
+            placeholder="Search thresholds..."
+            class="min-h-11"
+            aria-label="Search thresholds by name, type, or utility"
           />
         </IconField>
       </div>
     </template>
 
-    <Column selectionMode="multiple" style="width: 3rem" />
+    <template #empty>
+      <div class="text-center p-4 text-surface-500 dark:text-surface-400">
+        No thresholds found.
+      </div>
+    </template>
+
+    <Column selectionMode="multiple" style="width: 3rem" :exportable="false" />
 
     <Column field="name" header="Name" sortable style="min-width: 12rem">
       <template #body="{ data }">
@@ -69,27 +82,33 @@ const filters = ref({
 
     <Column
       field="thresholdType"
-      header="Threshold Type"
+      header="Type"
       sortable
-      style="min-width: 12rem"
+      style="min-width: 10rem"
     >
       <template #body="{ data }">
         {{ data.thresholdType || "-" }}
       </template>
     </Column>
-    <Column field="utilityType" header="Utility" sortable>
+
+    <Column
+      field="utilityType"
+      header="Utility"
+      sortable
+      style="min-width: 8rem"
+    >
       <template #body="{ data }">
         {{ data.utilityType || "-" }}
       </template>
     </Column>
 
-    <Column field="value" header="Value" sortable>
+    <Column field="value" header="Value" sortable style="min-width: 8rem">
       <template #body="{ data }">
         {{ data.value ?? "-" }}
       </template>
     </Column>
 
-    <Column field="periodType" header="Period" sortable>
+    <Column field="periodType" header="Period" sortable style="min-width: 8rem">
       <template #body="{ data }">
         {{ data.periodType || "-" }}
       </template>
@@ -99,27 +118,33 @@ const filters = ref({
       <template #body="{ data }">
         <ToggleSwitch
           :model-value="data.thresholdState === 'ENABLED'"
+          :aria-label="`Toggle ${data.name} threshold: currently ${data.thresholdState === 'ENABLED' ? 'enabled' : 'disabled'}`"
           @update:model-value="() => $emit('toggle-status', data)"
         />
       </template>
     </Column>
 
-    <Column style="min-width: 10rem">
+    <Column header="Actions" style="min-width: 10rem" :exportable="false">
       <template #body="{ data }">
-        <Button
-          icon="pi pi-pencil"
-          outlined
-          rounded
-          class="mr-2"
-          @click="$emit('edit', data)"
-        />
-        <Button
-          icon="pi pi-trash"
-          outlined
-          rounded
-          severity="danger"
-          @click="$emit('delete', data)"
-        />
+        <div class="flex gap-2">
+          <Button
+            icon="pi pi-pencil"
+            rounded
+            class="min-w-11 min-h-11"
+            aria-label="Edit threshold"
+            v-tooltip.top="'Edit'"
+            @click="$emit('edit', data)"
+          />
+          <Button
+            icon="pi pi-trash"
+            rounded
+            severity="danger"
+            class="min-w-11 min-h-11"
+            :aria-label="`Delete threshold ${data.name}`"
+            v-tooltip.top="'Delete'"
+            @click="$emit('delete', data)"
+          />
+        </div>
       </template>
     </Column>
   </DataTable>

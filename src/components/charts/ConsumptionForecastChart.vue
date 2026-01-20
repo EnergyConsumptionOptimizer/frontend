@@ -58,20 +58,25 @@ const hasData = computed(() => {
 <template>
   <div class="card h-full flex flex-col">
     <div
-      class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 shrink-0 gap-3"
+      class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6"
     >
-      <h3 class="text-lg font-semibold m-0">{{ title }}</h3>
+      <h3 class="text-lg sm:text-xl font-semibold m-0">{{ title }}</h3>
       <SelectButton
         v-model="selectedPeriod"
         :options="periods"
         optionLabel="label"
         :allow-empty="false"
         @change="emit('period-change', selectedPeriod)"
-        class="w-full sm:w-auto responsive-select-button"
+        class="w-full sm:w-auto"
+        :pt="{
+          button: {
+            class: 'min-h-11',
+          },
+        }"
       />
     </div>
 
-    <div class="flex-1 min-h-0 w-full relative">
+    <div class="flex-1 w-full relative" style="min-height: 16rem">
       <div
         class="h-full w-full overflow-x-auto overflow-y-hidden custom-scrollbar"
       >
@@ -85,6 +90,8 @@ const hasData = computed(() => {
             :options="chartOptions"
             class="h-full w-full transition-opacity"
             :class="{ 'opacity-50': loading }"
+            role="img"
+            :aria-label="`${title} forecast chart for ${selectedPeriod.label} period`"
           />
         </div>
       </div>
@@ -92,7 +99,11 @@ const hasData = computed(() => {
         v-if="loading"
         class="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-black/50 z-10"
       >
-        <i class="pi pi-spin pi-spinner text-primary text-2xl" />
+        <i
+          class="pi pi-spin pi-spinner text-primary text-2xl"
+          aria-hidden="true"
+        ></i>
+        <span class="sr-only">Loading forecast data...</span>
       </div>
     </div>
   </div>

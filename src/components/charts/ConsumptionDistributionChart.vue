@@ -3,6 +3,7 @@ import { computed } from "vue";
 import ConsumptionChartToolBar from "@/components/charts/ConsumptionChartToolBar.vue";
 import { useChartTheme } from "@/composables/charts/useChartTheme";
 import { useChartFilters } from "@/composables/charts/useChartFilters";
+import { CHART_CONSTANTS } from "@/config/uiConstants";
 
 defineOptions({ name: "ConsumptionDistributionChart" });
 
@@ -31,7 +32,7 @@ const chartData = computed(() => {
         data: props.values,
         backgroundColor: bgColors,
         borderColor: bgColors,
-        borderWidth: 1,
+        borderWidth: CHART_CONSTANTS.BORDER_WIDTH,
       },
     ],
   };
@@ -67,7 +68,8 @@ const chartOptions = computed(() => ({
     />
 
     <div
-      class="flex-1 w-full min-h-64 relative flex justify-center items-center"
+      class="flex-1 w-full relative flex justify-center items-center"
+      style="min-height: 16rem"
     >
       <Chart
         type="doughnut"
@@ -75,6 +77,8 @@ const chartOptions = computed(() => ({
         :options="chartOptions"
         class="h-full w-full max-w-md transition-opacity"
         :class="{ 'opacity-50 pointer-events-none': loading }"
+        role="img"
+        :aria-label="`Distribution of ${filters.utility || 'consumption'}`"
       />
     </div>
   </div>

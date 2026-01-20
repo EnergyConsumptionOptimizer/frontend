@@ -89,6 +89,8 @@ onMounted(() => {
               size="small"
               class="!w-7 !h-7"
               :disabled="disableActionsZone"
+              :aria-label="`Edit zone ${slotProps.node.label}`"
+              v-tooltip.top="'Edit zone'"
               @click.stop="emit('editZone', slotProps.node.id)"
             />
             <Button
@@ -99,6 +101,8 @@ onMounted(() => {
               severity="danger"
               class="!w-7 !h-7"
               :disabled="disableActionsZone"
+              :aria-label="`Delete zone ${slotProps.node.label}`"
+              v-tooltip.top="'Delete zone'"
               @click.stop="emit('deleteZone', slotProps.node.id)"
             />
           </template>
@@ -119,6 +123,8 @@ onMounted(() => {
               size="small"
               class="!w-7 !h-7"
               :disabled="disableActionsSmartFurnitureHookup"
+              :aria-label="`Edit hookup ${slotProps.node.label}`"
+              v-tooltip.top="'Edit hookup'"
               @click.stop="emit('editSmartFurnitureHookup', slotProps.node.id)"
             />
             <Button
@@ -129,6 +135,8 @@ onMounted(() => {
               severity="danger"
               class="!w-7 !h-7"
               :disabled="disableActionsSmartFurnitureHookup"
+              :aria-label="`Delete hookup ${slotProps.node.label}`"
+              v-tooltip.top="'Delete hookup'"
               @click.stop="
                 emit('deleteSmartFurnitureHookup', slotProps.node.id)
               "

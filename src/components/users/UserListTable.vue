@@ -38,41 +38,68 @@ const filters = ref({
       dataKey="id"
       :paginator="true"
       :rows="10"
+      :rowsPerPageOptions="[5, 10, 20]"
       :filters="filters"
       :globalFilterFields="['username', 'role']"
+      responsiveLayout="scroll"
+      aria-label="User management table"
     >
       <template #header>
-        <div class="flex flex-wrap gap-2 items-center justify-between">
-          <h4 class="m-0">Users</h4>
+        <div
+          class="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between"
+        >
+          <h2 class="m-0 text-xl sm:text-2xl font-semibold">Users</h2>
           <IconField>
-            <InputIcon><i class="pi pi-search" /></InputIcon>
+            <InputIcon><i class="pi pi-search" aria-hidden="true" /></InputIcon>
             <InputText
               v-model="filters['global'].value"
-              placeholder="Search..."
+              placeholder="Search users..."
+              class="min-h-11"
+              aria-label="Search users by username or role"
             />
           </IconField>
         </div>
       </template>
 
-      <Column selectionMode="multiple" style="width: 3rem" />
-      <Column field="username" header="Username" sortable />
-      <Column field="role" header="Role" sortable />
-      <Column style="width: 10rem">
+      <template #empty>
+        <div class="text-center p-4 text-surface-500 dark:text-surface-400">
+          No users found.
+        </div>
+      </template>
+
+      <Column
+        selectionMode="multiple"
+        style="width: 3rem"
+        :exportable="false"
+      />
+      <Column
+        field="username"
+        header="Username"
+        sortable
+        style="min-width: 12rem"
+      />
+      <Column field="role" header="Role" sortable style="min-width: 8rem" />
+      <Column header="Actions" style="min-width: 10rem" :exportable="false">
         <template #body="{ data }">
-          <Button
-            icon="pi pi-pencil"
-            outlined
-            rounded
-            class="mr-2"
-            @click="emit('edit', data)"
-          />
-          <Button
-            icon="pi pi-trash"
-            outlined
-            rounded
-            severity="danger"
-            @click="emit('delete', data)"
-          />
+          <div class="flex gap-2">
+            <Button
+              icon="pi pi-pencil"
+              rounded
+              class="min-w-11 min-h-11"
+              aria-label="Edit user"
+              v-tooltip.top="'Edit'"
+              @click="emit('edit', data)"
+            />
+            <Button
+              icon="pi pi-trash"
+              rounded
+              severity="danger"
+              class="min-w-11 min-h-11"
+              :aria-label="`Delete user ${data.username}`"
+              v-tooltip.top="'Delete'"
+              @click="emit('delete', data)"
+            />
+          </div>
         </template>
       </Column>
     </DataTable>

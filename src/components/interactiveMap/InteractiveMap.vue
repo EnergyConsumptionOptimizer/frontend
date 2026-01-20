@@ -170,7 +170,8 @@ async function handleSaveZone(zoneInfo) {
   if (isZoneOnDrawMode.value) {
     success = await interactiveMapStore.addZone({
       ...draftZone.value,
-      zoneInfo,
+      name: zoneInfo.name,
+      color: zoneInfo.color,
     });
     if (success) {
       doneDrawingZone();
@@ -377,6 +378,8 @@ onMounted(() => {
             label="Create new zone"
             icon="pi pi-plus"
             severity="success"
+            class="min-h-11"
+            aria-label="Create a new zone on the map"
             @click="handleStartDrawingZone"
           />
           <Button
@@ -384,13 +387,18 @@ onMounted(() => {
             label="Create new hookup"
             severity="success"
             icon="pi pi-plus"
+            class="min-h-11"
+            aria-label="Create a new smart furniture hookup"
             @click="handleStartDrawingSmartFurnitureHookup"
           />
           <Button
             label="Edit"
             severity="secondary"
+            outlined
             icon="pi pi-arrows-alt"
+            class="min-h-11"
             :disabled="!hasZones"
+            aria-label="Enter edit mode to move zones and hookups"
             @click="handleStartEditing"
           />
         </template>
@@ -398,6 +406,10 @@ onMounted(() => {
           <Button
             label="Back"
             severity="secondary"
+            outlined
+            icon="pi pi-arrow-left"
+            class="min-h-11"
+            aria-label="Cancel drawing and return to view mode"
             @click="handleStopDrawing"
           />
           <Button
@@ -409,6 +421,8 @@ onMounted(() => {
             "
             label="Continue to setup"
             severity="success"
+            class="min-h-11"
+            aria-label="Continue to zone setup dialog"
             @click="goToZoneSetup"
           />
           <Button
@@ -420,6 +434,8 @@ onMounted(() => {
             "
             label="Continue to setup"
             severity="success"
+            class="min-h-11"
+            aria-label="Continue to hookup setup dialog"
             @click="goToSmartFurnitureHookupSetup"
           />
         </template>
@@ -427,6 +443,8 @@ onMounted(() => {
           <Button
             label="Done Editing"
             severity="success"
+            class="min-h-11"
+            aria-label="Finish editing and return to view mode"
             @click="handleStopEditing"
           />
         </template>
@@ -533,5 +551,3 @@ onMounted(() => {
     @endpointUpdated="isSmartFurnitureHookupEndpointConfigured = false"
   />
 </template>
-
-<style scoped></style>

@@ -30,7 +30,7 @@ const emit = defineEmits([
 
 const interactiveMapStore = useInteractiveMapStore();
 const { smartFurnitureHookups, error } = storeToRefs(interactiveMapStore);
-const { getError: getServerError, formGlobalError } =
+const { getFieldError: getServerError, globalError } =
   useServerFormErrors(error);
 
 const submitted = ref(false);
@@ -66,24 +66,12 @@ const isFormValid = computed(() => {
   );
 });
 
-const utilityTypeLabel = computed(() => {
-  const type = smartFurnitureHookup.value?.utilityType;
-  if (type) {
-    return type;
-  }
-  return "Sync the information to see the utility type";
-});
-
 watch(visible, (isOpen) => {
   if (isOpen) {
     submitted.value = false;
-    if (interactiveMapStore.error) interactiveMapStore.error = null;
+    if (interactiveMapStore.error) interactiveMapStore.clearError();
   }
 });
-
-const clearError = () => {
-  if (interactiveMapStore.error) interactiveMapStore.error = null;
-};
 
 function onSave() {
   submitted.value = true;
@@ -108,41 +96,49 @@ const dialogTitle = computed(() =>
     v-model:visible="visible"
     modal
     :header="dialogTitle"
-    :style="{ width: '35rem' }"
+    class="w-full max-w-lg mx-4"
     @hide="emit('hide')"
   >
-    <span class="text-surface-500 dark:text-surface-400 block mb-8">
-      Smart furniture hookup information. Click the button to sync the
-      information.
-    </span>
-    <form id="sfh-form" @submit.prevent="onSave" novalidate>
+    <form
+      id="sfh-form"
+      @submit.prevent="onSave"
+      novalidate
+      aria-label="Smart furniture hookup information form"
+    >
       <Message
-        v-if="formGlobalError"
+        v-if="globalError"
         severity="error"
         variant="simple"
-        class="mb-2"
+        class="mb-4"
+        role="alert"
+        aria-live="assertive"
       >
-        {{ formGlobalError }}
+        {{ globalError }}
       </Message>
 
-      <div class="grid grid-cols-12 gap-2 mb-4">
+      <div class="flex flex-col gap-2 mb-6">
         <label
           for="smartFurnitureHookupEndpoint"
-          class="flex items-center col-span-12 md:col-span-2 md:mb-0 font-semibold"
+          class="font-semibold text-base"
         >
-          Endpoint
+          Endpoint <span class="text-red-500" aria-hidden="true">*</span>
         </label>
-        <div class="col-span-12 md:col-span-10 w-full flex space-x-4">
+        <div class="flex gap-2">
           <InputText
             id="smartFurnitureHookupEndpoint"
             autocomplete="off"
             type="text"
-            class="w-full"
+            class="flex-1 min-h-11"
             v-model.trim="smartFurnitureHookup.endpoint"
             :invalid="
               !!endpointError || (submitted && !smartFurnitureHookup.endpoint)
             "
+            :aria-invalid="
+              !!endpointError || (submitted && !smartFurnitureHookup.endpoint)
+            "
             aria-describedby="endpoint-error"
+            aria-required="true"
+            placeholder="http://endpoint-url"
             @update:modelValue="emit('endpointUpdated')"
             @input="clearError"
           />
@@ -151,85 +147,91 @@ const dialogTitle = computed(() =>
             :loading="loading"
             type="button"
             icon="pi pi-link"
-            aria-label="Sync Utility Info"
-            severity="secondary"
-            class="col-span-12 md:col-span-10"
+            class="min-w-11 min-h-11"
+            aria-label="Sync utility information from endpoint"
             @click="emit('fetchInfo')"
             v-tooltip="'Sync Utility Info'"
           />
         </div>
         <Message
-          class="col-span-12"
           id="endpoint-error"
           v-if="endpointError || (submitted && !smartFurnitureHookup.endpoint)"
           severity="error"
           variant="simple"
           size="small"
+          role="alert"
+          aria-live="polite"
         >
           {{ endpointError || "Endpoint is required" }}
         </Message>
       </div>
 
-      <div class="grid grid-cols-12 gap-2 mb-4">
-        <label
-          for="smartFurnitureHookupName"
-          class="flex items-center col-span-12 md:col-span-2 md:mb-0 font-semibold"
-        >
-          Name
+      <div class="flex flex-col gap-2 mb-6">
+        <label for="smartFurnitureHookupName" class="font-semibold text-base">
+          Name <span class="text-red-500" aria-hidden="true">*</span>
         </label>
-        <div class="col-span-12 md:col-span-10 w-full flex space-x-4">
-          <InputText
-            id="smartFurnitureHookupName"
-            autocomplete="off"
-            type="text"
-            class="w-full"
-            v-model.trim="smartFurnitureHookup.name"
-            :invalid="!!nameError || (submitted && !smartFurnitureHookup.name)"
-            aria-describedby="name-error"
-            @input="clearError"
-          />
-        </div>
+        <InputText
+          id="smartFurnitureHookupName"
+          autocomplete="off"
+          type="text"
+          class="w-full min-h-11"
+          v-model.trim="smartFurnitureHookup.name"
+          :invalid="!!nameError || (submitted && !smartFurnitureHookup.name)"
+          :aria-invalid="
+            !!nameError || (submitted && !smartFurnitureHookup.name)
+          "
+          aria-describedby="name-error"
+          aria-required="true"
+          placeholder="Hookup name"
+          @input="clearError"
+        />
         <Message
-          class="col-span-12"
           id="name-error"
           v-if="nameError || (submitted && !smartFurnitureHookup.name)"
           severity="error"
           variant="simple"
           size="small"
+          role="alert"
+          aria-live="polite"
         >
           {{ nameError || "Name is required" }}
         </Message>
       </div>
 
-      <div class="grid grid-cols-12 gap-2 mb-4">
-        <label
-          for="smartFurnitureHookupUtilityType"
-          class="flex items-center col-span-12 md:col-span-2 md:mb-0 font-semibold"
+      <div
+        v-if="smartFurnitureHookup.utilityType"
+        class="flex flex-col gap-2 mb-6"
+      >
+        <label class="font-semibold text-base"> Utility type </label>
+        <p
+          class="text-surface-700 dark:text-surface-300 text-sm sm:text-base px-3 py-2 bg-surface-50 dark:bg-surface-800 rounded"
+          role="status"
+          aria-live="polite"
         >
-          Utility type
-        </label>
-        <div class="col-span-12 md:col-span-10 w-full flex space-x-4">
-          <span id="smartFurnitureHookupUtilityType">{{
-            utilityTypeLabel
-          }}</span>
-        </div>
+          {{ smartFurnitureHookup.utilityType }}
+        </p>
       </div>
     </form>
 
     <template #footer>
-      <div class="flex justify-end gap-2">
+      <div class="flex flex-col sm:flex-row justify-end gap-3">
         <Button
           type="button"
           label="Cancel"
           severity="secondary"
+          outlined
+          class="min-h-11 w-full sm:w-auto"
           @click="emit('cancel')"
+          aria-label="Cancel hookup editing"
         />
         <Button
           type="submit"
           form="sfh-form"
           label="Save"
+          class="min-h-11 w-full sm:w-auto"
           :loading="saving"
           :disabled="!isFormValid || saving"
+          :aria-label="isOnDrawMode ? 'Save new hookup' : 'Save hookup changes'"
         />
       </div>
     </template>

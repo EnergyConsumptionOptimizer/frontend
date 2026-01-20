@@ -1,6 +1,7 @@
 <script setup>
 import { computed, inject } from "vue";
 import { utilityType } from "@/utils/utilityType.js";
+import { MAP_CONSTANTS } from "@/config/uiConstants";
 import ElectricityIcon from "@/components/interactiveMap/ElectricityIcon.vue";
 import GasIcon from "@/components/interactiveMap/GasIcon.vue";
 import WaterIcon from "@/components/interactiveMap/WaterIcon.vue";
@@ -32,6 +33,10 @@ const strokeColor = computed(() => {
   return props.smartFurnitureHookup.active ? "#0c5225" : "#546E7A";
 });
 
+const statusLabel = computed(() => {
+  return props.smartFurnitureHookup.active ? "Active" : "Inactive";
+});
+
 const transform = computed(() => {
   return "translate(-12, -12)";
 });
@@ -39,12 +44,13 @@ const transform = computed(() => {
 const title = computed(() => {
   const name = props.smartFurnitureHookup.name;
   const consumption = props.smartFurnitureHookup.utilityConsumption;
+  const status = statusLabel.value;
 
   if (!consumption) {
-    return name;
+    return `${name} (${status})`;
   }
 
-  return `${name}\nConsumption: ${consumption}`;
+  return `${name} (${status}) - Consumption: ${consumption}`;
 });
 
 const desc = computed(() => {
@@ -52,15 +58,18 @@ const desc = computed(() => {
     props.smartFurnitureHookup;
   const consumption = utilityConsumption ?? 0;
   const inZone = zone ? "Yes" : "No";
+  const status = statusLabel.value;
 
-  return `${name}, type ${utilityType}, consumption ${consumption}. In a zone: ${inZone}.`;
+  return `${name}, ${status}, type ${utilityType}, consumption ${consumption}. Located in a zone: ${inZone}. ${props.editModeActive ? "Click and drag to move." : ""}`;
 });
+
 const titleId = `hookup-title-${props.smartFurnitureHookup.id}`;
 const descId = `hookup-desc-${props.smartFurnitureHookup.id}`;
 </script>
 
 <template>
   <g
+    role="graphics-object"
     :aria-labelledby="`${titleId} ${descId}`"
     @mousedown="
       props.editModeActive
@@ -77,6 +86,14 @@ const descId = `hookup-desc-${props.smartFurnitureHookup.id}`;
       {{ desc }}
     </desc>
 
+    <circle
+      v-if="props.editModeActive"
+      :r="MAP_CONSTANTS.SMART_FURNITURE_RADIUS"
+      fill="transparent"
+      stroke="transparent"
+      aria-hidden="true"
+    />
+
     <g :transform="`scale(3)`">
       <electricity-icon
         v-if="
@@ -85,21 +102,28 @@ const descId = `hookup-desc-${props.smartFurnitureHookup.id}`;
         :fill="color"
         :stroke="strokeColor"
         :transform="transform"
+        aria-hidden="true"
       />
       <gas-icon
         v-else-if="props.smartFurnitureHookup.utilityType === utilityType.GAS"
         :fill="color"
         :stroke="strokeColor"
         :transform="transform"
+        aria-hidden="true"
       />
       <water-icon
         v-else-if="props.smartFurnitureHookup.utilityType === utilityType.WATER"
         :fill="color"
         :stroke="strokeColor"
         :transform="transform"
+        aria-hidden="true"
       />
-      <circle v-else r="8" :fill="color" :stroke="strokeColor" />
+      <circle
+        v-else
+        :r="MAP_CONSTANTS.SMART_FURNITURE_INNER_RADIUS"
+        :fill="color"
+        aria-hidden="true"
+      />
     </g>
   </g>
 </template>
-<style></style>

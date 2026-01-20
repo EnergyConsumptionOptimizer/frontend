@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import ConsumptionChartToolBar from "@/components/charts/ConsumptionChartToolBar.vue";
 import { useChartTheme } from "@/composables/charts/useChartTheme";
+import { CHART_CONSTANTS } from "@/config/uiConstants";
 import { useChartFilters } from "@/composables/charts/useChartFilters";
 import EmptyConsumptionData from "@/components/charts/EmptyConsumptionData.vue";
 
@@ -52,8 +53,8 @@ const chartData = computed(() => {
         fill: true,
         borderColor: getDynamicColor(utilName, 1),
         backgroundColor: getDynamicColor(utilName, 0.1),
-        tension: 0.4,
-        pointRadius: 2,
+        tension: CHART_CONSTANTS.TENSION,
+        pointRadius: CHART_CONSTANTS.POINT_RADIUS,
       },
     ],
   };
@@ -89,7 +90,7 @@ const hasData = computed(() => {
 </script>
 
 <template>
-  <div class="card h-full flex flex-col">
+  <section class="card h-full flex flex-col" aria-labelledby="rt-chart-title">
     <ConsumptionChartToolBar
       title="Real-Time Consumptions"
       v-model:filters="filters"
@@ -109,9 +110,11 @@ const hasData = computed(() => {
         type="line"
         :data="chartData"
         :options="chartOptions"
-        class="h-full w-full"
+        class="h-full w-full transition-opacity"
         :class="{ 'opacity-50': loading }"
+        role="img"
+        :aria-label="`Real-time ${filters.utility || 'consumption'} chart`"
       />
     </div>
-  </div>
+  </section>
 </template>

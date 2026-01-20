@@ -27,7 +27,7 @@ const emit = defineEmits(["save", "cancel", "type-change"]);
 
 const thresholdStore = useThresholdStore();
 const { thresholds, error } = storeToRefs(thresholdStore);
-const { getError: getServerError, formGlobalError } =
+const { getFieldError: getServerError, globalError } =
   useServerFormErrors(error);
 
 const submitted = ref(false);
@@ -60,13 +60,9 @@ const isFormValid = computed(() => {
 watch(visible, (isOpen) => {
   if (isOpen) {
     submitted.value = false;
-    if (thresholdStore.error) thresholdStore.error = null;
+    if (thresholdStore.error) thresholdStore.clearError();
   }
 });
-
-const clearError = () => {
-  if (thresholdStore.error) thresholdStore.error = null;
-};
 
 function onSave() {
   submitted.value = true;
@@ -82,37 +78,45 @@ function onSave() {
 <template>
   <Dialog
     v-model:visible="visible"
-    :style="{ width: '450px' }"
     header="Threshold Details"
     modal
-    class="p-fluid"
+    class="w-full max-w-lg mx-4"
     @hide="emit('cancel')"
   >
     <form
       id="threshold-form"
       @submit.prevent="onSave"
-      class="flex flex-col gap-4"
+      class="flex flex-col gap-6"
       novalidate
+      aria-label="Threshold configuration form"
     >
       <Message
-        v-if="formGlobalError"
+        v-if="globalError"
         severity="error"
         variant="simple"
         class="mb-2"
+        role="alert"
+        aria-live="assertive"
       >
-        {{ formGlobalError }}
+        {{ globalError }}
       </Message>
 
-      <div class="field">
-        <label for="name" class="font-bold block mb-2">Name</label>
+      <div class="flex flex-col gap-2">
+        <label for="name" class="font-semibold text-base">
+          Name <span class="text-red-500" aria-hidden="true">*</span>
+        </label>
         <InputText
           id="name"
           v-model.trim="threshold.name"
           required
           autofocus
+          class="w-full min-h-11"
           :invalid="!!nameError || (submitted && !threshold.name)"
+          :aria-invalid="!!nameError || (submitted && !threshold.name)"
           aria-describedby="name-error"
           fluid
+          aria-required="true"
+          placeholder="Enter threshold name"
           @input="clearError"
         />
         <Message
@@ -121,21 +125,31 @@ function onSave() {
           severity="error"
           variant="simple"
           size="small"
+          role="alert"
+          aria-live="polite"
         >
           {{ nameError || "Name is required." }}
         </Message>
       </div>
 
-      <div class="field">
-        <label for="utility" class="font-bold block mb-2">Utility</label>
+      <div class="flex flex-col gap-2">
+        <label for="utility" class="font-semibold text-base">
+          Utility <span class="text-red-500" aria-hidden="true">*</span>
+        </label>
         <Select
           id="utility"
           v-model="threshold.utilityType"
           :options="options.utilities"
-          placeholder="Select Utility"
+          placeholder="Select utility type"
+          class="w-full"
+          pt:pcInput:root:class="min-h-11"
           :invalid="!!utilityError || (submitted && !threshold.utilityType)"
+          :aria-invalid="
+            !!utilityError || (submitted && !threshold.utilityType)
+          "
           aria-describedby="utility-error"
           fluid
+          aria-required="true"
           @change="clearError"
         />
         <Message
@@ -144,21 +158,29 @@ function onSave() {
           severity="error"
           variant="simple"
           size="small"
+          role="alert"
+          aria-live="polite"
         >
           {{ utilityError || "Utility is required." }}
         </Message>
       </div>
 
-      <div class="field">
-        <label for="type" class="font-bold block mb-2">Threshold Type</label>
+      <div class="flex flex-col gap-2">
+        <label for="type" class="font-semibold text-base">
+          Threshold Type <span class="text-red-500" aria-hidden="true">*</span>
+        </label>
         <Select
           id="type"
           v-model="threshold.thresholdType"
           :options="options.types"
-          placeholder="Select Type"
+          placeholder="Select threshold type"
+          class="w-full"
+          pt:pcInput:root:class="min-h-11"
           :invalid="!!typeError || (submitted && !threshold.thresholdType)"
+          :aria-invalid="!!typeError || (submitted && !threshold.thresholdType)"
           aria-describedby="type-error"
           fluid
+          aria-required="true"
           @change="
             (e) => {
               $emit('type-change');
@@ -172,23 +194,35 @@ function onSave() {
           severity="error"
           variant="simple"
           size="small"
+          role="alert"
+          aria-live="polite"
         >
           {{ typeError || "Type is required." }}
         </Message>
       </div>
 
-      <div class="field">
-        <label for="value" class="font-bold block mb-2">Value</label>
+      <div class="flex flex-col gap-2">
+        <label for="value" class="font-semibold text-base">
+          Value <span class="text-red-500" aria-hidden="true">*</span>
+        </label>
         <InputNumber
           id="value"
           v-model.number="threshold.value"
           :min="0"
+          class="w-full"
+          pt:pcInput:root:class="min-h-11"
           :invalid="
+            !!valueError ||
+            (submitted && (!threshold.value || threshold.value <= 0))
+          "
+          :aria-invalid="
             !!valueError ||
             (submitted && (!threshold.value || threshold.value <= 0))
           "
           aria-describedby="value-error"
           fluid
+          aria-required="true"
+          placeholder="Enter threshold value"
           @input="clearError"
         />
         <Message
@@ -200,25 +234,39 @@ function onSave() {
           severity="error"
           variant="simple"
           size="small"
+          role="alert"
+          aria-live="polite"
         >
           {{ valueError || "Value must be a positive number." }}
         </Message>
       </div>
 
-      <div class="field">
-        <label for="periodType" class="font-bold block mb-2">Period Type</label>
+      <div class="flex flex-col gap-2">
+        <label for="periodType" class="font-semibold text-base">
+          Period Type
+          <span v-if="!isPeriodDisabled" class="text-red-500" aria-hidden="true"
+            >*</span
+          >
+        </label>
         <Select
           id="periodType"
           v-model="threshold.periodType"
           :options="options.periods"
-          placeholder="Select Period"
+          placeholder="Select period type"
           :disabled="isPeriodDisabled"
+          class="w-full"
+          pt:pcInput:root:class="min-h-11"
           :invalid="
+            !!periodError ||
+            (submitted && !isPeriodDisabled && !threshold.periodType)
+          "
+          :aria-invalid="
             !!periodError ||
             (submitted && !isPeriodDisabled && !threshold.periodType)
           "
           aria-describedby="period-error"
           fluid
+          :aria-required="!isPeriodDisabled"
           @change="clearError"
         />
         <Message
@@ -235,34 +283,44 @@ function onSave() {
         </Message>
       </div>
 
-      <div class="field">
-        <label for="status" class="font-bold block mb-2">State</label>
+      <div class="flex flex-col gap-2">
+        <label for="status" class="font-semibold text-base">State</label>
         <Select
           id="status"
           v-model="threshold.thresholdState"
           :options="statusOptions"
           placeholder="Select State"
           fluid
+          class="w-full"
+          aria-label="Threshold state"
         />
       </div>
     </form>
 
     <template #footer>
-      <Button
-        label="Cancel"
-        icon="pi pi-times"
-        text
-        type="button"
-        @click="emit('cancel')"
-      />
-      <Button
-        label="Save"
-        icon="pi pi-check"
-        type="submit"
-        form="threshold-form"
-        :loading="loading"
-        :disabled="loading"
-      />
+      <div class="flex flex-col sm:flex-row justify-end gap-3">
+        <Button
+          label="Cancel"
+          icon="pi pi-times"
+          text
+          type="button"
+          class="min-h-11 w-full sm:w-auto"
+          aria-label="Cancel threshold editing"
+          @click="emit('cancel')"
+        />
+        <Button
+          label="Save"
+          icon="pi pi-check"
+          type="submit"
+          form="threshold-form"
+          class="min-h-11 w-full sm:w-auto"
+          :loading="loading"
+          :disabled="loading"
+          :aria-label="
+            threshold?.id ? 'Save threshold changes' : 'Create new threshold'
+          "
+        />
+      </div>
     </template>
   </Dialog>
 </template>

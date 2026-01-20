@@ -102,7 +102,7 @@ const confirmDeleteSelected = () => {
 
 <template>
   <div class="card">
-    <div v-if="$slots.header" class="mb-4">
+    <div v-if="$slots.header" class="mb-4 sm:mb-6">
       <slot name="header"></slot>
     </div>
 

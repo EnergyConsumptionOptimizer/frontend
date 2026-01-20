@@ -44,15 +44,18 @@ const computedColor = computed(() => {
 </script>
 
 <template>
-  <div class="card">
+  <article class="card" role="region" :aria-label="`${label} statistics`">
     <header class="flex justify-between items-start">
-      <h3 class="text-gray-500 dark:text-gray-300 font-medium text-sm">
+      <h3
+        class="text-xs sm:text-sm text-surface-600 dark:text-surface-300 font-medium m-0"
+      >
         {{ label }}
       </h3>
 
       <div
         class="flex items-center justify-center rounded-xl w-10 h-10"
         :style="{ color: computedColor }"
+        aria-hidden="true"
       >
         <slot name="icon">
           <i v-if="icon" :class="icon"></i>
@@ -64,14 +67,16 @@ const computedColor = computed(() => {
       <p class="flex items-baseline space-x-1">
         <data
           :value="value"
-          class="text-gray-900 dark:text-white font-bold text-3xl tracking-tight"
+          class="text-2xl sm:text-3xl text-surface-900 dark:text-surface-50 font-bold tracking-tight select-all"
         >
           {{ value }}
         </data>
-        <span class="text-gray-400 dark:text-gray-500 font-medium text-sm">
+        <span
+          class="text-sm text-surface-500 dark:text-surface-400 font-medium select-all"
+        >
           {{ unit }}
         </span>
       </p>
     </div>
-  </div>
+  </article>
 </template>

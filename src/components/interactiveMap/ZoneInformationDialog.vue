@@ -22,10 +22,11 @@ const emit = defineEmits(["hide", "save", "cancel"]);
 
 const store = useInteractiveMapStore();
 const { zones, error } = storeToRefs(store);
-const { getError: getServerError, formGlobalError } =
+const { getFieldError: getServerError, globalError } =
   useServerFormErrors(error);
 
 const submitted = ref(false);
+const selectedColor = ref("");
 
 const nameRef = computed(() => zone.value?.name);
 const idRef = computed(() => zone.value?.id);
@@ -43,30 +44,47 @@ const isFormValid = computed(() => {
 });
 
 const activeColor = computed({
-  get: () => zone.value?.color || props.defaultColor,
+  get: () => {
+    const color =
+      selectedColor.value || zone.value?.color || props.defaultColor;
+    const colorStr =
+      typeof color === "string" ? color : color?.value || props.defaultColor;
+    return colorStr.startsWith("#") ? colorStr.substring(1) : colorStr;
+  },
   set: (val) => {
-    if (zone.value) zone.value.color = "#" + val;
+    selectedColor.value = val.startsWith("#") ? val : "#" + val;
   },
 });
 
 watch(visible, (isOpen) => {
   if (isOpen) {
     submitted.value = false;
-    if (store.error) store.error = null;
+
+    const zoneColor = zone.value?.color;
+    if (zoneColor?.value !== undefined) {
+      selectedColor.value = zoneColor.value;
+    } else if (typeof zoneColor === "string") {
+      selectedColor.value = zoneColor;
+    } else {
+      selectedColor.value = props.defaultColor;
+    }
+
+    if (store.error) store.clearError();
   }
 });
 
 const clearError = () => {
-  if (store.error) store.error = null;
+  if (store.error) store.clearError();
 };
 
 function onSave() {
   submitted.value = true;
   if (!isFormValid.value) return;
+
   emit("save", {
     id: zone.value?.id ?? null,
     name: zone.value.name.trim(),
-    color: zone.value?.color || props.defaultColor,
+    color: selectedColor.value || props.defaultColor,
   });
 }
 
@@ -80,49 +98,55 @@ const dialogTitle = computed(() =>
     v-model:visible="visible"
     modal
     :header="dialogTitle"
-    :style="{ width: '25rem' }"
+    class="w-full max-w-md mx-4"
     @hide="emit('hide')"
   >
-    <span class="text-surface-500 dark:text-surface-400 block mb-8">
-      Zone Information
-    </span>
-    <form id="zone-form" @submit.prevent="onSave" novalidate>
+    <form
+      id="zone-form"
+      @submit.prevent="onSave"
+      novalidate
+      aria-label="Zone information form"
+    >
       <Message
-        v-if="formGlobalError"
+        v-if="globalError"
         severity="error"
         variant="simple"
-        class="mb-2"
+        class="mb-4"
+        role="alert"
+        aria-live="assertive"
       >
-        {{ formGlobalError }}
+        {{ globalError }}
       </Message>
 
-      <div class="flex items-center gap-4 mb-4">
-        <label for="zoneName" class="font-semibold">Name</label>
-        <div class="flex flex-col gap-1 w-full">
-          <InputText
-            id="zoneName"
-            class="flex-auto"
-            autocomplete="off"
-            v-model.trim="zone.name"
-            :invalid="!!nameError || (submitted && !zone.name)"
-            aria-describedby="zoneName-error"
-            autofocus
-            @input="clearError"
-          />
-          <Message
-            id="zoneName-error"
-            v-if="nameError || (submitted && !zone.name)"
-            severity="error"
-            variant="simple"
-            size="small"
-          >
-            {{ nameError || "Zone name is required" }}
-          </Message>
-        </div>
+      <div class="flex flex-col gap-2 mb-6">
+        <label for="zoneName" class="font-semibold text-base">
+          Name <span class="text-red-500" aria-hidden="true">*</span>
+        </label>
+        <InputText
+          id="zoneName"
+          class="w-full min-h-11"
+          autocomplete="off"
+          v-model.trim="zone.name"
+          :invalid="!!nameError || (submitted && !zone.name)"
+          :aria-invalid="!!nameError || (submitted && !zone.name)"
+          aria-describedby="zoneName-error"
+          autofocus
+          @input="clearError"
+        />
+        <Message
+          id="zoneName-error"
+          v-if="nameError || (submitted && !zone.name)"
+          severity="error"
+          variant="simple"
+          size="small"
+          aria-live="polite"
+        >
+          {{ nameError || "Zone name is required" }}
+        </Message>
       </div>
 
-      <div class="flex items-center gap-4 mb-4">
-        <label for="zoneColor" class="font-semibold">Color</label>
+      <div class="flex flex-col gap-2 mb-6">
+        <label for="zoneColor" class="font-semibold text-base"> Color </label>
         <ColorPicker
           inputId="zoneColor"
           v-model="activeColor"
@@ -134,19 +158,24 @@ const dialogTitle = computed(() =>
     </form>
 
     <template #footer>
-      <div class="flex justify-end gap-2">
+      <div class="flex flex-col sm:flex-row justify-end gap-3">
         <Button
           type="button"
           label="Cancel"
           severity="secondary"
+          outlined
+          class="min-h-11 w-full sm:w-auto"
           @click="emit('cancel')"
+          aria-label="Cancel zone editing"
         />
         <Button
           type="submit"
           form="zone-form"
           label="Save"
+          class="min-h-11 w-full sm:w-auto"
           :loading="loading"
           :disabled="loading"
+          :aria-label="isOnDrawMode ? 'Save new zone' : 'Save zone changes'"
         />
       </div>
     </template>

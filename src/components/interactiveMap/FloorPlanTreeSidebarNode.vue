@@ -13,10 +13,11 @@ defineProps({
         class="h-4 w-4 shrink-0"
         :class="indicatorClass"
         :style="{ backgroundColor: color }"
+        aria-hidden="true"
       />
 
       <span
-        class="truncate text-sm font-medium text-surface-700 dark:text-surface-0 block"
+        class="truncate text-xs sm:text-sm font-medium text-surface-700 dark:text-surface-0 block"
         v-tooltip.top="label"
       >
         {{ label }}
