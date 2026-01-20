@@ -1,6 +1,6 @@
 <script setup>
 import StatsCard from "@/components/common/StatsCard.vue";
-import { computed, onMounted } from "vue";
+import { computed, onMounted, onUnmounted } from "vue";
 import { useMonitoringStore } from "@/stores/monitoringStore.js";
 import { storeToRefs } from "pinia";
 import ConsumptionRealTimeChart from "@/components/charts/ConsumptionRealTimeChart.vue";
@@ -136,6 +136,11 @@ onMounted(async () => {
       await monitoringStore.subscribeToUtilityConsumptions();
     }),
   ]);
+});
+
+onUnmounted(() => {
+  console.log("View unmounting, closing sockets...");
+  monitoringStore.disconnectMonitoring();
 });
 </script>
 
