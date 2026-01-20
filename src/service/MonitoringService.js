@@ -1,9 +1,8 @@
 import { SocketController } from "@/sockets/SocketController.js";
 
-const BASE_URL = `http://${import.meta.env.VITE_MONITORING_HOST}:${import.meta.env.VITE_MONITORING_PORT}`;
-
-const REAL_TIME_NAMESPACE = "real-time";
-const UTILITY_CONSUMPTION_NAMESPACE = "utility-consumptions";
+const SOCKET_PREFIX = "/monitoring";
+const REAL_TIME_NAMESPACE = "/real-time";
+const UTILITY_CONSUMPTION_NAMESPACE = "/utility-consumptions";
 
 export class MonitoringService {
   realTimeSocket = null;
@@ -17,7 +16,7 @@ export class MonitoringService {
       this.realTimeSocket = new SocketController();
     }
 
-    await this.realTimeSocket.connect(`${BASE_URL}/${REAL_TIME_NAMESPACE}`);
+    await this.realTimeSocket.connect(REAL_TIME_NAMESPACE, SOCKET_PREFIX);
   }
 
   async subscribeToRealTimeMetersUpdates(onUpdate) {
@@ -68,7 +67,8 @@ export class MonitoringService {
       this.utilityConsumptionSocket = new SocketController();
     }
     await this.utilityConsumptionSocket.connect(
-      `${BASE_URL}/${UTILITY_CONSUMPTION_NAMESPACE}`,
+      UTILITY_CONSUMPTION_NAMESPACE,
+      SOCKET_PREFIX,
     );
 
     this.utilityConsumptionSocket?.emit("subscribe", query);

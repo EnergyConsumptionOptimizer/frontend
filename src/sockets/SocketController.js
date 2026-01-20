@@ -7,7 +7,7 @@ export class SocketController {
     this.connectionPromise = null;
   }
 
-  async connect(url) {
+  async connect(uri, pathPrefix) {
     if (this.isConnected) {
       console.warn("Socket already connected");
       return;
@@ -18,10 +18,11 @@ export class SocketController {
     }
 
     this.connectionPromise = new Promise((resolve, reject) => {
-      this.socket = io(url, {
+      this.socket = io(uri, {
         transports: ["websocket"],
         reconnection: true,
         withCredentials: true,
+        path: `${pathPrefix}/socket.io`,
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,
       });
