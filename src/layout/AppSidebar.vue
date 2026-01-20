@@ -3,9 +3,12 @@ import AppMenu from "./AppMenu.vue";
 </script>
 
 <template>
-  <div class="layout-sidebar">
-    <app-menu></app-menu>
-  </div>
+  <aside
+    id="layout-sidebar"
+    class="layout-sidebar"
+    role="region"
+    aria-label="Main navigation"
+  >
+    <AppMenu />
+  </aside>
 </template>
-
-<style lang="scss" scoped></style>

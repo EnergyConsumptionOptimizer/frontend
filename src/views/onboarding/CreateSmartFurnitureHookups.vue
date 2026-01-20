@@ -19,19 +19,19 @@ async function handleDeleteSmartFurnitureHookup(smartFurnitureHookupsLength) {
 </script>
 
 <template>
-  <onboarding-step-layout
+  <OnboardingStepLayout
     title="Create smart furniture hookups"
     subtitle="Create smart furniture hookups and position them on the floor plan"
   >
     <template #content>
-      <interactive-map
-        :is-local-mode="true"
-        :manage-zones="false"
-        @smart-furniture-hookup-created="handleSaveSmartFurnitureHookup"
-        @smart-furniture-hookup-deleted="handleDeleteSmartFurnitureHookup"
-      />
+      <div class="w-full">
+        <InteractiveMap
+          :is-local-mode="true"
+          :manage-zones="false"
+          @smart-furniture-hookup-created="handleSaveSmartFurnitureHookup"
+          @smart-furniture-hookup-deleted="handleDeleteSmartFurnitureHookup"
+        />
+      </div>
     </template>
-  </onboarding-step-layout>
+  </OnboardingStepLayout>
 </template>
-
-<style scoped></style>

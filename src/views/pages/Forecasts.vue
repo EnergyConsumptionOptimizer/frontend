@@ -17,9 +17,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="grid grid-cols-12 gap-8">
+  <div class="grid grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
     <div class="col-span-12">
-      <h1 class="text-3xl font-bold mb-2">Consumption Forecasts</h1>
+      <h1 class="text-2xl sm:text-3xl font-bold mb-2">Consumption Forecasts</h1>
     </div>
 
     <div

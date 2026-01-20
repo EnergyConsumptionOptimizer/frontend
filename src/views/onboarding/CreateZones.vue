@@ -5,23 +5,24 @@ import { useOnboardingStore } from "@/stores/onboarding.js";
 import OnboardingStepLayout from "@/layout/OnboardingStepLayout.vue";
 
 const onboardingStore = useOnboardingStore();
+
 onMounted(() => {
   onboardingStore.completeStep();
 });
 </script>
 
 <template>
-  <onboarding-step-layout
+  <OnboardingStepLayout
     title="Create zones"
     subtitle="Draw polygons on the floor plan to create new zones"
   >
     <template #content>
-      <interactive-map
-        :is-local-mode="true"
-        :manage-smart-furniture-hookups="false"
-      />
+      <div class="w-full">
+        <InteractiveMap
+          :is-local-mode="true"
+          :manage-smart-furniture-hookups="false"
+        />
+      </div>
     </template>
-  </onboarding-step-layout>
+  </OnboardingStepLayout>
 </template>
-
-<style scoped></style>

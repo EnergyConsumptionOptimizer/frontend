@@ -20,10 +20,8 @@ const EcoTheme = definePreset(Aura, {
     // Color scheme overrides
     colorScheme: {
       light: {
-        // Light mode inherits Aura defaults
-        // Text on surface-0 (white): Uses text-900 (near black) = ~14:1 contrast ✓
         surface: {
-          0: "#ffffff", // Pure white background
+          0: "#ffffff",
           50: "{slate.50}", // #f8fafc
           100: "{slate.100}", // #f1f5f9
           200: "{slate.200}", // #e2e8f0
@@ -38,10 +36,8 @@ const EcoTheme = definePreset(Aura, {
         },
       },
       dark: {
-        // Dark mode surface palette
-        // Text on surface-900 (near black): Uses text-50 (near white) = ~14:1 contrast ✓
         surface: {
-          0: "#ffffff", // White (for contrast)
+          0: "#ffffff",
           50: "{slate.50}", // #f8fafc
           100: "{slate.100}", // #f1f5f9
           200: "{slate.200}", // #e2e8f0

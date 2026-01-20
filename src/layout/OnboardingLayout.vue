@@ -8,28 +8,39 @@ import { useUserStore } from "@/stores/userStore";
 import { useThresholdStore } from "@/stores/thresholdStore";
 import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
 import { useConfirm } from "primevue/useconfirm";
+import { useLayout } from "@/layout/composables/useLayout";
 
 const route = useRoute();
 const confirm = useConfirm();
+const { toggleDarkMode, isDarkTheme } = useLayout();
 
 const loading = ref(false);
 const storesMounted = ref(false);
+const mobileMenuOpen = ref(false);
 
 const onboardingStore = useOnboardingStore();
+const authStore = useAuthStore();
 
 let userStore = null;
 let interactiveMapStore = null;
 let thresholdStore = null;
 
-const step = computed(() => {
-  return route.meta.step ?? 1;
-});
+const step = computed(() => route.meta.step ?? 1);
+const canProceed = computed(() => onboardingStore.isStepCompleted(step.value));
 
-const canProceed = computed(() => {
-  return onboardingStore.isStepCompleted(step.value);
-});
+const userMenuExpanded = computed(() => mobileMenuOpen.value);
 
-const authStore = useAuthStore();
+const themeToggleLabel = computed(() =>
+  isDarkTheme.value ? "Switch to Light Mode" : "Switch to Dark Mode",
+);
+
+function toggleMobileMenu() {
+  mobileMenuOpen.value = !mobileMenuOpen.value;
+}
+
+function closeMobileMenu() {
+  mobileMenuOpen.value = false;
+}
 
 function goToPreviousStep() {
   loading.value = true;
@@ -78,7 +89,10 @@ async function completeOnboarding() {
   loading.value = true;
   mountStores();
 
+  console.log("[completeOnboarding] Starting sync process");
+
   const mapSuccess = await interactiveMapStore.syncAndFinalize();
+  console.log("[completeOnboarding] mapSuccess:", mapSuccess);
 
   if (!mapSuccess) {
     loading.value = false;
@@ -86,15 +100,19 @@ async function completeOnboarding() {
   }
 
   const userSuccess = await userStore.syncAndFinalize();
+  console.log("[completeOnboarding] userSuccess:", userSuccess);
+
   const thresholdSuccess = await thresholdStore.syncAndFinalize();
+  console.log("[completeOnboarding] thresholdSuccess:", thresholdSuccess);
 
   if (userSuccess && thresholdSuccess) {
+    console.log("[completeOnboarding] All syncs successful, redirecting");
     await finalizeAndRedirect();
     loading.value = false;
     return;
   }
 
-  let errorDetail = "";
+  let errorDetail;
   if (!userSuccess && !thresholdSuccess) {
     errorDetail = "Users and Thresholds";
   } else if (!userSuccess) {
@@ -102,6 +120,8 @@ async function completeOnboarding() {
   } else {
     errorDetail = "Thresholds";
   }
+
+  console.log("[completeOnboarding] Showing error dialog:", errorDetail);
 
   confirm.require({
     header: "Setup Incomplete",
@@ -130,94 +150,166 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="layout-topbar">
-    <div class="layout-topbar-logo-container flex items-center gap-3">
-      <div class="layout-topbar-logo flex items-center gap-2 no-underline">
-        <span class="text-xl font-semibold whitespace-nowrap"
-          >WELCOME TO E.C.O.</span
+  <div class="min-h-screen flex flex-col bg-surface-50 dark:bg-surface-950">
+    <header class="layout-topbar" role="banner">
+      <div class="layout-topbar-logo-container">
+        <div class="layout-topbar-logo">
+          <span class="font-semibold whitespace-nowrap">Welcome to E.C.O.</span>
+        </div>
+      </div>
+      <div class="layout-topbar-actions">
+        <button
+          class="layout-topbar-menu-button layout-topbar-action lg:hidden"
+          type="button"
+          aria-label="Open user menu"
+          :aria-expanded="userMenuExpanded"
+          aria-controls="onboarding-user-menu"
+          @click="toggleMobileMenu"
         >
-      </div>
-    </div>
+          <i class="pi pi-ellipsis-v" aria-hidden="true"></i>
+        </button>
 
-    <div class="layout-topbar-actions">
-      <div class="layout-topbar-menu hidden lg:block">
-        <div class="layout-topbar-menu-content">
-          <button
-            type="button"
-            class="layout-topbar-action"
-            @click="handleLogout"
-          >
-            <i class="pi pi-sign-out"></i>
-            <span>Logout</span>
-          </button>
-        </div>
+        <!-- Desktop/Mobile menu -->
+        <nav
+          id="onboarding-user-menu"
+          :class="[
+            'layout-topbar-menu',
+            'hidden lg:block',
+            {
+              'absolute right-8 top-16 bg-surface-0 dark:bg-surface-900 shadow-lg rounded-lg border border-surface-200 dark:border-surface-700 p-4 z-50 min-w-48':
+                mobileMenuOpen,
+              block: mobileMenuOpen,
+            },
+          ]"
+          aria-label="User menu"
+        >
+          <!-- Click outside handler for mobile -->
+          <div
+            v-if="mobileMenuOpen"
+            class="fixed inset-0 z-40 lg:hidden"
+            @click="closeMobileMenu"
+            aria-hidden="true"
+          ></div>
+
+          <div class="layout-topbar-menu-content relative z-50">
+            <button
+              type="button"
+              class="layout-topbar-action w-full lg:w-auto"
+              @click="toggleDarkMode"
+              :aria-label="themeToggleLabel"
+            >
+              <i
+                :class="['pi', isDarkTheme ? 'pi-moon' : 'pi-sun']"
+                aria-hidden="true"
+              ></i>
+              <span class="ml-2 lg:hidden">
+                {{ isDarkTheme ? "Dark Mode" : "Light Mode" }}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              class="layout-topbar-action w-full lg:w-auto"
+              @click="handleLogout"
+              aria-label="Logout"
+            >
+              <i class="pi pi-sign-out" aria-hidden="true"></i>
+              <span class="ml-2 lg:hidden">Logout</span>
+            </button>
+          </div>
+        </nav>
       </div>
-    </div>
-  </div>
-  <div class="layout-main-container content-center">
-    <div class="layout-main space-y-6">
-      <div class="flex justify-center w-full">
-        <Card class="w-2/3">
-          <template #content>
-            <Stepper :value="step" class="basis-200" linear>
-              <StepList>
-                <Step
-                  v-for="step in onboardingStore.steps"
-                  :key="step.index"
-                  :value="step.index"
+    </header>
+
+    <main id="main-content" class="layout-main-container" tabindex="-1">
+      <div class="layout-main">
+        <div
+          class="w-full max-w-[90%] lg:max-w-[85%] xl:max-w-7xl mx-auto space-y-6"
+        >
+          <section aria-label="Onboarding progress">
+            <Card class="shadow-sm">
+              <template #content>
+                <Stepper :value="step" linear>
+                  <StepList>
+                    <Step
+                      v-for="stepItem in onboardingStore.steps"
+                      :key="stepItem.index"
+                      :value="stepItem.index"
+                    >
+                      <span class="text-sm font-medium">{{
+                        stepItem.label
+                      }}</span>
+                    </Step>
+                  </StepList>
+                </Stepper>
+              </template>
+            </Card>
+          </section>
+
+          <section class="flex-1" aria-label="Step content">
+            <Card class="shadow-sm">
+              <template #content>
+                <div class="p-2 sm:p-4 lg:p-6">
+                  <router-view />
+                </div>
+              </template>
+            </Card>
+          </section>
+
+          <nav aria-label="Step navigation">
+            <Card class="shadow-sm">
+              <template #content>
+                <div
+                  class="flex flex-col sm:flex-row justify-between gap-3 p-2"
                 >
-                  {{ step.label }}
-                </Step>
-              </StepList>
-            </Stepper>
-          </template>
-        </Card>
-      </div>
-      <Card>
-        <template #content>
-          <router-view />
-        </template>
-      </Card>
-    </div>
-    <Card class="mb-4">
-      <template #content>
-        <div class="w-full flex justify-between">
-          <div>
-            <Button
-              :loading="loading"
-              v-if="onboardingStore.hasPreviousStep(step)"
-              label="Back"
-              @click="goToPreviousStep"
-              severity="secondary"
-              icon="pi pi-arrow-left"
-            />
-          </div>
-          <div>
-            <Button
-              :loading="loading"
-              v-if="onboardingStore.hasNextStep(step)"
-              label="Next"
-              @click="goToNextStep"
-              :disabled="!canProceed"
-              icon="pi pi-arrow-right"
-              iconPos="right"
-            />
-            <Button
-              :loading="loading"
-              v-else
-              label="Complete"
-              icon="pi pi-arrow-right"
-              iconPos="right"
-              :disabled="!canProceed"
-              @click="completeOnboarding"
-            />
-          </div>
-        </div>
-      </template>
-    </Card>
-  </div>
-  <Toast />
-  <ConfirmDialog />
-</template>
+                  <div class="order-2 sm:order-1">
+                    <Button
+                      v-if="onboardingStore.hasPreviousStep(step)"
+                      label="Back"
+                      :loading="loading"
+                      severity="secondary"
+                      outlined
+                      icon="pi pi-arrow-left"
+                      class="w-full sm:w-auto min-h-11"
+                      @click="goToPreviousStep"
+                      :aria-label="`Go to previous step: ${onboardingStore.steps[step - 2]?.label}`"
+                    />
+                  </div>
 
-<style scoped></style>
+                  <div class="order-1 sm:order-2">
+                    <Button
+                      v-if="onboardingStore.hasNextStep(step)"
+                      label="Next"
+                      :loading="loading"
+                      :disabled="!canProceed"
+                      icon="pi pi-arrow-right"
+                      iconPos="right"
+                      class="w-full sm:w-auto min-h-11"
+                      @click="goToNextStep"
+                      :aria-label="`Go to next step: ${onboardingStore.steps[step]?.label}`"
+                    />
+                    <Button
+                      v-else
+                      label="Complete"
+                      :loading="loading"
+                      :disabled="!canProceed"
+                      severity="success"
+                      icon="pi pi-check"
+                      iconPos="right"
+                      class="w-full sm:w-auto min-h-11"
+                      @click="completeOnboarding"
+                      aria-label="Complete onboarding and go to dashboard"
+                    />
+                  </div>
+                </div>
+              </template>
+            </Card>
+          </nav>
+        </div>
+      </div>
+    </main>
+
+    <Toast />
+    <ConfirmDialog />
+  </div>
+</template>

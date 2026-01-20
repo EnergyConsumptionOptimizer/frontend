@@ -1,21 +1,34 @@
 <script setup>
 defineProps({
-  title: String,
-  subtitle: String,
+  title: {
+    type: String,
+    required: true,
+  },
+  subtitle: {
+    type: String,
+    default: "",
+  },
 });
 </script>
 
 <template>
-  <div class="flex flex-col justify-center items-center w-full space-y-2">
-    <div class="font-semibold text-xl mb-4">{{ title }}</div>
-    <p>{{ subtitle }}</p>
-  </div>
+  <div class="flex flex-col w-full space-y-4 sm:space-y-6">
+    <header class="text-center">
+      <h2 class="text-xl sm:text-2xl font-semibold mb-2">
+        {{ title }}
+      </h2>
+      <p
+        v-if="subtitle"
+        class="text-sm sm:text-base text-surface-600 dark:text-surface-300"
+      >
+        {{ subtitle }}
+      </p>
+    </header>
 
-  <div class="flex justify-center flex-1 mt-4">
-    <slot name="content" />
-  </div>
+    <div class="flex-1">
+      <slot name="content" />
+    </div>
 
-  <slot name="dialogs" />
+    <slot name="dialogs" />
+  </div>
 </template>
-
-<style></style>

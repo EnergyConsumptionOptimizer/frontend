@@ -18,14 +18,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <onboarding-step-layout
+  <OnboardingStepLayout
     title="Household Users"
     subtitle="Add users that live in the house"
   >
     <template #content>
-      <div class="w-full mt-4">
+      <div class="w-full">
         <UserManagementView />
       </div>
     </template>
-  </onboarding-step-layout>
+  </OnboardingStepLayout>
 </template>

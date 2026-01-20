@@ -1,6 +1,7 @@
 <script setup>
 import StatsCard from "@/components/common/StatsCard.vue";
 import { computed, onMounted, onUnmounted } from "vue";
+import StaticMap from "@/components/interactiveMap/StaticMap.vue";
 import { useMonitoringStore } from "@/stores/monitoringStore.js";
 import { storeToRefs } from "pinia";
 import ConsumptionRealTimeChart from "@/components/charts/ConsumptionRealTimeChart.vue";
@@ -8,7 +9,6 @@ import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
 import { useUserStore } from "@/stores/userStore.js";
 import { useAsyncAction } from "@/composables/utils/asyncAction.js";
 import { computeUtilityConsumptionStatsCards } from "@/utils/utilityConsumptionStatsCards.js";
-import StaticMap from "@/components/interactiveMap/StaticMap.vue";
 import ConsumptionHistoryChart from "@/components/charts/ConsumptionHistoryChart.vue";
 
 const monitoringStore = useMonitoringStore();
@@ -160,13 +160,17 @@ onUnmounted(() => {
         :color="`var(${card.colorVar})`"
       >
         <template #icon>
-          <component :is="card.icon" class="w-7 h-7 fill-current" />
+          <component
+            :is="card.icon"
+            class="w-7 h-7 fill-current"
+            aria-hidden="true"
+          />
         </template>
       </StatsCard>
     </div>
 
     <div class="col-span-12 xl:col-span-6">
-      <consumption-real-time-chart
+      <ConsumptionRealTimeChart
         :users="usersFilterOptions"
         :zones="zonesFilterOptions"
         :utilities="UTILITIES"
@@ -177,7 +181,7 @@ onUnmounted(() => {
       />
     </div>
     <div class="col-span-12 xl:col-span-6 min-w-0">
-      <consumption-history-chart
+      <ConsumptionHistoryChart
         :users="usersFilterOptions"
         :zones="zonesFilterOptions"
         :utilities="UTILITIES"
@@ -192,7 +196,7 @@ onUnmounted(() => {
         <div class="flex justify-between items-center">
           <h3 class="text-xl font-semibold m-0">House Map</h3>
         </div>
-        <static-map />
+        <StaticMap />
       </div>
     </div>
   </Fluid>

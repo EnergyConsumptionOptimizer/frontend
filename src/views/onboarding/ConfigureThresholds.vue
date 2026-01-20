@@ -18,14 +18,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <onboarding-step-layout
+  <OnboardingStepLayout
     title="Set Thresholds"
     subtitle="Configure your alert thresholds"
   >
     <template #content>
-      <div class="w-full mt-4">
+      <div class="w-full">
         <ThresholdManagementView />
       </div>
     </template>
-  </onboarding-step-layout>
+  </OnboardingStepLayout>
 </template>

@@ -35,7 +35,7 @@ const deleteBulk = (alerts) => {
 </script>
 
 <template>
-  <div class="w-full">
+  <div class="card">
     <AlertListTable
       :alerts="alerts"
       :loading="isLoading"

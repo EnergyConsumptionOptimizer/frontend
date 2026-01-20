@@ -1,7 +1,6 @@
 <script setup></script>
-
 <template>
-  <div class="layout-footer">
-    <span class="layout-footer-text">Energy Consumption Optimizer</span>
-  </div>
+  <footer class="layout-footer" role="contentinfo">
+    <span class="layout-footer-text"> Energy Consumption Optimizer </span>
+  </footer>
 </template>

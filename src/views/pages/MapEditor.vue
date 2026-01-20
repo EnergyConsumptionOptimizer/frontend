@@ -11,17 +11,15 @@ onUnmounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 h-full">
+  <div class="flex flex-col gap-4">
     <div>
-      <h1 class="text-3xl font-bold m-0">Map editor</h1>
+      <h1 class="text-2xl sm:text-3xl font-bold m-0">Map editor</h1>
     </div>
 
     <Card class="flex-1">
       <template #content>
-        <interactive-map />
+        <InteractiveMap />
       </template>
     </Card>
   </div>
 </template>
-
-<style scoped></style>

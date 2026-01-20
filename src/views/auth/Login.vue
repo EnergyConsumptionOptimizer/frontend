@@ -12,7 +12,7 @@ const route = useRoute();
 const authStore = useAuthStore();
 const { error } = storeToRefs(authStore);
 
-const { formGlobalError } = useServerFormErrors(error);
+const { globalError } = useServerFormErrors(error);
 
 const username = ref("");
 const password = ref("");
@@ -45,48 +45,52 @@ onUnmounted(clearError);
     title="Energy Consumption Optimizer"
     subtitle="Log in to continue"
   >
-    <form @submit.prevent="handleLogin" class="space-y-6" novalidate>
+    <form
+      @submit.prevent="handleLogin"
+      class="space-y-4 sm:space-y-6"
+      novalidate
+    >
       <Message
-        v-if="formGlobalError"
+        v-if="globalError"
         severity="error"
         variant="simple"
         class="mb-4 w-full justify-center"
       >
-        {{ formGlobalError }}
+        {{ globalError }}
       </Message>
 
-      <div>
+      <div class="space-y-2">
         <label
           for="username"
-          class="block text-xl font-medium mb-2 text-surface-900 dark:text-surface-0"
+          class="block text-base sm:text-xl font-medium text-surface-900 dark:text-surface-0"
         >
           Username
         </label>
         <InputText
           id="username"
           v-model="username"
-          placeholder="Username"
-          class="w-full"
-          :invalid="!!formGlobalError"
+          placeholder="Enter your username"
+          class="w-full min-h-11"
+          :invalid="!!globalError"
           autocomplete="username"
           @input="clearError"
         />
       </div>
 
-      <div>
+      <div class="space-y-2">
         <label
           for="password"
-          class="block text-xl font-medium mb-2 text-surface-900 dark:text-surface-0"
+          class="block text-base sm:text-xl font-medium text-surface-900 dark:text-surface-0"
         >
           Password
         </label>
         <Password
           inputId="password"
           v-model="password"
-          placeholder="Password"
+          placeholder="Enter your password"
           toggleMask
           :feedback="false"
-          :invalid="!!formGlobalError"
+          :invalid="!!globalError"
           autocomplete="current-password"
           fluid
           @input="clearError"
@@ -96,7 +100,7 @@ onUnmounted(clearError);
       <div class="text-right">
         <router-link
           to="/reset-password"
-          class="text-primary font-medium cursor-pointer hover:underline"
+          class="text-sm sm:text-base text-primary font-medium hover:underline"
         >
           Reset admin password
         </router-link>
@@ -105,7 +109,7 @@ onUnmounted(clearError);
       <Button
         label="Log In"
         type="submit"
-        class="w-full"
+        class="w-full min-h-11"
         :loading="authStore.isLoading"
         :disabled="authStore.isLoading || isFormInvalid"
       />

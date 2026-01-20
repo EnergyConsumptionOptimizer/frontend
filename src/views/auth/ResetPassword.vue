@@ -11,7 +11,7 @@ const router = useRouter();
 const authStore = useAuthStore();
 const { error } = storeToRefs(authStore);
 
-const { getError: getServerError, formGlobalError } =
+const { getFieldError: getServerError, globalError } =
   useServerFormErrors(error);
 
 const resetCode = ref("");
@@ -41,7 +41,6 @@ const codeError = computed(() => {
   ) {
     return "Invalid reset code";
   }
-
   return null;
 });
 
@@ -74,35 +73,38 @@ onUnmounted(clearError);
     title="Reset Admin Password"
     subtitle="Enter your code and new password"
   >
-    <form @submit.prevent="handleSubmit" class="space-y-6" novalidate>
+    <form
+      @submit.prevent="handleSubmit"
+      class="space-y-4 sm:space-y-6"
+      novalidate
+    >
       <Message
-        v-if="formGlobalError && !codeError"
+        v-if="globalError && !codeError"
         severity="error"
         variant="simple"
         class="mb-4 w-full justify-center"
       >
-        {{ formGlobalError }}
+        {{ globalError }}
       </Message>
 
-      <div>
+      <div class="space-y-2">
         <label
           for="resetCode"
-          class="block text-xl font-medium mb-2 text-surface-900 dark:text-surface-0"
+          class="block text-base sm:text-xl font-medium text-surface-900 dark:text-surface-0"
         >
           Reset Code
         </label>
         <InputText
           id="resetCode"
           v-model="resetCode"
-          placeholder="Reset Code"
-          class="w-full"
+          placeholder="Enter reset code"
+          class="w-full min-h-11"
           :invalid="!!codeError"
           aria-describedby="code-error"
           @input="clearError"
         />
         <Message
           v-if="codeError"
-          id="code-error"
           severity="error"
           variant="simple"
           size="small"
@@ -112,34 +114,34 @@ onUnmounted(clearError);
         </Message>
       </div>
 
-      <div>
+      <div class="space-y-2">
         <label
           for="newPassword"
-          class="block text-xl font-medium mb-2 text-surface-900 dark:text-surface-0"
+          class="block text-base sm:text-xl font-medium text-surface-900 dark:text-surface-0"
         >
           New Password
         </label>
         <Password
           inputId="newPassword"
           v-model="newPassword"
-          placeholder="New Password"
+          placeholder="Enter new password"
           toggleMask
           :feedback="false"
           fluid
         />
       </div>
 
-      <div>
+      <div class="space-y-2">
         <label
           for="confirmPassword"
-          class="block text-xl font-medium mb-2 text-surface-900 dark:text-surface-0"
+          class="block text-base sm:text-xl font-medium text-surface-900 dark:text-surface-0"
         >
           Confirm Password
         </label>
         <Password
           inputId="confirmPassword"
           v-model="confirmPassword"
-          placeholder="Confirm Password"
+          placeholder="Confirm new password"
           toggleMask
           :feedback="false"
           :invalid="!passwordsMatch"
@@ -148,7 +150,6 @@ onUnmounted(clearError);
         />
         <Message
           v-if="!passwordsMatch"
-          id="match-error"
           severity="error"
           variant="simple"
           size="small"
@@ -158,18 +159,18 @@ onUnmounted(clearError);
         </Message>
       </div>
 
-      <div class="flex gap-4 pt-2">
+      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
         <Button
           label="Cancel"
           text
           type="button"
-          class="w-full"
+          class="w-full sm:flex-1 min-h-11"
           @click="handleCancel"
         />
         <Button
           label="Confirm"
           type="submit"
-          class="w-full"
+          class="w-full sm:flex-1 min-h-11"
           :loading="authStore.isLoading"
           :disabled="authStore.isLoading || !isValid"
         />

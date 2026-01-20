@@ -6,8 +6,12 @@ import { provide } from "vue";
 const props = defineProps({
   floorPlanSvg: {
     type: String,
+    default: "",
   },
-  cursor: String,
+  cursor: {
+    type: String,
+    default: "cursor-default",
+  },
 });
 
 const emit = defineEmits(["interactiveMapClick", "interactiveMapMouseMove"]);
@@ -85,18 +89,26 @@ provide("interactiveMap", {
     :viewBox="viewBox"
     preserveAspectRatio="xMidYMid meet"
     class="h-full w-full"
+    :class="cursor"
+    role="img"
+    aria-label="Interactive floor plan map"
     @click="svgClick"
     @mousemove="svgMouseMove"
-    :class="cursor"
   >
+    <title>Floor Plan</title>
+    <desc>Interactive map showing zones and smart furniture hookups</desc>
+
     <g>
-      <g v-html="extractedSvg" />
-      <g>
+      <g v-html="extractedSvg" aria-hidden="true" />
+
+      <g role="list" aria-label="Zones">
         <slot name="zones" />
       </g>
-      <g>
+
+      <g role="list" aria-label="Smart furniture hookups">
         <slot name="hookups" />
       </g>
+
       <slot></slot>
     </g>
   </svg>
