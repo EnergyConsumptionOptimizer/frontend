@@ -8,6 +8,8 @@ export class MonitoringService {
   realTimeSocket = null;
   utilityConsumptionSocket = null;
 
+  realTimeSubscribersCount = 0;
+
   subscribedToRealTimeMetersUpdates = false;
   subscribedToActiveSmartFurnitureHookupsUpdates = false;
 
@@ -20,6 +22,7 @@ export class MonitoringService {
   }
 
   async subscribeToRealTimeMetersUpdates(onUpdate) {
+    this.realTimeSubscribersCount++;
     if (this.subscribedToRealTimeMetersUpdates) {
       console.warn(
         `Socket already subscribed to ${REAL_TIME_NAMESPACE} meters room`,
@@ -41,6 +44,7 @@ export class MonitoringService {
   }
 
   async subscribeToActiveSmartFurnitureHookups(onUpdate) {
+    this.realTimeSubscribersCount++;
     if (this.subscribedToActiveSmartFurnitureHookupsUpdates) {
       console.warn(
         `Socket already subscribed to ${REAL_TIME_NAMESPACE} active smart furniture hookup room`,
@@ -125,6 +129,11 @@ export class MonitoringService {
 
   disconnect() {
     if (this.realTimeSocket) {
+      this.realTimeSubscribersCount--;
+      if (this.realTimeSubscribersCount < 0) this.realTimeSubscribersCount = 0;
+      if (this.realTimeSubscribersCount !== 0) {
+        return;
+      }
       this.realTimeSocket.disconnect();
       this.subscribedToRealTimeMetersUpdates = false;
       this.subscribedToActiveSmartFurnitureHookupsUpdates = false;
