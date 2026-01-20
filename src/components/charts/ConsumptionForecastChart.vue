@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import { useChartTheme } from "@/composables/charts/useChartTheme";
 import { useChartScroll } from "@/composables/charts/useChartScroll";
+import EmptyConsumptionData from "@/components/charts/EmptyConsumptionData.vue";
 
 defineOptions({ name: "ConsumptionForecastChart" });
 
@@ -46,6 +47,12 @@ const chartOptions = computed(() => ({
   plugins: { ...baseOptions.value.plugins, legend: { display: false } },
   elements: { bar: { borderRadius: 4 } },
 }));
+
+const hasData = computed(() => {
+  const points = props.values;
+
+  return !(!Array.isArray(points) || points.length === 0);
+});
 </script>
 
 <template>
@@ -68,7 +75,10 @@ const chartOptions = computed(() => ({
       <div
         class="h-full w-full overflow-x-auto overflow-y-hidden custom-scrollbar"
       >
-        <div :style="containerStyle">
+        <div class="flex-1 w-full min-h-64 relative" v-if="!hasData">
+          <empty-consumption-data />
+        </div>
+        <div :style="containerStyle" v-else>
           <Chart
             type="bar"
             :data="chartData"

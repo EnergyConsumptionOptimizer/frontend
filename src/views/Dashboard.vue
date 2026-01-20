@@ -176,7 +176,7 @@ onUnmounted(() => {
         @filter-change="updateRealTimeFilter"
       />
     </div>
-    <div class="col-span-12 xl:col-span-6">
+    <div class="col-span-12 xl:col-span-6 min-w-0">
       <consumption-history-chart
         :users="usersFilterOptions"
         :zones="zonesFilterOptions"

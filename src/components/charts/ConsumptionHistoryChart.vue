@@ -39,7 +39,10 @@ const timeOptions = computed(() => {
 
 const hasData = computed(() => {
   const points = props.consumptionSeries?.utilityConsumptionPoints;
-  return Array.isArray(points) && points.length > 0;
+
+  if (!Array.isArray(points) || points.length === 0) return false;
+
+  return points.some((point) => point.value > 0);
 });
 
 const chartData = computed(() => {
@@ -92,7 +95,9 @@ const chartOptions = computed(() => ({
 </script>
 
 <template>
-  <div class="card h-full flex flex-col">
+  <div
+    class="card flex flex-col aspect-square md:aspect-video xl:aspect-auto xl:h-full"
+  >
     <ConsumptionChartToolBar
       title="Historical Consumptions"
       v-model:filters="filters"

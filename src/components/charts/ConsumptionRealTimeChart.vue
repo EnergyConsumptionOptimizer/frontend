@@ -3,6 +3,7 @@ import { computed } from "vue";
 import ConsumptionChartToolBar from "@/components/charts/ConsumptionChartToolBar.vue";
 import { useChartTheme } from "@/composables/charts/useChartTheme";
 import { useChartFilters } from "@/composables/charts/useChartFilters";
+import EmptyConsumptionData from "@/components/charts/EmptyConsumptionData.vue";
 
 const props = defineProps({
   timeFilterConfig: { type: Object, default: () => {} },
@@ -78,7 +79,12 @@ const chartOptions = computed(() => ({
 
 const hasData = computed(() => {
   const points = props.consumptionSeries?.utilityConsumptionPoints;
-  return Array.isArray(points) && points.length > 0;
+
+  if (!Array.isArray(points) || points.length === 0) return false;
+
+  // Checks if AT LEAST ONE point is greater than 0
+  // (Assuming points are objects with a 'value' property)
+  return points.some((point) => point.value > 0);
 });
 </script>
 
@@ -97,14 +103,7 @@ const hasData = computed(() => {
     />
 
     <div class="flex-1 w-full min-h-64 relative">
-      <div
-        v-if="!hasData"
-        class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 select-none"
-      >
-        <span class="pi pi-chart-bar" style="font-size: 2rem"></span>
-        <h3 class="text-lg font-medium">No Data Available</h3>
-        <p class="text-sm">Try changing the selected filters or time range.</p>
-      </div>
+      <empty-consumption-data v-if="!hasData" />
       <Chart
         v-else
         type="line"
