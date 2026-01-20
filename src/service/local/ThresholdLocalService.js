@@ -20,8 +20,7 @@ export const ThresholdLocalService = {
     const newThreshold = {
       ...payload,
       id: `temp-${Date.now()}`,
-      periodType:
-        payload.thresholdType === "ACTUAL" ? null : payload.periodType,
+      periodType: payload.thresholdType === "ACTUAL" ? "" : payload.periodType,
     };
 
     thresholds.push(newThreshold);
