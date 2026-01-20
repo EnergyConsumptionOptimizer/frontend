@@ -12,6 +12,14 @@ export default defineConfig({
   },
   server: {
     allowedHosts: true,
+    host: true,
+    port: 80,
+    hmr: {
+      clientPort: 8080,
+    },
+    watch: {
+      usePolling: true,
+    },
   },
   plugins: [
     vue(),
