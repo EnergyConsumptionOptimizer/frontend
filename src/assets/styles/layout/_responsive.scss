@@ -1,3 +1,15 @@
+// ============================================================================
+// Responsive Breakpoints - Mobile-First Approach
+// ============================================================================
+// Aligned with Tailwind CSS breakpoints:
+// - sm: 640px   (small tablets, large phones landscape)
+// - md: 768px   (tablets)
+// - lg: 1024px  (desktop)
+// - xl: 1280px  (large desktop)
+// - 2xl: 1536px (extra large desktop)
+// ============================================================================
+
+// Extra Large Screens (2xl) - Content width constraint
 @media screen and (min-width: 1960px) {
     .layout-main,
     .landing-wrapper {
@@ -7,8 +19,11 @@
     }
 }
 
-@media (min-width: 992px) {
+// Desktop and Above (lg: 1024px+)
+// Standard desktop layout with visible sidebar
+@media (min-width: 1024px) {
     .layout-wrapper {
+        // Overlay mode: Sidebar slides over content
         &.layout-overlay {
             .layout-main-container {
                 margin-left: 0;
@@ -39,6 +54,7 @@
             }
         }
 
+        // Static mode: Sidebar always visible, content adjusts
         &.layout-static {
             .layout-main-container {
                 margin-left: 22rem;
@@ -63,7 +79,10 @@
     }
 }
 
-@media (max-width: 991px) {
+// Tablet and Below (max-width: 1023px)
+// Mobile-first: Sidebar hidden by default, triggered by menu button
+@media (max-width: 1023px) {
+    // Prevent body scroll when mobile menu is active
     .blocked-scroll {
         overflow: hidden;
     }
@@ -74,6 +93,7 @@
             padding-left: 2rem;
         }
 
+        // Sidebar: Hidden off-screen by default
         .layout-sidebar {
             transform: translateX(-100%);
             left: 0;
@@ -86,6 +106,7 @@
                 left 0.4s cubic-bezier(0.05, 0.74, 0.2, 0.99);
         }
 
+        // Backdrop overlay for mobile menu
         .layout-mask {
             display: none;
             position: fixed;
@@ -97,6 +118,7 @@
             background-color: var(--maskbg);
         }
 
+        // Active state: Show sidebar and backdrop
         &.layout-mobile-active {
             .layout-sidebar {
                 transform: translateX(0);
@@ -108,3 +130,4 @@
         }
     }
 }
+

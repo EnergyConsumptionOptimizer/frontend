@@ -1,0 +1,120 @@
+// ============================================================================
+// Global Focus & Hover Utilities
+// ============================================================================
+// Consistent focus and hover patterns for all interactive elements
+// WCAG 2.1 AA compliant with clean, simple design
+// ============================================================================
+
+// ============================================================================
+// Focus Utilities - Keyboard Navigation Accessibility
+// ============================================================================
+
+// Remove default outline and apply custom focus-visible styles
+*:focus {
+    outline: none;
+}
+
+*:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+    transition: outline-color 0.2s ease;
+}
+
+// Focus utilities for specific element types
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[role="link"]:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+// Input focus states (subtle box-shadow instead of outline)
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    border-color: var(--primary-color);
+}
+
+// ============================================================================
+// Hover Utilities - Interactive Feedback
+// ============================================================================
+
+// Smooth transitions for all interactive elements
+button,
+a,
+[role="button"],
+[role="link"],
+.interactive {
+    transition: 
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+// ============================================================================
+// Utility Classes
+// ============================================================================
+
+// Focus ring (for custom components)
+.focus-ring:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+// Focus ring inset (for compact elements)
+.focus-ring-inset:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+}
+
+// Hover background
+.hover-bg:hover {
+    background-color: var(--surface-hover);
+}
+
+// Hover scale (subtle lift effect)
+.hover-scale:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+// Active press (feedback on click)
+.active-press:active {
+    transform: scale(0.98);
+}
+
+// ============================================================================
+// High Contrast Mode Support
+// ============================================================================
+
+@media (prefers-contrast: high) {
+    *:focus-visible {
+        outline-width: 3px;
+        outline-offset: 3px;
+    }
+
+    button:focus-visible,
+    a:focus-visible {
+        outline-width: 3px;
+    }
+}
+
+// ============================================================================
+// Reduced Motion Support
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    button,
+    a,
+    [role="button"],
+    [role="link"],
+    .interactive {
+        transition: none !important;
+        animation: none !important;
+    }
+}

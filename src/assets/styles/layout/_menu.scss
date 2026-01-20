@@ -1,5 +1,12 @@
 @use 'mixins' as *;
 
+// ============================================================================
+// Sidebar Navigation Menu
+// ============================================================================
+// Hierarchical navigation with mobile-first responsive design
+// WCAG AA compliant: 44px touch targets, clear focus states, semantic structure
+// ============================================================================
+
 .layout-sidebar {
     position: fixed;
     width: 20rem;
@@ -22,6 +29,7 @@
     padding: 0;
     list-style-type: none;
 
+    // Root level menu items (sections)
     .layout-root-menuitem {
         > .layout-menuitem-root-text {
             font-size: 0.857rem;
@@ -54,6 +62,7 @@
         }
     }
 
+    // Menu item links
     ul {
         margin: 0;
         padding: 0;
@@ -66,65 +75,93 @@
             outline: 0 none;
             color: var(--text-color);
             cursor: pointer;
+            min-height: 2.75rem; // 44px minimum touch target (WCAG AA)
             padding: 0.75rem 1rem;
             border-radius: var(--content-border-radius);
             transition:
-                background-color var(--element-transition-duration),
-                box-shadow var(--element-transition-duration);
+                background-color 0.2s ease,
+                color 0.2s ease,
+                transform 0.15s ease;
 
             .layout-menuitem-icon {
                 margin-right: 0.5rem;
+                font-size: 1.125rem; // Larger icons for better visibility
+                transition: transform 0.2s ease;
             }
 
             .layout-submenu-toggler {
                 font-size: 75%;
                 margin-left: auto;
-                transition: transform var(--element-transition-duration);
+                transition: transform 0.3s ease;
             }
 
+            // Active route highlighting
             &.active-route {
                 font-weight: 700;
                 color: var(--primary-color);
+                background-color: var(--primary-50);
+
+                .layout-menuitem-icon {
+                    color: var(--primary-color);
+                }
             }
 
+            // Hover state with subtle background
             &:hover {
                 background-color: var(--surface-hover);
+
+                .layout-menuitem-icon {
+                    transform: scale(1.05);
+                }
             }
 
-            &:focus {
+            // Clear focus state for keyboard navigation
+            &:focus-visible {
                 @include focused-inset();
+            }
+
+            // Active press feedback
+            &:active {
+                transform: scale(0.98);
             }
         }
 
+        // Nested submenu indentation
         ul {
             overflow: hidden;
             border-radius: var(--content-border-radius);
 
+            // Level 1 indentation
             li {
                 a {
                     margin-left: 1rem;
                 }
 
+                // Level 2 indentation
                 li {
                     a {
                         margin-left: 2rem;
                     }
 
+                    // Level 3 indentation
                     li {
                         a {
                             margin-left: 2.5rem;
                         }
 
+                        // Level 4 indentation
                         li {
                             a {
                                 margin-left: 3rem;
                             }
 
+                            // Level 5 indentation
                             li {
                                 a {
                                     margin-left: 3.5rem;
                                 }
 
+                                // Level 6 indentation
                                 li {
                                     a {
                                         margin-left: 4rem;
@@ -139,6 +176,9 @@
     }
 }
 
+// ============================================================================
+// Submenu Transitions (Smooth expand/collapse)
+// ============================================================================
 .layout-submenu-enter-from,
 .layout-submenu-leave-to {
     max-height: 0;
@@ -158,3 +198,4 @@
     overflow: hidden;
     transition: max-height 1s ease-in-out;
 }
+

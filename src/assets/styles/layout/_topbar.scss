@@ -1,8 +1,15 @@
 @use 'mixins' as *;
 
+// ============================================================================
+// Topbar Layout
+// ============================================================================
+// Fixed header with logo, menu toggle, and user actions
+// Mobile-first responsive design with WCAG AA compliance
+// ============================================================================
+
 .layout-topbar {
     position: fixed;
-    height: 4rem;
+    height: 4rem; // 64px - sufficient for touch targets
     z-index: 997;
     left: 0;
     top: 0;
@@ -37,23 +44,35 @@
         }
     }
 
+    // Interactive buttons (menu, theme, profile, etc.)
     .layout-topbar-action {
         display: inline-flex;
         justify-content: center;
         align-items: center;
         border-radius: 50%;
-        width: 2.5rem;
-        height: 2.5rem;
+        min-width: 2.75rem; // 44px minimum for touch targets (WCAG AA)
+        min-height: 2.75rem;
+        width: 2.75rem;
+        height: 2.75rem;
         color: var(--text-color);
-        transition: background-color var(--element-transition-duration);
         cursor: pointer;
+        transition: 
+            background-color 0.2s ease,
+            transform 0.2s ease;
 
+        // Subtle hover with background
         &:hover {
             background-color: var(--surface-hover);
         }
 
+        // Clear focus state with primary color outline
         &:focus-visible {
             @include focused();
+        }
+
+        // Active state (pressed)
+        &:active {
+            transform: scale(0.95);
         }
 
         i {
@@ -65,9 +84,14 @@
             display: none;
         }
 
+        // Highlighted actions (alerts badge, etc.)
         &.layout-topbar-action-highlight {
             background-color: var(--primary-color);
             color: var(--primary-contrast-color);
+
+            &:hover {
+                background-color: var(--primary-600);
+            }
         }
     }
 
@@ -96,7 +120,10 @@
     }
 }
 
-@media (max-width: 991px) {
+// ============================================================================
+// Tablet and Mobile Responsive (max-width: 1023px)
+// ============================================================================
+@media (max-width: 1023px) {
     .layout-topbar {
         padding: 0 2rem;
 
@@ -113,6 +140,7 @@
             display: inline-flex;
         }
 
+        // Dropdown menu for mobile
         .layout-topbar-menu {
             position: absolute;
             background-color: var(--surface-overlay);
@@ -132,13 +160,30 @@
                 gap: 0.5rem;
             }
 
+            // Full-width touch-friendly actions
             .layout-topbar-action {
                 display: flex;
                 width: 100%;
+                min-height: 2.75rem; // 44px minimum touch target
                 height: auto;
                 justify-content: flex-start;
                 border-radius: var(--content-border-radius);
                 padding: 0.5rem 1rem;
+                transition: 
+                    background-color 0.2s ease,
+                    transform 0.15s ease;
+
+                &:hover {
+                    background-color: var(--surface-hover);
+                }
+
+                &:focus-visible {
+                    @include focused-inset();
+                }
+
+                &:active {
+                    transform: scale(0.98);
+                }
 
                 i {
                     font-size: 1rem;
@@ -146,7 +191,7 @@
                 }
 
                 > span {
-                    font-weight: medium;
+                    font-weight: 500;
                     display: block;
                 }
             }
@@ -158,6 +203,9 @@
     }
 }
 
+// ============================================================================
+// Configuration Panel
+// ============================================================================
 .config-panel {
     .config-panel-label {
         font-size: 0.875rem;
@@ -176,18 +224,42 @@
 
             button {
                 border: none;
-                width: 1.25rem;
-                height: 1.25rem;
+                min-width: 2.75rem; // 44px minimum touch target
+                min-height: 2.75rem;
+                width: 2.75rem;
+                height: 2.75rem;
                 border-radius: 50%;
                 padding: 0;
                 cursor: pointer;
                 outline-color: transparent;
                 outline-width: 2px;
                 outline-style: solid;
-                outline-offset: 1px;
+                outline-offset: 2px;
+                transition: 
+                    outline-color 0.2s ease,
+                    transform 0.2s ease,
+                    box-shadow 0.2s ease;
 
+                // Active state
                 &.active-color {
                     outline-color: var(--primary-color);
+                }
+
+                // Hover state
+                &:hover {
+                    transform: scale(1.1);
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                }
+
+                // Focus state (keyboard navigation)
+                &:focus-visible {
+                    outline-color: var(--primary-color);
+                    outline-width: 3px;
+                }
+
+                // Active press
+                &:active {
+                    transform: scale(0.95);
                 }
             }
         }
@@ -199,3 +271,4 @@
         gap: 0.5rem;
     }
 }
+

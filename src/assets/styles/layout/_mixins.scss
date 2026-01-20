@@ -1,15 +1,51 @@
+// ============================================================================
+// Focus & Interaction Mixins
+// ============================================================================
+// WCAG 2.1 AA compliant focus states with clean, simple design
+// Focus indicators: 3:1 minimum contrast ratio with adjacent colors
+// ============================================================================
+
+// Standard focus ring for most interactive elements
+// Used for: buttons, links, cards, navigation items
 @mixin focused() {
-    outline-width: var(--focus-ring-width);
-    outline-style: var(--focus-ring-style);
-    outline-color: var(--focus-ring-color);
-    outline-offset: var(--focus-ring-offset);
-    box-shadow: var(--focus-ring-shadow);
-    transition:
-        box-shadow var(--transition-duration),
-        outline-color var(--transition-duration);
+    outline-width: 2px;
+    outline-style: solid;
+    outline-color: var(--focus-ring-color, var(--primary-color));
+    outline-offset: 2px;
+    transition: outline-color 0.2s ease;
 }
 
+// Inset focus ring for compact elements or nested components
+// Used for: menu items, table rows, list items
 @mixin focused-inset() {
-    outline-offset: -1px;
-    box-shadow: inset var(--focus-ring-shadow);
+    outline-width: 2px;
+    outline-style: solid;
+    outline-color: var(--focus-ring-color, var(--primary-color));
+    outline-offset: -2px;
+    transition: outline-color 0.2s ease;
+}
+
+// Subtle focus for minimal design (input fields, select boxes)
+@mixin focused-subtle() {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 59, 130, 246), 0.2);
+    border-color: var(--primary-color);
+    transition: 
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+}
+
+// Hover state with smooth background transition
+@mixin hovered() {
+    background-color: var(--surface-hover);
+    transition: background-color 0.2s ease;
+}
+
+// Hover with slight scale for buttons (subtle, not distracting)
+@mixin hovered-scale() {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: 
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }

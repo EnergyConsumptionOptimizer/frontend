@@ -1,3 +1,11 @@
+// ============================================================================
+// Typography System
+// ============================================================================
+// Responsive, accessible typography with fluid scaling
+// Aligned with Tailwind typography scale and WCAG AA guidelines
+// ============================================================================
+
+// Headings: Semantic hierarchy with responsive sizing
 h1,
 h2,
 h3,
@@ -7,7 +15,7 @@ h6 {
     margin: 1.5rem 0 1rem 0;
     font-family: inherit;
     font-weight: 700;
-    line-height: 1.5;
+    line-height: 1.2; // Tighter line-height for headings
     color: var(--text-color);
 
     &:first-child {
@@ -15,54 +23,103 @@ h6 {
     }
 }
 
+// Heading sizes aligned with Tailwind scale
 h1 {
-    font-size: 2.5rem;
+    font-size: 2.25rem; // 36px (text-4xl)
+    letter-spacing: -0.025em;
+
+    @media (min-width: 640px) {
+        font-size: 3rem; // 48px (text-5xl) on tablet+
+    }
 }
 
 h2 {
-    font-size: 2rem;
+    font-size: 1.875rem; // 30px (text-3xl)
+    letter-spacing: -0.025em;
+
+    @media (min-width: 640px) {
+        font-size: 2.25rem; // 36px (text-4xl) on tablet+
+    }
 }
 
 h3 {
-    font-size: 1.75rem;
+    font-size: 1.5rem; // 24px (text-2xl)
+
+    @media (min-width: 640px) {
+        font-size: 1.875rem; // 30px (text-3xl) on tablet+
+    }
 }
 
 h4 {
-    font-size: 1.5rem;
+    font-size: 1.25rem; // 20px (text-xl)
+
+    @media (min-width: 640px) {
+        font-size: 1.5rem; // 24px (text-2xl) on tablet+
+    }
 }
 
 h5 {
-    font-size: 1.25rem;
+    font-size: 1.125rem; // 18px (text-lg)
+
+    @media (min-width: 640px) {
+        font-size: 1.25rem; // 20px (text-xl) on tablet+
+    }
 }
 
 h6 {
-    font-size: 1rem;
+    font-size: 1rem; // 16px (text-base)
+
+    @media (min-width: 640px) {
+        font-size: 1.125rem; // 18px (text-lg) on tablet+
+    }
 }
 
+// Code highlighting
 mark {
     background: #fff8e1;
     padding: 0.25rem 0.4rem;
     border-radius: var(--content-border-radius);
     font-family: monospace;
+    color: var(--text-color); // Ensure sufficient contrast
 }
 
+// Blockquotes
 blockquote {
     margin: 1rem 0;
     padding: 0 2rem;
-    border-left: 4px solid #90a4ae;
+    border-left: 4px solid var(--primary-color);
+    color: var(--text-secondary-color);
+    font-style: italic;
 }
 
+// Horizontal rule
 hr {
     border-top: solid var(--surface-border);
     border-width: 1px 0 0 0;
     margin: 1rem 0;
 }
 
+// Paragraph text
 p {
     margin: 0 0 1rem 0;
-    line-height: 1.5;
+    line-height: 1.5; // WCAG recommends 1.5 for body text
+    font-size: 1rem; // 16px base
 
     &:last-child {
         margin-bottom: 0;
     }
+
+    @media (min-width: 640px) {
+        line-height: 1.625; // Slightly more spacious on larger screens
+    }
 }
+
+// Text utilities for improved readability
+.text-balance {
+    text-wrap: balance; // Better heading wrapping
+}
+
+.text-pretty {
+    text-wrap: pretty; // Better paragraph wrapping
+}
+
