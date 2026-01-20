@@ -122,4 +122,18 @@ export class MonitoringService {
       this.utilityConsumptionSocket?.emit("editQuery", query);
     });
   }
+
+  disconnect() {
+    if (this.realTimeSocket) {
+      this.realTimeSocket.disconnect();
+      this.subscribedToRealTimeMetersUpdates = false;
+      this.subscribedToActiveSmartFurnitureHookupsUpdates = false;
+    }
+
+    if (this.utilityConsumptionSocket) {
+      this.utilityConsumptionSocket.disconnect();
+    }
+
+    console.log("MonitoringService: All sockets disconnected and flags reset.");
+  }
 }
