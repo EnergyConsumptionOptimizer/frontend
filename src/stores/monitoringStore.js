@@ -197,6 +197,16 @@ export const useMonitoringStore = defineStore("monitoring", () => {
     await monitoringService.editUtilityConsumptionQuery(query);
   };
 
+  const disconnectMonitoring = () => {
+    monitoringService.disconnect();
+
+    meters.value = [];
+    activeSmartFurnitureHookups.value = [];
+    realTimeConsumptions.value = [];
+    historicalConsumptions.value = [];
+    consumption_queries.value = [];
+  };
+
   return {
     meters,
     activeSmartFurnitureHookups,
@@ -212,5 +222,6 @@ export const useMonitoringStore = defineStore("monitoring", () => {
     subscribeToUtilityConsumptions,
     updateRealTimeQuery,
     updateHistoricalQuery,
+    disconnectMonitoring,
   };
 });
