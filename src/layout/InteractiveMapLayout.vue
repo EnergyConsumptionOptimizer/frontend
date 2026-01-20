@@ -21,6 +21,16 @@ const svgRef = ref(null);
 const svgContent = computed(() => props.floorPlanSvg || "");
 const viewBox = computed(() => getSvgViewBox(svgContent.value));
 
+const elementScaleFactor = computed(() => {
+  const vb = viewBox.value;
+  if (!vb) return 1;
+
+  const [, , width, height] = vb.split(" ").map(Number);
+  const maxDimension = Math.max(width, height);
+
+  return Math.max(1, maxDimension / 1000);
+});
+
 const extractedSvg = computed(() => {
   if (!props.floorPlanSvg) return "";
 
@@ -102,11 +112,11 @@ provide("interactiveMap", {
       <g v-html="extractedSvg" aria-hidden="true" />
 
       <g role="list" aria-label="Zones">
-        <slot name="zones" />
+        <slot name="zones" :scale-factor="elementScaleFactor" />
       </g>
 
       <g role="list" aria-label="Smart furniture hookups">
-        <slot name="hookups" />
+        <slot name="hookups" :scale-factor="elementScaleFactor" />
       </g>
 
       <slot></slot>

@@ -15,7 +15,18 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  scaleFactor: {
+    type: Number,
+    required: true,
+  },
 });
+
+const vertexRadius = computed(
+  () => POLYGON_CONSTANTS.INCOMPLETE_VERTEX_RADIUS * props.scaleFactor,
+);
+const strokeWidth = computed(() => 6 * props.scaleFactor);
+const vertexStrokeWidth = computed(() => 2 * props.scaleFactor);
+const dashArray = computed(() => 16 * props.scaleFactor);
 
 const ariaLabel = computed(
   () =>
@@ -29,8 +40,8 @@ const ariaLabel = computed(
       :points="props.polygonPath"
       fill="none"
       :stroke="props.color"
-      stroke-width="6"
-      stroke-dasharray="16"
+      :stroke-width="strokeWidth"
+      :stroke-dasharray="dashArray"
       aria-hidden="true"
     />
     <circle
@@ -38,10 +49,10 @@ const ariaLabel = computed(
       :key="i"
       :cx="point.x"
       :cy="point.y"
-      :r="POLYGON_CONSTANTS.INCOMPLETE_VERTEX_RADIUS"
+      :r="vertexRadius"
       :fill="props.color"
       stroke="white"
-      stroke-width="2"
+      :stroke-width="vertexStrokeWidth"
       :aria-label="`Point ${i + 1} of ${props.points.length}`"
     />
   </g>

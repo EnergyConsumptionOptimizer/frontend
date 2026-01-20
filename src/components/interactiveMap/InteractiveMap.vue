@@ -24,7 +24,6 @@ import { useConfirm, useToast } from "primevue";
 import { deleteZoneDialog } from "@/utils/ui/deleteZoneDialog.js";
 import { deleteZoneToast } from "@/utils/ui/deleteZoneToast.js";
 import { collisionZoneToast } from "@/utils/ui/collisionZoneToast.js";
-import { cannotFetchSmartFurnitureHookupInfoToast } from "@/utils/ui/cannotFetchSmartFurnitureHookupInfoToast.js";
 import { deleteSmartFurnitureHookupDialog } from "@/utils/ui/deleteSmartFurnitureHookupDialog.js";
 import { deleteSmartFurnitureHookupTost } from "@/utils/ui/deleteSmartFurnitureHookupTost.js";
 import { useMonitoringStore } from "@/stores/monitoringStore.js";
@@ -189,34 +188,32 @@ async function handleSaveZone(zoneInfo) {
 }
 
 async function fetchAndConfigSmartFurnitureHookupInfo() {
-  const success = await performEndpointCheck(async () => {
-    const response =
-      await SmartFurnitureHookupService.fetchExternalEndpointInfo(
-        draftSmartFurnitureHookup.value.endpoint,
-      );
-    if (
-      !response.data ||
-      !(
-        response.data.name ||
-        response.data.utilityType ||
-        response.data.node_type
-      )
-    ) {
-      throw new Error("Invalid response format");
-    }
+  return await performEndpointCheck(
+    async () => {
+      const response =
+        await SmartFurnitureHookupService.fetchExternalEndpointInfo(
+          draftSmartFurnitureHookup.value.endpoint,
+        );
+      if (
+        !response.data ||
+        !(
+          response.data.name ||
+          response.data.utilityType ||
+          response.data.node_type
+        )
+      ) {
+        throw new Error("Invalid response format");
+      }
 
-    isSmartFurnitureHookupEndpointConfigured.value = true;
-    if (!draftSmartFurnitureHookup.value.name) {
-      draftSmartFurnitureHookup.value.name = response.data.name;
-    }
-    draftSmartFurnitureHookup.value.utilityType =
-      response.data.node_type || response.data.utilityType;
-  });
-
-  if (!success) {
-    toast.add(cannotFetchSmartFurnitureHookupInfoToast);
-  }
-  return success;
+      isSmartFurnitureHookupEndpointConfigured.value = true;
+      if (!draftSmartFurnitureHookup.value.name) {
+        draftSmartFurnitureHookup.value.name = response.data.name;
+      }
+      draftSmartFurnitureHookup.value.utilityType =
+        response.data.node_type || response.data.utilityType;
+    },
+    { toastOnSystemError: false },
+  );
 }
 
 async function handleSaveSmartFurnitureHookup(smartFurnitureHookupInfo) {
@@ -394,7 +391,7 @@ onMounted(() => {
           <Button
             label="Edit"
             severity="secondary"
-            outlined
+            :outlined="!hasZones"
             icon="pi pi-arrows-alt"
             class="min-h-11"
             :disabled="!hasZones"
@@ -406,7 +403,6 @@ onMounted(() => {
           <Button
             label="Back"
             severity="secondary"
-            outlined
             icon="pi pi-arrow-left"
             class="min-h-11"
             aria-label="Cancel drawing and return to view mode"
@@ -460,18 +456,20 @@ onMounted(() => {
         @mouseup="handleStopDrag"
         @mouseleave="handleStopDrag"
       >
-        <template #zones>
+        <template #zones="{ scaleFactor }">
           <g v-if="props.manageZones && isDrawMode && isZoneOnDrawMode">
             <incomplete-polygon
               v-if="!isPolygonClosed"
               :points="draftZone.points"
               :color="displayColor"
-              :polygonPath="polygonPath"
+              :polygon-path="polygonPath"
+              :scale-factor="scaleFactor"
             />
             <zone
               v-if="isPolygonClosed"
               :zone="draftZone"
-              :editModeActive="isPolygonClosed"
+              :edit-mode-active="isPolygonClosed"
+              :scale-factor="scaleFactor"
               @zoneClick="startDragZone"
               @zoneVerticeClick="startDragVertex"
             />
@@ -481,13 +479,14 @@ onMounted(() => {
             v-for="zone in zones"
             :key="zone.id"
             :zone="zone"
-            :editModeActive="props.manageZones && isEditMode"
+            :edit-mode-active="props.manageZones && isEditMode"
+            :scale-factor="scaleFactor"
             @zoneClick="handleStartDragZone"
             @zoneVerticeClick="handleStartDragVertex"
           />
         </template>
 
-        <template #hookups>
+        <template #hookups="{ scaleFactor }">
           <smart-furniture-hookup
             @smartFurnitureHookupClick="startDragSmartFurnitureHookup"
             v-if="
@@ -496,16 +495,18 @@ onMounted(() => {
               isSmartFurnitureHookupOnDrawMode &&
               isSmartFurnitureHookupPositioned
             "
-            :smartFurnitureHookup="draftSmartFurnitureHookup"
-            :editModeActive="true"
+            :smart-furniture-hookup="draftSmartFurnitureHookup"
+            :edit-mode-active="true"
+            :scale-factor="scaleFactor"
           />
 
           <smart-furniture-hookup
             v-for="sfh in smartFurnitureHookups"
             :key="sfh.id"
-            :editModeActive="isEditMode"
+            :edit-mode-active="isEditMode"
+            :scale-factor="scaleFactor"
             @smartFurnitureHookupClick="handleStartDragSmartFurnitureHookup"
-            :smartFurnitureHookup="sfh"
+            :smart-furniture-hookup="sfh"
           />
         </template>
       </interactive-map-layout>

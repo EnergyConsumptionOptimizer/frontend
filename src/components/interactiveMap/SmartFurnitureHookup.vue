@@ -13,8 +13,20 @@ const props = defineProps({
     required: true,
   },
   editModeActive: Boolean,
+  scaleFactor: {
+    type: Number,
+    required: true,
+  },
 });
 const emit = defineEmits(["smartFurnitureHookupClick"]);
+
+const smartFurnitureRadius = computed(
+  () => MAP_CONSTANTS.SMART_FURNITURE_RADIUS * props.scaleFactor * 0.5,
+);
+const iconScale = computed(() => 3 * props.scaleFactor * 0.5);
+const innerRadius = computed(
+  () => MAP_CONSTANTS.SMART_FURNITURE_INNER_RADIUS * props.scaleFactor * 0.5,
+);
 
 const smartFurnitureHookupClick = (event, hookup = null) => {
   if (!props.editModeActive) return;
@@ -88,13 +100,13 @@ const descId = `hookup-desc-${props.smartFurnitureHookup.id}`;
 
     <circle
       v-if="props.editModeActive"
-      :r="MAP_CONSTANTS.SMART_FURNITURE_RADIUS"
+      :r="smartFurnitureRadius"
       fill="transparent"
       stroke="transparent"
       aria-hidden="true"
     />
 
-    <g :transform="`scale(3)`">
+    <g :transform="`scale(${iconScale})`">
       <electricity-icon
         v-if="
           props.smartFurnitureHookup.utilityType === utilityType.ELECTRICITY
@@ -120,7 +132,7 @@ const descId = `hookup-desc-${props.smartFurnitureHookup.id}`;
       />
       <circle
         v-else
-        :r="MAP_CONSTANTS.SMART_FURNITURE_INNER_RADIUS"
+        :r="innerRadius / iconScale"
         :fill="color"
         aria-hidden="true"
       />

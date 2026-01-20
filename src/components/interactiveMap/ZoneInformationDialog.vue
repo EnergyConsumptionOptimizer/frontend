@@ -57,9 +57,10 @@ const activeColor = computed({
 });
 
 watch(visible, (isOpen) => {
-  if (isOpen) {
+  if (!isOpen) {
     submitted.value = false;
-
+    if (store.error) store.clearError();
+  } else {
     const zoneColor = zone.value?.color;
     if (zoneColor?.value !== undefined) {
       selectedColor.value = zoneColor.value;
@@ -68,8 +69,6 @@ watch(visible, (isOpen) => {
     } else {
       selectedColor.value = props.defaultColor;
     }
-
-    if (store.error) store.clearError();
   }
 });
 
@@ -78,8 +77,10 @@ const clearError = () => {
 };
 
 function onSave() {
-  submitted.value = true;
-  if (!isFormValid.value) return;
+  if (!isFormValid.value) {
+    submitted.value = true;
+    return;
+  }
 
   emit("save", {
     id: zone.value?.id ?? null,

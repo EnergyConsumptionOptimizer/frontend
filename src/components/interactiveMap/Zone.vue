@@ -1,6 +1,6 @@
 <script setup>
 import { inject, computed } from "vue";
-import { TEXT_LIMITS } from "@/config/uiConstants";
+import { TEXT_LIMITS, MAP_CONSTANTS } from "@/config/uiConstants";
 
 const props = defineProps({
   zone: {
@@ -8,10 +8,25 @@ const props = defineProps({
     required: true,
   },
   editModeActive: Boolean,
+  scaleFactor: {
+    type: Number,
+    required: true,
+  },
 });
 const interactiveMap = inject("interactiveMap");
 
 const emit = defineEmits(["zoneClick", "zoneVerticeClick"]);
+
+const vertexRadius = computed(
+  () => MAP_CONSTANTS.VERTEX_RADIUS * props.scaleFactor,
+);
+const vertexStrokeWidth = computed(
+  () => MAP_CONSTANTS.VERTEX_STROKE_WIDTH * props.scaleFactor,
+);
+const zoneStrokeWidth = computed(
+  () => MAP_CONSTANTS.ZONE_STROKE_WIDTH * props.scaleFactor,
+);
+const fontSize = computed(() => 38 * props.scaleFactor * 0.5);
 
 const pointsToPath = (points) => {
   if (points.length === 0) return "";
@@ -67,7 +82,7 @@ const descId = `zone-desc-${props.zone.id}`;
       :fill="props.zone.color"
       :fill-opacity="MAP_CONSTANTS.ZONE_FILL_OPACITY"
       :stroke="props.zone.color"
-      :stroke-width="MAP_CONSTANTS.ZONE_STROKE_WIDTH"
+      :stroke-width="zoneStrokeWidth"
     />
 
     <g v-if="props.editModeActive" role="list" aria-label="Zone vertices">
@@ -78,10 +93,10 @@ const descId = `zone-desc-${props.zone.id}`;
         :aria-label="`Vertex ${i + 1} of ${props.zone.points.length}`"
         :cx="point.x"
         :cy="point.y"
-        :r="MAP_CONSTANTS.VERTEX_RADIUS"
+        :r="vertexRadius"
         :fill="props.zone.color"
         stroke="white"
-        stroke-width="4"
+        :stroke-width="vertexStrokeWidth"
         style="cursor: pointer"
         @mousedown="zoneClick($event, props.zone, i)"
       />
@@ -98,7 +113,7 @@ const descId = `zone-desc-${props.zone.id}`;
       "
       text-anchor="middle"
       fill="#000"
-      font-size="38"
+      :font-size="fontSize"
       font-weight="bold"
       pointer-events="none"
       aria-hidden="true"
