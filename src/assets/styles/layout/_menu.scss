@@ -1,12 +1,5 @@
 @use 'mixins' as *;
 
-// ============================================================================
-// Sidebar Navigation Menu
-// ============================================================================
-// Hierarchical navigation with mobile-first responsive design
-// WCAG AA compliant: 44px touch targets, clear focus states, semantic structure
-// ============================================================================
-
 .layout-sidebar {
     position: fixed;
     width: 20rem;
@@ -176,9 +169,6 @@
     }
 }
 
-// ============================================================================
-// Submenu Transitions (Smooth expand/collapse)
-// ============================================================================
 .layout-submenu-enter-from,
 .layout-submenu-leave-to {
     max-height: 0;

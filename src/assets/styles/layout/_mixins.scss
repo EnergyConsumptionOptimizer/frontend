@@ -1,10 +1,3 @@
-// ============================================================================
-// Focus & Interaction Mixins
-// ============================================================================
-// WCAG 2.1 AA compliant focus states with clean, simple design
-// Focus indicators: 3:1 minimum contrast ratio with adjacent colors
-// ============================================================================
-
 // Standard focus ring for most interactive elements
 // Used for: buttons, links, cards, navigation items
 @mixin focused() {
