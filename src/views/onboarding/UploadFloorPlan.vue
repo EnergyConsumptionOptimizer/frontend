@@ -99,7 +99,7 @@ onMounted(async () => {
             <!-- SVG Preview -->
             <div
               class="w-full bg-surface-0 dark:bg-surface-950 rounded border border-surface-200 dark:border-surface-700 overflow-hidden"
-              style="min-height: 300px; max-height: 500px"
+              style="min-height: 300px"
               role="img"
               :aria-label="`Floor plan preview: ${interactiveMapStore.svgFileName}`"
             >
