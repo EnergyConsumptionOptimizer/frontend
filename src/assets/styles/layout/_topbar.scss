@@ -140,8 +140,9 @@
             display: inline-flex;
         }
 
-        // Dropdown menu for mobile
+        // Dropdown menu for mobile - hidden by default
         .layout-topbar-menu {
+            display: none;
             position: absolute;
             background-color: var(--surface-overlay);
             transform-origin: top;
@@ -155,6 +156,12 @@
             top: 4rem;
             min-width: 15rem;
             border: 1px solid var(--surface-border);
+            z-index: 999; // Above overlay backdrop (z-998)
+
+            // Show menu when active
+            &.layout-topbar-menu-mobile-active {
+                display: block;
+            }
 
             .layout-topbar-menu-content {
                 gap: 0.5rem;
@@ -199,6 +206,18 @@
 
         .layout-topbar-menu-content {
             flex-direction: column;
+        }
+    }
+}
+
+// ============================================================================
+// Desktop View (min-width: 1024px)
+// ============================================================================
+@media (min-width: 1024px) {
+    .layout-topbar {
+        // Desktop menu is always visible
+        .layout-topbar-menu {
+            display: block;
         }
     }
 }

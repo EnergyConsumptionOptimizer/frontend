@@ -4,7 +4,7 @@ import { useAuthStore } from "@/stores/authsStore.js";
 import { useAlertStore } from "@/stores/alertStore";
 import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";
-import { computed, ref } from "vue";
+import { computed, ref, onMounted, onUnmounted } from "vue";
 import OverlayBadge from "primevue/overlaybadge";
 
 const { toggleMenu, toggleDarkMode, isDarkTheme, layoutState } = useLayout();
@@ -16,6 +16,8 @@ const router = useRouter();
 
 // State for mobile user menu
 const mobileMenuOpen = ref(false);
+const mobileMenuRef = ref(null);
+const mobileMenuButtonRef = ref(null);
 
 const handleLogout = async () => {
   await authStore.logout();
@@ -35,6 +37,24 @@ const toggleMobileMenu = () => {
 const closeMobileMenu = () => {
   mobileMenuOpen.value = false;
 };
+
+// Handle keyboard navigation (Escape key)
+const handleKeyDown = (event) => {
+  if (event.key === "Escape" && mobileMenuOpen.value) {
+    closeMobileMenu();
+    // Return focus to the toggle button
+    mobileMenuButtonRef.value?.focus();
+  }
+};
+
+// Set up and clean up event listeners
+onMounted(() => {
+  document.addEventListener("keydown", handleKeyDown);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("keydown", handleKeyDown);
+});
 
 // Computed ARIA attributes
 const menuButtonExpanded = computed(() => {
@@ -99,9 +119,10 @@ const alertsLabel = computed(() =>
       </div>
 
       <button
+        ref="mobileMenuButtonRef"
         class="layout-topbar-menu-button layout-topbar-action lg:hidden"
         type="button"
-        aria-label="Open user menu"
+        :aria-label="mobileMenuOpen ? 'Close user menu' : 'Open user menu'"
         :aria-expanded="userMenuExpanded"
         aria-controls="topbar-user-menu"
         @click="toggleMobileMenu"
@@ -109,33 +130,32 @@ const alertsLabel = computed(() =>
         <i class="pi pi-ellipsis-v" aria-hidden="true"></i>
       </button>
 
+      <!-- Click outside handler for mobile -->
+      <div
+        v-if="mobileMenuOpen"
+        class="fixed inset-0 z-998 lg:hidden"
+        @click="closeMobileMenu"
+        aria-hidden="true"
+      ></div>
+
       <nav
+        ref="mobileMenuRef"
         id="topbar-user-menu"
         :class="[
           'layout-topbar-menu',
-          'hidden lg:block',
-          {
-            'absolute right-8 top-16 bg-surface-0 dark:bg-surface-900 shadow-lg rounded-lg border border-surface-200 dark:border-surface-700 p-4 z-50 min-w-48':
-              mobileMenuOpen,
-            block: mobileMenuOpen,
-          },
+          { 'layout-topbar-menu-mobile-active': mobileMenuOpen },
         ]"
+        :aria-hidden="!mobileMenuOpen && 'true'"
         aria-label="User menu"
+        role="menu"
       >
-        <!-- Click outside handler for mobile -->
-        <div
-          v-if="mobileMenuOpen"
-          class="fixed inset-0 z-40 lg:hidden"
-          @click="closeMobileMenu"
-          aria-hidden="true"
-        ></div>
-
-        <div class="layout-topbar-menu-content relative z-50">
+        <div class="layout-topbar-menu-content">
           <button
             type="button"
             class="layout-topbar-action w-full lg:w-auto"
             @click="toggleDarkMode"
             :aria-label="themeToggleLabel"
+            role="menuitem"
           >
             <i
               :class="['pi', isDarkTheme ? 'pi-moon' : 'pi-sun']"
@@ -151,6 +171,7 @@ const alertsLabel = computed(() =>
             class="layout-topbar-action w-full lg:w-auto"
             @click="handleLogout"
             aria-label="Logout"
+            role="menuitem"
           >
             <i class="pi pi-sign-out" aria-hidden="true"></i>
             <span class="ml-2 lg:hidden">Logout</span>
