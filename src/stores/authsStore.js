@@ -2,18 +2,9 @@ import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import { AuthService } from "@/service/AuthService";
 import { useAsyncAction } from "@/composables/utils/asyncAction";
+import { MANUAL_HANDLED_ERROR_CODES } from "@/config/errorCodes";
 
 const ROLES = { ADMIN: "admin", HOUSEHOLD: "household" };
-
-const AUTH_MANUAL_ERRORS = [
-  "UNAUTHORIZED",
-  "BAD_REQUEST",
-  "VALIDATION_ERROR",
-  "INTERNAL_ERROR",
-  "INFRASTRUCTURE_ERROR",
-  "NETWORK_ERROR",
-  "TIMEOUT",
-];
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
@@ -42,7 +33,7 @@ export const useAuthStore = defineStore("auth", () => {
         setUser(data.user);
         isInitialized.value = true;
       },
-      { suppressToastForCodes: AUTH_MANUAL_ERRORS },
+      { suppressToastForCodes: MANUAL_HANDLED_ERROR_CODES },
     );
 
   const logout = () =>
@@ -59,7 +50,7 @@ export const useAuthStore = defineStore("auth", () => {
       async () => {
         await AuthService.resetAdminPassword(code, password);
       },
-      { suppressToastForCodes: AUTH_MANUAL_ERRORS },
+      { suppressToastForCodes: MANUAL_HANDLED_ERROR_CODES },
     );
 
   const init = async () => {

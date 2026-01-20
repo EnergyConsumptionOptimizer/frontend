@@ -81,6 +81,10 @@ export const useThresholdStore = defineStore("threshold", () => {
       thresholds.value = createdThresholds;
     });
 
+  const clearError = () => {
+    error.value = null;
+  };
+
   return {
     thresholds,
     isLoading,
@@ -88,6 +92,7 @@ export const useThresholdStore = defineStore("threshold", () => {
     staticOptions,
     isLocalMode,
     setLocalMode,
+    clearError,
     syncAndFinalize,
     fetchThresholds,
     createThreshold,

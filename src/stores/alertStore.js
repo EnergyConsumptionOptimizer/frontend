@@ -146,6 +146,7 @@ export const useAlertStore = defineStore("alert", () => {
           },
           onEvent: (data) => {
             if (data?.type === "NEW_ALERT") {
+              fetchAlerts();
               fetchUnreadCount();
             }
           },

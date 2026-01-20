@@ -250,7 +250,7 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
   const { activeSmartFurnitureHookups } = storeToRefs(monitoringStore);
 
   const realTimeSmartFurnitureHookups = computed(() => {
-    if (isLocalMode.value) smartFurnitureHookups.value;
+    if (isLocalMode.value) return smartFurnitureHookups.value;
 
     const activeMap = new Map(
       activeSmartFurnitureHookups.value.map((a) => [a.id, a]),
@@ -271,6 +271,10 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
     });
   });
 
+  const clearError = () => {
+    error.value = null;
+  };
+
   return {
     svgData,
     svgFileName,
@@ -286,6 +290,7 @@ export const useInteractiveMapStore = defineStore("interactiveMap", () => {
     isDrawMode,
     isEditMode,
 
+    clearError,
     syncAndFinalize,
     setLocalMode,
     uploadSvg,

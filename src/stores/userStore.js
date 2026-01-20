@@ -72,12 +72,17 @@ export const useUserStore = defineStore("user", () => {
       users.value = createdUsers;
     });
 
+  const clearError = () => {
+    error.value = null;
+  };
+
   return {
     users,
     isLoading,
     error,
     isLocalMode,
     setLocalMode,
+    clearError,
     syncAndFinalize,
     fetchUsers,
     createUser,
