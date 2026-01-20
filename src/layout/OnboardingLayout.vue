@@ -7,11 +7,12 @@ import { useAuthStore } from "@/stores/authsStore.js";
 import { useUserStore } from "@/stores/userStore";
 import { useThresholdStore } from "@/stores/thresholdStore";
 import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
-import { useConfirm } from "primevue/useconfirm";
+import { useToast } from "primevue/usetoast";
+import { errorToast } from "@/utils/ui/toastPresets.js";
 import { useLayout } from "@/layout/composables/useLayout";
 
 const route = useRoute();
-const confirm = useConfirm();
+const toast = useToast();
 const { toggleDarkMode, isDarkTheme } = useLayout();
 
 const loading = ref(false);
@@ -88,11 +89,7 @@ async function finalizeAndRedirect() {
 async function completeOnboarding() {
   loading.value = true;
   mountStores();
-
-  console.log("[completeOnboarding] Starting sync process");
-
   const mapSuccess = await interactiveMapStore.syncAndFinalize();
-  console.log("[completeOnboarding] mapSuccess:", mapSuccess);
 
   if (!mapSuccess) {
     loading.value = false;
@@ -100,43 +97,28 @@ async function completeOnboarding() {
   }
 
   const userSuccess = await userStore.syncAndFinalize();
-  console.log("[completeOnboarding] userSuccess:", userSuccess);
-
   const thresholdSuccess = await thresholdStore.syncAndFinalize();
-  console.log("[completeOnboarding] thresholdSuccess:", thresholdSuccess);
 
-  if (userSuccess && thresholdSuccess) {
-    console.log("[completeOnboarding] All syncs successful, redirecting");
-    await finalizeAndRedirect();
-    loading.value = false;
-    return;
+  if (!userSuccess || !thresholdSuccess) {
+    let errorDetail;
+    if (!userSuccess && !thresholdSuccess) {
+      errorDetail = "Users and Thresholds";
+    } else if (!userSuccess) {
+      errorDetail = "Household Users";
+    } else {
+      errorDetail = "Thresholds";
+    }
+
+    toast.add(
+      errorToast(
+        "Setup Incomplete",
+        `There was an error saving: ${errorDetail}. You can configure them later manually.`,
+      ),
+    );
   }
 
-  let errorDetail;
-  if (!userSuccess && !thresholdSuccess) {
-    errorDetail = "Users and Thresholds";
-  } else if (!userSuccess) {
-    errorDetail = "Household Users";
-  } else {
-    errorDetail = "Thresholds";
-  }
-
-  console.log("[completeOnboarding] Showing error dialog:", errorDetail);
-
-  confirm.require({
-    header: "Setup Incomplete",
-    message: `There was an error saving: ${errorDetail}. Do you want to proceed to the Dashboard anyway? You can configure them later manually.`,
-    icon: "pi pi-exclamation-triangle",
-    acceptLabel: "Yes, proceed",
-    rejectLabel: "No, stay here",
-    accept: async () => {
-      await finalizeAndRedirect();
-      loading.value = false;
-    },
-    reject: () => {
-      loading.value = false;
-    },
-  });
+  await finalizeAndRedirect();
+  loading.value = false;
 }
 
 const handleLogout = async () => {
@@ -310,6 +292,5 @@ onMounted(() => {
     </main>
 
     <Toast />
-    <ConfirmDialog />
   </div>
 </template>
