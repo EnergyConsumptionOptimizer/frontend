@@ -10,8 +10,9 @@ import Password from "primevue/password";
 import Button from "primevue/button";
 import Message from "primevue/message";
 
-defineProps({
+const props = defineProps({
   loading: { type: Boolean, default: false },
+  isAdminEditingOwnProfile: { type: Boolean, default: false },
 });
 
 const user = defineModel("user", { required: true });
@@ -50,6 +51,11 @@ const isFormValid = computed(() => {
   const passwordValid =
     hasNewPassword && hasConfirmPassword && passwordsMatch.value;
 
+  // Admin can only change password, not username
+  if (props.isAdminEditingOwnProfile) {
+    return passwordValid;
+  }
+
   return usernameValid || passwordValid;
 });
 
@@ -68,7 +74,9 @@ function onSave() {
 
   const payload = {
     id: user.value.id,
-    username: user.value?.username?.trim() || undefined,
+    username: props.isAdminEditingOwnProfile
+      ? undefined
+      : user.value?.username?.trim() || undefined,
     password: newPassword.value?.trim() || undefined,
     role: user.value.role,
   };
@@ -116,13 +124,23 @@ const dialogTitle = computed(() =>
           class="w-full min-h-11"
           :invalid="!!usernameError"
           :aria-invalid="!!usernameError"
-          aria-describedby="username-error"
+          :disabled="isAdminEditingOwnProfile"
+          aria-describedby="username-error username-info"
           placeholder="Enter username"
           fluid
         />
         <Message
+          id="username-info"
+          v-if="isAdminEditingOwnProfile"
+          severity="info"
+          variant="simple"
+          size="small"
+        >
+          Admin username cannot be changed
+        </Message>
+        <Message
           id="username-error"
-          v-if="usernameError"
+          v-if="usernameError && !isAdminEditingOwnProfile"
           severity="error"
           variant="simple"
           size="small"

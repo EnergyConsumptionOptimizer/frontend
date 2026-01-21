@@ -9,7 +9,7 @@ import UserFormDialog from "@/components/users/UserFormDialog.vue";
 
 const authStore = useAuthStore();
 const userStore = useUserStore();
-const { user } = storeToRefs(authStore);
+const { user, isAdmin } = storeToRefs(authStore);
 const { isLoading } = storeToRefs(userStore);
 
 const showDialog = ref(false);
@@ -77,6 +77,7 @@ const handleSave = async (payload) => {
       v-model:visible="showDialog"
       v-model:user="editUser"
       :loading="isLoading"
+      :is-admin-editing-own-profile="isAdmin"
       @save="handleSave"
       @cancel="showDialog = false"
     />
