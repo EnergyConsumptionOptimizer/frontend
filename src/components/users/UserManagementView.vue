@@ -34,7 +34,11 @@ const editUser = (prod) => {
 const saveUser = async (payload) => {
   let success;
   if (payload.id) {
-    success = await userStore.updateUser(payload.id, payload.username);
+    const userId = payload.id?.value || payload.id;
+    success = await userStore.updateUser(userId, payload.username);
+    if (success && payload.password) {
+      await userStore.updateUserPassword(userId, payload.password);
+    }
   } else {
     success = await userStore.createUser(payload);
   }
@@ -48,10 +52,12 @@ const confirmDeleteUser = (prod) => {
       message: `Are you sure you want to delete ${prod.username}?`,
       header: "Delete User",
       onAccept: async () => {
-        await userStore.deleteUser(prod.id);
-        selectedUsers.value = selectedUsers.value.filter(
-          (u) => u.id !== prod.id,
-        );
+        const userId = prod.id?.value || prod.id;
+        await userStore.deleteUser(userId);
+        selectedUsers.value = selectedUsers.value.filter((u) => {
+          const uId = u.id?.value || u.id;
+          return uId !== userId;
+        });
       },
     }),
   );
@@ -63,7 +69,7 @@ const confirmDeleteSelected = () => {
       message: "Are you sure you want to delete selected users?",
       header: "Delete Users",
       onAccept: async () => {
-        const ids = selectedUsers.value.map((u) => u.id);
+        const ids = selectedUsers.value.map((u) => u.id?.value || u.id);
         const success = await userStore.deleteUsers(ids);
         if (success) selectedUsers.value = [];
       },

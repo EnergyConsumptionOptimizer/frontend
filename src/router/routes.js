@@ -38,6 +38,11 @@ export const routes = [
         meta: { roles: ["ADMIN"] },
       },
       {
+        path: "profile",
+        name: "profile",
+        component: () => import("@/views/pages/Profile.vue"),
+      },
+      {
         path: "mapeditor",
         name: "mapeditor",
         component: () => import("@/views/pages/MapEditor.vue"),

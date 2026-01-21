@@ -51,6 +51,14 @@ export const useUserStore = defineStore("user", () => {
       users.value = users.value.filter((u) => !ids.includes(u.id));
     });
 
+  const updateUserPassword = (id, password) =>
+    perform(
+      async () => {
+        await UserApiService.updatePassword(id, password);
+      },
+      { suppressToastForCodes: ["VALIDATION_ERROR"] },
+    );
+
   const setLocalMode = (active) => {
     isLocalMode.value = active;
   };
@@ -87,6 +95,7 @@ export const useUserStore = defineStore("user", () => {
     fetchUsers,
     createUser,
     updateUser,
+    updateUserPassword,
     deleteUser,
     deleteUsers,
   };

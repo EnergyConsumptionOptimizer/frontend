@@ -13,8 +13,13 @@ export function useUniqueFieldValidation(
     }
     const valueToCheck = String(valueRef.value).trim().toLowerCase();
 
+    const currentId = idRef?.value?.value || idRef?.value;
+
     const exists = listRef.value.some((item) => {
-      if (idRef && idRef.value && item.id === idRef.value) {
+      const itemId = item.id?.value || item.id;
+
+      // Skip comparison with the current item being edited
+      if (currentId && itemId === currentId) {
         return false;
       }
 

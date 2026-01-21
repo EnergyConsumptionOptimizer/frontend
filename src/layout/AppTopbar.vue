@@ -28,6 +28,11 @@ const goToAlerts = () => {
   router.push({ name: "alerts" });
 };
 
+const goToProfile = () => {
+  router.push({ name: "profile" });
+  closeMobileMenu();
+};
+
 // Toggle mobile user menu
 const toggleMobileMenu = () => {
   mobileMenuOpen.value = !mobileMenuOpen.value;
@@ -150,6 +155,17 @@ const alertsLabel = computed(() =>
         role="menu"
       >
         <div class="layout-topbar-menu-content">
+          <button
+            type="button"
+            class="layout-topbar-action w-full lg:w-auto"
+            @click="goToProfile"
+            aria-label="Profile"
+            role="menuitem"
+          >
+            <i class="pi pi-user" aria-hidden="true"></i>
+            <span class="ml-2 lg:hidden">Profile</span>
+          </button>
+
           <button
             type="button"
             class="layout-topbar-action w-full lg:w-auto"

@@ -24,6 +24,8 @@ const { getFieldError: getServerError, globalError } =
   useServerFormErrors(error);
 
 const submitted = ref(false);
+const newPassword = ref("");
+const confirmPassword = ref("");
 
 const usernameRef = computed(() => user.value?.username);
 const userIdRef = computed(() => user.value?.id);
@@ -35,16 +37,27 @@ const usernameError = computed(
   () => getServerError("username") || localValidationError.value,
 );
 
+const passwordsMatch = computed(
+  () => !confirmPassword.value || newPassword.value === confirmPassword.value,
+);
+
 const isFormValid = computed(() => {
   const hasUsername = !!user.value?.username?.trim();
-  const isUnique = isNameUnique.value;
-  const isPasswordValid = !!user.value?.id || !!user.value?.password?.trim();
-  return hasUsername && isUnique && isPasswordValid;
+  const usernameValid = hasUsername && isNameUnique.value;
+
+  const hasNewPassword = !!newPassword.value?.trim();
+  const hasConfirmPassword = !!confirmPassword.value?.trim();
+  const passwordValid =
+    hasNewPassword && hasConfirmPassword && passwordsMatch.value;
+
+  return usernameValid || passwordValid;
 });
 
 watch(visible, (isOpen) => {
   if (isOpen) {
     submitted.value = false;
+    newPassword.value = "";
+    confirmPassword.value = "";
     if (userStore.error) userStore.clearError();
   }
 });
@@ -52,15 +65,20 @@ watch(visible, (isOpen) => {
 function onSave() {
   submitted.value = true;
   if (!isFormValid.value) return;
-  emit("save", {
+
+  const payload = {
     id: user.value.id,
-    username: user.value.username.trim(),
-    password: user.value.password,
+    username: user.value?.username?.trim() || undefined,
+    password: newPassword.value?.trim() || undefined,
     role: user.value.role,
-  });
+  };
+
+  emit("save", payload);
 }
 
-const dialogTitle = computed(() => (user.value?.id ? "Edit User" : "New User"));
+const dialogTitle = computed(() =>
+  user.value?.id ? "Edit Profile" : "New User",
+);
 </script>
 
 <template>
@@ -90,65 +108,74 @@ const dialogTitle = computed(() => (user.value?.id ? "Edit User" : "New User"));
       </Message>
 
       <div class="flex flex-col gap-2">
-        <label for="username" class="font-semibold text-base">
-          Username <span class="text-red-500" aria-hidden="true">*</span>
-        </label>
+        <label for="username" class="font-semibold text-base">Username</label>
         <InputText
           id="username"
           v-model.trim="user.username"
-          required
           autofocus
           class="w-full min-h-11"
-          :invalid="!!usernameError || (submitted && !user.username)"
-          :aria-invalid="!!usernameError || (submitted && !user.username)"
+          :invalid="!!usernameError"
+          :aria-invalid="!!usernameError"
           aria-describedby="username-error"
-          aria-required="true"
           placeholder="Enter username"
           fluid
-          @input="clearError"
         />
         <Message
           id="username-error"
-          v-if="usernameError || (submitted && !user.username)"
+          v-if="usernameError"
           severity="error"
           variant="simple"
           size="small"
           role="alert"
           aria-live="polite"
         >
-          {{ usernameError || "Username is required." }}
+          {{ usernameError }}
         </Message>
       </div>
 
-      <div v-if="!user.id" class="flex flex-col gap-2">
-        <label for="password" class="font-semibold text-base">
-          Password <span class="text-red-500" aria-hidden="true">*</span>
-        </label>
+      <div class="flex flex-col gap-2">
+        <label for="new-password" class="font-semibold text-base"
+          >New Password</label
+        >
         <Password
-          id="password"
-          v-model.trim="user.password"
+          id="new-password"
+          v-model.trim="newPassword"
           toggleMask
           :feedback="false"
           class="w-full"
           inputClass="w-full min-h-11"
-          :invalid="submitted && !user.password"
-          :aria-invalid="submitted && !user.password"
-          aria-describedby="password-error"
           fluid
-          aria-required="true"
-          placeholder="Enter password"
-          @input="clearError"
+          placeholder="Enter new password"
+        />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="confirm-password" class="font-semibold text-base"
+          >Confirm Password</label
+        >
+        <Password
+          id="confirm-password"
+          v-model.trim="confirmPassword"
+          toggleMask
+          :feedback="false"
+          class="w-full"
+          inputClass="w-full min-h-11"
+          :invalid="!passwordsMatch"
+          :aria-invalid="!passwordsMatch"
+          aria-describedby="password-match-error"
+          fluid
+          placeholder="Confirm new password"
         />
         <Message
-          id="password-error"
-          v-if="submitted && !user.password"
+          id="password-match-error"
+          v-if="!passwordsMatch"
           severity="error"
           variant="simple"
           size="small"
           role="alert"
           aria-live="polite"
         >
-          Password is required.
+          Passwords do not match.
         </Message>
       </div>
     </form>
@@ -172,8 +199,8 @@ const dialogTitle = computed(() => (user.value?.id ? "Edit User" : "New User"));
           form="user-form"
           class="min-h-11 w-full sm:w-auto"
           :loading="loading"
-          :disabled="loading"
-          :aria-label="user?.id ? 'Save user changes' : 'Create new user'"
+          :disabled="!isFormValid || loading"
+          :aria-label="user?.id ? 'Save changes' : 'Create new user'"
         />
       </div>
     </template>

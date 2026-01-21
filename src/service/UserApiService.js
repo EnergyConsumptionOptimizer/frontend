@@ -23,4 +23,11 @@ export const UserApiService = {
   async delete(id) {
     return apiClient.delete(`${BASE_URL}/${id}`);
   },
+
+  async updatePassword(id, password) {
+    const { data } = await apiClient.patch(`/user/api/users/${id}/password`, {
+      password,
+    });
+    return data;
+  },
 };
