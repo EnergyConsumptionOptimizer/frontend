@@ -1,5 +1,12 @@
 <script setup>
-import { computed, onBeforeMount, onMounted, ref, watch } from "vue";
+import {
+  computed,
+  onBeforeMount,
+  onBeforeUnmount,
+  onUnmounted,
+  ref,
+  watch,
+} from "vue";
 import { storeToRefs } from "pinia";
 import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
 
@@ -70,6 +77,7 @@ const { isLoading: endpointLoading, perform: performEndpointCheck } =
 
 const {
   draftZone,
+  colorInput,
   isPolygonClosed,
   polygonPath,
   displayColor,
@@ -351,13 +359,18 @@ watch(collisionError, (error) => {
   }
 });
 
-onBeforeMount(() => interactiveMapStore.viewMap());
-onMounted(() => {
+onBeforeMount(() => {
   interactiveMapStore.setLocalMode(props.isLocalMode);
+  interactiveMapStore.viewMap();
+  monitoringStore.subscribeToActiveSmartFurnitureHookups();
+});
 
-  if (!props.isLocalMode) {
-    monitoringStore.subscribeToActiveSmartFurnitureHookups();
-  }
+onBeforeUnmount(() => {
+  monitoringStore.unsubscribeFromActiveSmartFurnitureHookups();
+});
+
+onUnmounted(() => {
+  monitoringStore.disconnectMonitoring();
 });
 </script>
 
@@ -531,6 +544,7 @@ onMounted(() => {
   <zone-information-dialog
     v-model:visible="zoneDialog"
     v-model:zone="draftZone"
+    v-model:colorInput="colorInput"
     :isOnDrawMode="isZoneOnDrawMode"
     :default-color="displayColor"
     :loading="isLoading"

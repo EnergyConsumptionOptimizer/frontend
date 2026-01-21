@@ -1,13 +1,5 @@
 <script setup>
 import InteractiveMap from "@/components/interactiveMap/InteractiveMap.vue";
-import { onUnmounted } from "vue";
-
-onUnmounted(async () => {
-  console.log("View unmounting, closing sockets...");
-  const { useMonitoringStore } = await import("@/stores/monitoringStore.js");
-  const monitoringStore = useMonitoringStore();
-  monitoringStore.disconnectMonitoring();
-});
 </script>
 
 <template>

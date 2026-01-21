@@ -1,10 +1,10 @@
 <script setup>
 import StatsCard from "@/components/common/StatsCard.vue";
-import { computed, onMounted, onUnmounted } from "vue";
-import StaticMap from "@/components/interactiveMap/StaticMap.vue";
+import { computed, onBeforeMount, onBeforeUnmount, onUnmounted } from "vue";
 import { useMonitoringStore } from "@/stores/monitoringStore.js";
 import { storeToRefs } from "pinia";
 import ConsumptionRealTimeChart from "@/components/charts/ConsumptionRealTimeChart.vue";
+import StaticMap from "@/components/interactiveMap/StaticMap.vue";
 import { useInteractiveMapStore } from "@/stores/interactiveMapStore.js";
 import { useUserStore } from "@/stores/userStore.js";
 import { useAsyncAction } from "@/composables/utils/asyncAction.js";
@@ -112,8 +112,9 @@ async function updateHistoricalFilter(filter) {
 
 const { isLoading, perform } = useAsyncAction();
 
-onMounted(async () => {
-  userStore.setLocalMode(false);
+onBeforeMount(async () => {
+  interactiveMapStore.viewMap();
+
   const defaultRTKey = Object.keys(RT_CONFIG)[0];
   const defaultHistKey = Object.keys(HIST_CONFIG)[0];
 
@@ -129,17 +130,20 @@ onMounted(async () => {
   );
 
   await Promise.allSettled([
-    userStore.fetchUsers(),
     interactiveMapStore.setLocalMode(false),
     monitoringStore.subscribeToRealTimeMetersUpdates(),
+    userStore.fetchUsers(),
     perform(async () => {
       await monitoringStore.subscribeToUtilityConsumptions();
     }),
   ]);
 });
 
+onBeforeUnmount(() => {
+  monitoringStore.unsubscribeFromRealTimeMetersUpdates();
+  monitoringStore.unsubscribeFromUtilityConsumptions();
+});
 onUnmounted(() => {
-  console.log("View unmounting, closing sockets...");
   monitoringStore.disconnectMonitoring();
 });
 </script>
