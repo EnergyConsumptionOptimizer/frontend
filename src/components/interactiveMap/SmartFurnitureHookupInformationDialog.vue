@@ -81,9 +81,14 @@ watch(visible, (isOpen) => {
 watch(
   () => smartFurnitureHookup.value?.endpoint,
   (newVal, oldVal) => {
-    if (visible.value && newVal !== oldVal) {
+    if (visible.value && newVal !== oldVal && oldVal !== undefined) {
       isSynced.value = false;
       syncFailed.value = false;
+      if (!smartFurnitureHookup.value.id) {
+        smartFurnitureHookup.value.name = "";
+        smartFurnitureHookup.value.utilityType = null;
+      }
+      if (interactiveMapStore.error) interactiveMapStore.clearError();
     }
   },
 );
