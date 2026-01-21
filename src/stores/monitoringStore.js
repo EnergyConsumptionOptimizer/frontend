@@ -197,14 +197,23 @@ export const useMonitoringStore = defineStore("monitoring", () => {
     await monitoringService.editUtilityConsumptionQuery(query);
   };
 
-  const disconnectMonitoring = () => {
-    monitoringService.disconnect();
-
+  const unsubscribeFromRealTimeMetersUpdates = async () => {
     meters.value = [];
+    await monitoringService.unsubscribeFromRealTimeMetersUpdates();
+  };
+  const unsubscribeFromActiveSmartFurnitureHookups = async () => {
     activeSmartFurnitureHookups.value = [];
+    await monitoringService.unsubscribeFromActiveSmartFurnitureHookups();
+  };
+  const unsubscribeFromUtilityConsumptions = async () => {
     realTimeConsumptions.value = [];
     historicalConsumptions.value = [];
     consumption_queries.value = [];
+    await monitoringService.unsubscribeFromUtilityConsumptions();
+  };
+
+  const disconnectMonitoring = () => {
+    monitoringService.disconnect();
   };
 
   return {
@@ -223,5 +232,9 @@ export const useMonitoringStore = defineStore("monitoring", () => {
     updateRealTimeQuery,
     updateHistoricalQuery,
     disconnectMonitoring,
+
+    unsubscribeFromRealTimeMetersUpdates,
+    unsubscribeFromActiveSmartFurnitureHookups,
+    unsubscribeFromUtilityConsumptions,
   };
 });

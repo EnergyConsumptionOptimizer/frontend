@@ -9,6 +9,7 @@ export class MonitoringService {
   utilityConsumptionSocket = null;
 
   realTimeSubscribersCount = 0;
+  utilityConsumptionSubscribersCount = 0;
 
   subscribedToRealTimeMetersUpdates = false;
   subscribedToActiveSmartFurnitureHookupsUpdates = false;
@@ -67,6 +68,7 @@ export class MonitoringService {
   }
 
   async subscribeToUtilityConsumptions(query, onUpdate) {
+    this.utilityConsumptionSubscribersCount++;
     if (!this.utilityConsumptionSocket) {
       this.utilityConsumptionSocket = new SocketController();
     }
@@ -127,22 +129,40 @@ export class MonitoringService {
     });
   }
 
+  async unsubscribeFromRealTimeMetersUpdates() {
+    this.realTimeSubscribersCount--;
+  }
+
+  async unsubscribeFromActiveSmartFurnitureHookups() {
+    this.realTimeSubscribersCount--;
+  }
+
+  async unsubscribeFromUtilityConsumptions() {
+    this.utilityConsumptionSubscribersCount--;
+  }
+
   disconnect() {
-    if (this.realTimeSocket) {
-      this.realTimeSubscribersCount--;
-      if (this.realTimeSubscribersCount < 0) this.realTimeSubscribersCount = 0;
-      if (this.realTimeSubscribersCount !== 0) {
-        return;
-      }
+    if (this.realTimeSocket && this.realTimeSubscribersCount <= 0) {
       this.realTimeSocket.disconnect();
       this.subscribedToRealTimeMetersUpdates = false;
       this.subscribedToActiveSmartFurnitureHookupsUpdates = false;
+      this.realTimeSocket = null;
+
+      console.log(
+        "MonitoringService: realTimeSocket disconnected and flags reset.",
+      );
     }
 
-    if (this.utilityConsumptionSocket) {
+    if (
+      this.utilityConsumptionSocket &&
+      this.utilityConsumptionSubscribersCount <= 0
+    ) {
       this.utilityConsumptionSocket.disconnect();
-    }
+      this.utilityConsumptionSocket = null;
 
-    console.log("MonitoringService: All sockets disconnected and flags reset.");
+      console.log(
+        "MonitoringService: utilityConsumptionSocket disconnected and flags reset.",
+      );
+    }
   }
 }
