@@ -7,6 +7,8 @@ import { useServerFormErrors } from "@/composables/useServerFormErrors";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import InputNumber from "primevue/inputnumber";
+import InputGroup from "primevue/inputgroup";
+import InputGroupAddon from "primevue/inputgroupaddon";
 import Select from "primevue/select";
 import Button from "primevue/button";
 import Message from "primevue/message";
@@ -55,6 +57,13 @@ const isFormValid = computed(() => {
   const validValue = t.value !== null && t.value !== undefined && t.value > 0;
   const validPeriod = props.isPeriodDisabled || !!t.periodType;
   return validName && validUtility && validType && validValue && validPeriod;
+});
+
+const unitOfMeasure = computed(() => {
+  const utility = threshold.value?.utilityType?.toLowerCase();
+  if (utility === "electricity") return "kWh";
+  if (utility === "gas" || utility === "water") return "Smc";
+  return "";
 });
 
 watch(visible, (isOpen) => {
@@ -205,28 +214,33 @@ function onSave() {
         <label for="value" class="font-semibold text-base">
           Value <span class="text-red-500" aria-hidden="true">*</span>
         </label>
-        <InputNumber
-          id="value"
-          v-model="threshold.value"
-          :min="Number.EPSILON"
-          :minFractionDigits="0"
-          :maxFractionDigits="6"
-          class="w-full"
-          pt:pcInput:root:class="min-h-11"
-          :invalid="
-            !!valueError ||
-            (submitted && (!threshold.value || threshold.value <= 0))
-          "
-          :aria-invalid="
-            !!valueError ||
-            (submitted && (!threshold.value || threshold.value <= 0))
-          "
-          aria-describedby="value-error"
-          fluid
-          aria-required="true"
-          placeholder="Enter threshold value"
-          @input="clearError"
-        />
+        <InputGroup>
+          <InputNumber
+            id="value"
+            v-model="threshold.value"
+            :min="Number.EPSILON"
+            :minFractionDigits="0"
+            :maxFractionDigits="6"
+            class="flex-1"
+            pt:pcInput:root:class="min-h-11"
+            :invalid="
+              !!valueError ||
+              (submitted && (!threshold.value || threshold.value <= 0))
+            "
+            :aria-invalid="
+              !!valueError ||
+              (submitted && (!threshold.value || threshold.value <= 0))
+            "
+            aria-describedby="value-error"
+            fluid
+            aria-required="true"
+            placeholder="Enter threshold value"
+            @input="clearError"
+          />
+          <InputGroupAddon v-if="unitOfMeasure" class="min-h-11">
+            {{ unitOfMeasure }}
+          </InputGroupAddon>
+        </InputGroup>
         <Message
           id="value-error"
           v-if="
