@@ -13,9 +13,9 @@ export const UserApiService = {
     return data;
   },
 
-  async updateUsername(id, username) {
+  async update(id, payload) {
     const { data } = await apiClient.patch(`${BASE_URL}/${id}/username`, {
-      username,
+      username: payload.username,
     });
     return data;
   },
