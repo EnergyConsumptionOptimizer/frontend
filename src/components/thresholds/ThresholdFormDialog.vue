@@ -207,8 +207,10 @@ function onSave() {
         </label>
         <InputNumber
           id="value"
-          v-model.number="threshold.value"
-          :min="0"
+          v-model="threshold.value"
+          :min="Number.EPSILON"
+          :minFractionDigits="0"
+          :maxFractionDigits="6"
           class="w-full"
           pt:pcInput:root:class="min-h-11"
           :invalid="
