@@ -290,7 +290,7 @@ onMounted(() => {
         </div>
       </div>
     </main>
-
+    <ConfirmDialog />
     <Toast />
   </div>
 </template>
