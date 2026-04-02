@@ -354,15 +354,17 @@ watch(collisionError, (error) => {
 onBeforeMount(() => {
   interactiveMapStore.setLocalMode(props.isLocalMode);
   interactiveMapStore.viewMap();
-  monitoringStore.subscribeToActiveSmartFurnitureHookups();
+  if (!props.isLocalMode)
+    monitoringStore.subscribeToActiveSmartFurnitureHookups();
 });
 
 onBeforeUnmount(() => {
-  monitoringStore.unsubscribeFromActiveSmartFurnitureHookups();
+  if (!props.isLocalMode)
+    monitoringStore.unsubscribeFromActiveSmartFurnitureHookups();
 });
 
 onUnmounted(() => {
-  monitoringStore.disconnectMonitoring();
+  if (!props.isLocalMode) monitoringStore.disconnectMonitoring();
 });
 </script>
 
