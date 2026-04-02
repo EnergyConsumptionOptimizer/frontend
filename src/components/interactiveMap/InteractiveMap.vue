@@ -60,6 +60,7 @@ const {
   isDrawMode,
   isEditMode,
   hasZones,
+  hasSmartFurnitureHookups,
   isLoading,
 } = storeToRefs(interactiveMapStore);
 
@@ -395,10 +396,10 @@ onUnmounted(() => {
           <Button
             label="Edit"
             severity="secondary"
-            :outlined="!hasZones"
+            :outlined="!hasZones && !hasSmartFurnitureHookups"
             icon="pi pi-arrows-alt"
             class="min-h-11"
-            :disabled="!hasZones"
+            :disabled="!hasZones && !hasSmartFurnitureHookups"
             aria-label="Enter edit mode to move zones and hookups"
             @click="handleStartEditing"
           />
