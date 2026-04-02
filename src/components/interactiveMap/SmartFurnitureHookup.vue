@@ -24,9 +24,6 @@ const smartFurnitureRadius = computed(
   () => MAP_CONSTANTS.SMART_FURNITURE_RADIUS * props.scaleFactor * 0.5,
 );
 const iconScale = computed(() => 3 * props.scaleFactor * 0.5);
-const innerRadius = computed(
-  () => MAP_CONSTANTS.SMART_FURNITURE_INNER_RADIUS * props.scaleFactor * 0.5,
-);
 
 const smartFurnitureHookupClick = (event, hookup = null) => {
   if (!props.editModeActive) return;
@@ -100,14 +97,6 @@ const descId = `hookup-desc-${props.smartFurnitureHookup.id}`;
       {{ desc }}
     </desc>
 
-    <circle
-      v-if="props.editModeActive"
-      :r="smartFurnitureRadius"
-      fill="transparent"
-      stroke="transparent"
-      aria-hidden="true"
-    />
-
     <g :transform="`scale(${iconScale})`">
       <electricity-icon
         v-if="
@@ -134,8 +123,9 @@ const descId = `hookup-desc-${props.smartFurnitureHookup.id}`;
       />
       <circle
         v-else
-        :r="innerRadius / iconScale"
+        :r="smartFurnitureRadius"
         :fill="color"
+        :stroke="strokeColor"
         aria-hidden="true"
       />
     </g>
