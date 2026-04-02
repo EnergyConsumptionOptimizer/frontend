@@ -18,6 +18,7 @@ const props = defineProps({
 
 const zone = defineModel("zone", { type: Object, required: true });
 const visible = defineModel("visible", { type: Boolean, default: false });
+const colorInput = defineModel("colorInput", { type: String, default: "#fff" });
 const emit = defineEmits(["hide", "save", "cancel"]);
 
 const store = useInteractiveMapStore();
@@ -26,7 +27,6 @@ const { getFieldError: getServerError, globalError } =
   useServerFormErrors(error);
 
 const submitted = ref(false);
-const selectedColor = ref("");
 
 const nameRef = computed(() => zone.value?.name);
 const idRef = computed(() => zone.value?.id);
@@ -43,32 +43,10 @@ const isFormValid = computed(() => {
   return name && name.length > 0 && isNameLocalValid.value;
 });
 
-const activeColor = computed({
-  get: () => {
-    const color =
-      selectedColor.value || zone.value?.color || props.defaultColor;
-    const colorStr =
-      typeof color === "string" ? color : color?.value || props.defaultColor;
-    return colorStr.startsWith("#") ? colorStr.substring(1) : colorStr;
-  },
-  set: (val) => {
-    selectedColor.value = val.startsWith("#") ? val : "#" + val;
-  },
-});
-
 watch(visible, (isOpen) => {
   if (!isOpen) {
     submitted.value = false;
     if (store.error) store.clearError();
-  } else {
-    const zoneColor = zone.value?.color;
-    if (zoneColor?.value !== undefined) {
-      selectedColor.value = zoneColor.value;
-    } else if (typeof zoneColor === "string") {
-      selectedColor.value = zoneColor;
-    } else {
-      selectedColor.value = props.defaultColor;
-    }
   }
 });
 
@@ -82,10 +60,14 @@ function onSave() {
     return;
   }
 
+  const zoneColor = colorInput.value;
+
   emit("save", {
     id: zone.value?.id ?? null,
     name: zone.value.name.trim(),
-    color: selectedColor.value || props.defaultColor,
+    color: zoneColor.startsWith("#")
+      ? zoneColor
+      : "#" + zoneColor || props.defaultColor,
   });
 }
 
@@ -150,7 +132,7 @@ const dialogTitle = computed(() =>
         <label for="zoneColor" class="font-semibold text-base"> Color </label>
         <ColorPicker
           inputId="zoneColor"
-          v-model="activeColor"
+          v-model="colorInput"
           format="hex"
           pt:root:class="flex-1 flex !w-full"
           pt:preview:class="flex-1 !h-8 !w-full"
