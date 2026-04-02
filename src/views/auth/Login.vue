@@ -28,6 +28,11 @@ const handleLogin = async () => {
   });
 
   if (success) {
+    const { useOnboardingStore } = await import("@/stores/onboarding.js");
+    const onboardingStore = useOnboardingStore();
+
+    await onboardingStore.init();
+
     const redirectPath = route.query.redirect?.toString() || "/";
     await router.push(redirectPath);
   }
