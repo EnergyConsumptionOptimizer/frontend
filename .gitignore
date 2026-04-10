@@ -50,6 +50,7 @@ dist/
 
 # Node.js dependencies
 node_modules/
+components.d.ts
 
 # Logs
 npm-debug.log*
