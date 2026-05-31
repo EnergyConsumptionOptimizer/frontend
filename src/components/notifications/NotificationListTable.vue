@@ -9,7 +9,7 @@ import Tag from "primevue/tag";
 import CrudToolbar from "@/components/common/CrudToolbar.vue";
 
 defineProps({
-  alerts: {
+  notifications: {
     type: Array,
     required: true,
   },
@@ -19,7 +19,7 @@ defineProps({
   },
 });
 
-const selectedAlerts = defineModel("selection", { default: () => [] });
+const selectedNotifications = defineModel("selection", { default: () => [] });
 
 const emit = defineEmits([
   "mark-read",
@@ -38,12 +38,12 @@ const formatDate = (dateString) => {
   return format(new Date(dateString), "PPpp");
 };
 
-const getMessage = (alert) => {
-  if (alert?.details) {
-    const { thresholdName, detected, limit } = alert.details;
+const getMessage = (notification) => {
+  if (notification?.details) {
+    const { thresholdName, detected, limit } = notification.details;
     return `${thresholdName}: Detected ${detected} (Limit: ${limit})`;
   }
-  return alert?.message ?? "";
+  return notification?.message ?? "";
 };
 
 const rowClass = (data) => {
@@ -51,16 +51,16 @@ const rowClass = (data) => {
 };
 
 const onBulkAction = (action) => {
-  if (selectedAlerts.value.length === 0) return;
-  emit(action, [...selectedAlerts.value]);
-  selectedAlerts.value = [];
+  if (selectedNotifications.value.length === 0) return;
+  emit(action, [...selectedNotifications.value]);
+  selectedNotifications.value = [];
 };
 </script>
 
 <template>
   <div>
     <CrudToolbar
-      :selected-items="selectedAlerts"
+      :selected-items="selectedNotifications"
       delete-label="Mark Read"
       delete-icon="pi pi-check"
       delete-severity="success"
@@ -72,13 +72,13 @@ const onBulkAction = (action) => {
           label="Delete"
           icon="pi pi-trash"
           severity="danger"
-          :outlined="selectedAlerts.length === 0"
+          :outlined="selectedNotifications.length === 0"
           class="min-h-11"
-          :disabled="selectedAlerts.length === 0"
+          :disabled="selectedNotifications.length === 0"
           :aria-label="
-            selectedAlerts.length > 0
-              ? `Delete ${selectedAlerts.length} selected alerts`
-              : 'Delete selected alerts (none selected)'
+            selectedNotifications.length > 0
+              ? `Delete ${selectedNotifications.length} selected notifications`
+              : 'Delete selected notifications (none selected)'
           "
           @click="onBulkAction('delete-bulk')"
         />
@@ -86,8 +86,8 @@ const onBulkAction = (action) => {
     </CrudToolbar>
 
     <DataTable
-      v-model:selection="selectedAlerts"
-      :value="alerts"
+      v-model:selection="selectedNotifications"
+      :value="notifications"
       dataKey="id"
       :paginator="true"
       :rows="10"
@@ -97,20 +97,20 @@ const onBulkAction = (action) => {
       :loading="loading"
       :rowClass="rowClass"
       responsiveLayout="scroll"
-      aria-label="Alerts table"
+      aria-label="Notifications table"
     >
       <template #header>
         <div
           class="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between"
         >
-          <h2 class="m-0 text-xl sm:text-2xl font-semibold">Alerts</h2>
+          <h2 class="m-0 text-xl sm:text-2xl font-semibold">Notifications</h2>
           <IconField>
             <InputIcon><i class="pi pi-search" aria-hidden="true" /></InputIcon>
             <InputText
               v-model="filters['global'].value"
-              placeholder="Search alerts..."
+              placeholder="Search notifications..."
               class="min-h-11"
-              aria-label="Search alerts by message or threshold name"
+              aria-label="Search notifications by message or threshold name"
             />
           </IconField>
         </div>
@@ -118,7 +118,7 @@ const onBulkAction = (action) => {
 
       <template #empty>
         <div class="text-center p-4 text-surface-500 dark:text-surface-400">
-          No alerts available.
+          No notifications available.
         </div>
       </template>
 
@@ -142,7 +142,9 @@ const onBulkAction = (action) => {
             :severity="!data.isRead ? 'info' : 'success'"
             :value="!data.isRead ? 'New' : 'Read'"
             class="uppercase text-xs"
-            :aria-label="!data.isRead ? 'Unread alert' : 'Read alert'"
+            :aria-label="
+              !data.isRead ? 'Unread notification' : 'Read notification'
+            "
           />
         </template>
       </Column>
@@ -160,6 +162,9 @@ const onBulkAction = (action) => {
 
       <Column header="Actions" style="min-width: 10rem" :exportable="false">
         <template #body="{ data }">
+          <span hidden data-testid="notification-source-id">{{
+            data.sourceId
+          }}</span>
           <div class="flex gap-2">
             <div class="w-11">
               <Button
@@ -178,7 +183,7 @@ const onBulkAction = (action) => {
               rounded
               severity="danger"
               class="min-w-11 min-h-11"
-              aria-label="Delete alert"
+              aria-label="Delete notification"
               v-tooltip.top="'Delete'"
               @click="$emit('delete', data)"
             />

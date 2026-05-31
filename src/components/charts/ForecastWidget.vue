@@ -27,6 +27,10 @@ const chartData = computed(() => {
 const setPeriod = (newPeriod) => {
   period.value = newPeriod;
 };
+
+const testIdPrefix = computed(
+  () => `forecast-${props.utilityType.toLowerCase()}`,
+);
 </script>
 
 <template>
@@ -36,6 +40,7 @@ const setPeriod = (newPeriod) => {
     :values="chartData.values"
     :loading="store.isLoading"
     :periods="PERIOD_OPTIONS"
+    :test-id-prefix="testIdPrefix"
     @period-change="setPeriod"
   />
 </template>

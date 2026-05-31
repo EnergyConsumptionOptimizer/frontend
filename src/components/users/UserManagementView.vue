@@ -26,18 +26,17 @@ const hideDialog = () => {
   userDialog.value = false;
 };
 
-const editUser = (prod) => {
-  user.value = { ...prod };
+const editUser = (userData) => {
+  user.value = { ...userData };
   userDialog.value = true;
 };
 
 const saveUser = async (payload) => {
   let success;
   if (payload.id) {
-    const userId = payload.id?.value || payload.id;
-    success = await userStore.updateUser(userId, payload.username);
+    success = await userStore.updateUser(payload.id, payload.username);
     if (success && payload.password) {
-      await userStore.updateUserPassword(userId, payload.password);
+      await userStore.updateUserPassword(payload.id, payload.password);
     }
   } else {
     success = await userStore.createUser(payload);
@@ -46,18 +45,18 @@ const saveUser = async (payload) => {
   if (success) hideDialog();
 };
 
-const confirmDeleteUser = (prod) => {
+const confirmDeleteUser = (userData) => {
   confirm.require(
     confirmDeleteDialog({
-      message: `Are you sure you want to delete ${prod.username}?`,
+      message: `Are you sure you want to delete ${userData.username}?`,
       header: "Delete User",
       onAccept: async () => {
-        const userId = prod.id?.value || prod.id;
-        await userStore.deleteUser(userId);
-        selectedUsers.value = selectedUsers.value.filter((u) => {
-          const uId = u.id?.value || u.id;
-          return uId !== userId;
-        });
+        const success = await userStore.deleteUser(userData.id);
+        if (success) {
+          selectedUsers.value = selectedUsers.value.filter(
+            (u) => u.id !== userData.id,
+          );
+        }
       },
     }),
   );
@@ -69,7 +68,7 @@ const confirmDeleteSelected = () => {
       message: "Are you sure you want to delete selected users?",
       header: "Delete Users",
       onAccept: async () => {
-        const ids = selectedUsers.value.map((u) => u.id?.value || u.id);
+        const ids = selectedUsers.value.map((u) => u.id);
         const success = await userStore.deleteUsers(ids);
         if (success) selectedUsers.value = [];
       },

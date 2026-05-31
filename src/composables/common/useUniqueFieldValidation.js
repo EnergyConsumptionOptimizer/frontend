@@ -13,15 +13,12 @@ export function useUniqueFieldValidation(
     }
     const valueToCheck = String(valueRef.value).trim().toLowerCase();
 
-    const currentId = idRef?.value?.value || idRef?.value;
+    const currentId = idRef?.value;
 
     const exists = listRef.value.some((item) => {
-      const itemId = item.id?.value || item.id;
+      const itemId = item.id;
 
-      // Skip comparison with the current item being edited
-      if (currentId && itemId === currentId) {
-        return false;
-      }
+      if (currentId && itemId === currentId) return false;
 
       const itemValue = String(item[fieldProperty] || "")
         .trim()

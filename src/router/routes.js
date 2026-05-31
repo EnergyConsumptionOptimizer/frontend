@@ -16,8 +16,8 @@ export const routes = [
       },
       {
         path: "alerts",
-        name: "alerts",
-        component: () => import("@/views/pages/Alerts.vue"),
+        name: "notifications",
+        component: () => import("@/views/pages/Notifications.vue"),
         meta: { roles: ["ADMIN"] },
       },
       {

@@ -83,6 +83,8 @@ const descId = `hookup-desc-${props.smartFurnitureHookup.id}`;
   <g
     role="graphics-object"
     :aria-labelledby="`${titleId} ${descId}`"
+    data-testid="hookup-marker"
+    :data-hookup-name="props.smartFurnitureHookup.name"
     @mousedown="
       props.editModeActive
         ? smartFurnitureHookupClick($event, props.smartFurnitureHookup)

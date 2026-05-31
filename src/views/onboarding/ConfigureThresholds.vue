@@ -20,7 +20,7 @@ onMounted(() => {
 <template>
   <OnboardingStepLayout
     title="Set Thresholds"
-    subtitle="Configure your alert thresholds"
+    subtitle="Configure your notification thresholds"
   >
     <template #content>
       <div class="w-full">

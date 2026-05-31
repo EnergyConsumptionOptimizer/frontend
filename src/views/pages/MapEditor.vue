@@ -1,5 +1,9 @@
 <script setup>
+import { useRoute } from "vue-router";
 import InteractiveMap from "@/components/interactiveMap/InteractiveMap.vue";
+
+const route = useRoute();
+const bypassHookupSync = route.query.bypassSync === "1";
 </script>
 
 <template>
@@ -11,7 +15,7 @@ import InteractiveMap from "@/components/interactiveMap/InteractiveMap.vue";
     <Card class="flex-1 min-h-0 flex flex-col">
       <template #content>
         <div class="h-full min-h-0">
-          <InteractiveMap />
+          <InteractiveMap :bypass-hookup-sync="bypassHookupSync" />
         </div>
       </template>
     </Card>

@@ -30,7 +30,7 @@ export const useAuthStore = defineStore("auth", () => {
     perform(
       async () => {
         const data = await AuthService.login(credentials);
-        setUser(data.user);
+        setUser(data);
         isInitialized.value = true;
       },
       { suppressToastForCodes: MANUAL_HANDLED_ERROR_CODES },
@@ -57,7 +57,7 @@ export const useAuthStore = defineStore("auth", () => {
     if (isInitialized.value) return;
     try {
       const data = await AuthService.verifySession();
-      setUser(data.user);
+      setUser(data);
     } catch {
       clearSession();
     } finally {
@@ -68,8 +68,8 @@ export const useAuthStore = defineStore("auth", () => {
   const refreshToken = async () => {
     try {
       const data = await AuthService.refreshToken();
-      if (data?.user) {
-        setUser(data.user);
+      if (data?.id) {
+        setUser(data);
         return true;
       }
       return false;

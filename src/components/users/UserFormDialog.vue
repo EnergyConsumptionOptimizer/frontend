@@ -156,7 +156,7 @@ const dialogTitle = computed(() =>
           >New Password</label
         >
         <Password
-          id="new-password"
+          inputId="new-password"
           v-model.trim="newPassword"
           toggleMask
           :feedback="false"
@@ -172,7 +172,7 @@ const dialogTitle = computed(() =>
           >Confirm Password</label
         >
         <Password
-          id="confirm-password"
+          inputId="confirm-password"
           v-model.trim="confirmPassword"
           toggleMask
           :feedback="false"

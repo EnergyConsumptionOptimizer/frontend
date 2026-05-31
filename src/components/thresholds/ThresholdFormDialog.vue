@@ -34,6 +34,10 @@ const { getFieldError: getServerError, globalError } =
 
 const submitted = ref(false);
 
+const clearError = () => {
+  thresholdStore.clearError();
+};
+
 const nameRef = computed(() => threshold.value?.name);
 const idRef = computed(() => threshold.value?.id);
 
@@ -308,7 +312,6 @@ function onSave() {
           placeholder="Select State"
           fluid
           class="w-full"
-          aria-label="Threshold state"
         />
       </div>
     </form>

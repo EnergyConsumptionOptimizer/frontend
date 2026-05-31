@@ -18,12 +18,12 @@ export const AuthService = {
   },
 
   async verifySession() {
-    const { data } = await apiClient.get(`${BASE_URL}/verify`);
+    const { data } = await apiClient.get(`/user/api/internal/auth/verify`);
     return data;
   },
 
   async resetAdminPassword(resetCode, password) {
-    const { data } = await apiClient.post(`user/admin/reset-password`, {
+    const { data } = await apiClient.post(`/user/admin/reset-password`, {
       resetCode,
       password,
     });

@@ -1,11 +1,11 @@
 import apiClient from "@/middlewares/authInterceptor";
 
-const BASE_URL = "/user/api/household-users";
+const BASE_URL = "/user/api/users";
 
 export const UserApiService = {
   async getAll() {
     const { data } = await apiClient.get(BASE_URL);
-    return data["household-users"] ?? (Array.isArray(data) ? data : []);
+    return Array.isArray(data) ? data : [];
   },
 
   async create(payload) {
@@ -14,9 +14,10 @@ export const UserApiService = {
   },
 
   async update(id, payload) {
-    const { data } = await apiClient.patch(`${BASE_URL}/${id}/username`, {
-      username: payload.username,
-    });
+    const { data } = await apiClient.patch(
+      `${BASE_URL}/${id}/username`,
+      payload,
+    );
     return data;
   },
 
@@ -25,7 +26,7 @@ export const UserApiService = {
   },
 
   async updatePassword(id, password) {
-    const { data } = await apiClient.patch(`/user/api/users/${id}/password`, {
+    const { data } = await apiClient.patch(`${BASE_URL}/${id}/password`, {
       password,
     });
     return data;

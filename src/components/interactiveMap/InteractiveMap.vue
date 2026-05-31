@@ -41,6 +41,7 @@ const props = defineProps({
   isLocalMode: { type: Boolean, default: false },
   manageZones: { type: Boolean, default: true },
   manageSmartFurnitureHookups: { type: Boolean, default: true },
+  bypassHookupSync: { type: Boolean, default: false },
 });
 
 const emit = defineEmits([
@@ -559,6 +560,7 @@ onUnmounted(() => {
     v-model:loading="endpointLoading"
     :saving="isLoading"
     :isOnDrawMode="isSmartFurnitureHookupOnDrawMode"
+    :bypassSync="props.bypassHookupSync"
     @save="handleSaveSmartFurnitureHookup"
     @hide="hideSmartFurnitureHookupDialog"
     @cancel="hideSmartFurnitureHookupDialog"

@@ -1,7 +1,7 @@
 <script setup>
 import { useLayout } from "@/layout/composables/useLayout";
 import { useAuthStore } from "@/stores/authsStore.js";
-import { useAlertStore } from "@/stores/alertStore";
+import { useNotificationStore } from "@/stores/notificationStore";
 import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";
 import { computed, ref, onMounted, onUnmounted } from "vue";
@@ -9,8 +9,8 @@ import OverlayBadge from "primevue/overlaybadge";
 
 const { toggleMenu, toggleDarkMode, isDarkTheme, layoutState } = useLayout();
 const authStore = useAuthStore();
-const alertStore = useAlertStore();
-const { unreadCount } = storeToRefs(alertStore);
+const notificationStore = useNotificationStore();
+const { unreadCount } = storeToRefs(notificationStore);
 const { isAdmin } = storeToRefs(authStore);
 const router = useRouter();
 
@@ -24,8 +24,8 @@ const handleLogout = async () => {
   router.push({ name: "login" });
 };
 
-const goToAlerts = () => {
-  router.push({ name: "alerts" });
+const goToNotifications = () => {
+  router.push({ name: "notifications" });
 };
 
 const goToProfile = () => {
@@ -73,8 +73,10 @@ const themeToggleLabel = computed(() =>
   isDarkTheme.value ? "Switch to Light Mode" : "Switch to Dark Mode",
 );
 
-const alertsLabel = computed(() =>
-  unreadCount.value > 0 ? `Alerts (${unreadCount.value} unread)` : "Alerts",
+const notificationsLabel = computed(() =>
+  unreadCount.value > 0
+    ? `Notifications (${unreadCount.value} unread)`
+    : "Notifications",
 );
 </script>
 
@@ -107,8 +109,8 @@ const alertsLabel = computed(() =>
         <button
           type="button"
           class="layout-topbar-action"
-          @click="goToAlerts"
-          :aria-label="alertsLabel"
+          @click="goToNotifications"
+          :aria-label="notificationsLabel"
         >
           <overlay-badge
             v-if="unreadCount > 0"
@@ -119,7 +121,7 @@ const alertsLabel = computed(() =>
             <i class="pi pi-bell" aria-hidden="true"></i>
           </overlay-badge>
           <i v-else class="pi pi-bell" aria-hidden="true"></i>
-          <span class="hidden lg:inline ml-2">Alerts</span>
+          <span class="hidden lg:inline ml-2">Notifications</span>
         </button>
       </div>
 
@@ -150,7 +152,6 @@ const alertsLabel = computed(() =>
           'layout-topbar-menu',
           { 'layout-topbar-menu-mobile-active': mobileMenuOpen },
         ]"
-        :aria-hidden="!mobileMenuOpen && 'true'"
         aria-label="User menu"
         role="menu"
       >

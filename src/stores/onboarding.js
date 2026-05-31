@@ -74,11 +74,9 @@ export const useOnboardingStore = defineStore("onboarding", {
           const floorPlan = await InteractiveMapService.fetchFloorPlan();
           if (floorPlan) {
             this.finishOnboarding();
-          } else this.isComplete = false;
+          }
         } catch {
-          console.error("Cannot init the onboarding!");
-          this.isInitialized = false;
-          return;
+          this.isComplete = false;
         }
       }
 

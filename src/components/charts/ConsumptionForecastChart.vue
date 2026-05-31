@@ -12,6 +12,7 @@ const props = defineProps({
   values: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
   periods: { type: Array, default: () => [{ label: "Daily", value: "daily" }] },
+  testIdPrefix: { type: String, default: "" },
 });
 
 const emit = defineEmits(["period-change"]);
@@ -56,7 +57,7 @@ const hasData = computed(() => {
 </script>
 
 <template>
-  <div class="card h-full flex flex-col">
+  <div class="card h-full flex flex-col" :data-testid="testIdPrefix">
     <div
       class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6"
     >
@@ -72,6 +73,9 @@ const hasData = computed(() => {
           button: {
             class: 'min-h-11',
           },
+          root: testIdPrefix
+            ? { 'data-testid': `${testIdPrefix}-period` }
+            : undefined,
         }"
       />
     </div>
@@ -80,10 +84,18 @@ const hasData = computed(() => {
       <div
         class="h-full w-full overflow-x-auto overflow-y-hidden custom-scrollbar"
       >
-        <div class="flex-1 w-full min-h-64 relative" v-if="!hasData">
+        <div
+          v-if="!hasData"
+          class="flex-1 w-full min-h-64 relative"
+          :data-testid="testIdPrefix ? `${testIdPrefix}-empty` : undefined"
+        >
           <empty-consumption-data />
         </div>
-        <div :style="containerStyle" v-else>
+        <div
+          v-else
+          :style="containerStyle"
+          :data-testid="testIdPrefix ? `${testIdPrefix}-chart` : undefined"
+        >
           <Chart
             type="bar"
             :data="chartData"

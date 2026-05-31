@@ -18,7 +18,6 @@ defineProps({
     <div class="w-full max-w-md">
       <div
         class="bg-gradient-to-b from-primary-400 to-primary-500 p-1 rounded-3xl sm:rounded-[56px]"
-        aria-hidden="true"
       >
         <div
           class="bg-surface-0 dark:bg-surface-900 rounded-3xl sm:rounded-[53px] p-6 sm:p-8 md:p-12"

@@ -1,13 +1,13 @@
 import { defineStore } from "pinia";
 import { ref, computed, watch } from "vue";
 import { useAuthStore } from "./authsStore.js";
-import { AlertService } from "@/service/AlertService";
+import { NotificationService } from "@/service/NotificationService";
 import { useAsyncAction } from "@/composables/utils/asyncAction";
 
 const MAX_RETRIES = 10;
 
-export const useAlertStore = defineStore("alert", () => {
-  const alerts = ref([]);
+export const useNotificationStore = defineStore("notification", () => {
+  const notifications = ref([]);
   const unreadCount = ref(0);
   const isConnected = ref(false);
   const isConnectionFailed = ref(false);
@@ -19,18 +19,22 @@ export const useAlertStore = defineStore("alert", () => {
   let reconnectTimer = null;
   let reconnectAttempt = 0;
 
-  const unreadAlerts = computed(() => alerts.value.filter((a) => !a.isRead));
+  const unreadNotifications = computed(() =>
+    notifications.value.filter((n) => !n.isRead),
+  );
   const hasUnread = computed(() => unreadCount.value > 0);
-  const getById = computed(() => (id) => alerts.value.find((a) => a.id === id));
+  const getById = computed(
+    () => (id) => notifications.value.find((n) => n.id === id),
+  );
 
-  const fetchAlerts = () =>
+  const fetchNotifications = () =>
     perform(async () => {
-      alerts.value = await AlertService.getAlerts();
+      notifications.value = await NotificationService.getNotifications();
     });
 
   const fetchUnreadCount = async () => {
     try {
-      unreadCount.value = await AlertService.getUnreadCount();
+      unreadCount.value = await NotificationService.getUnreadCount();
     } catch (err) {
       console.error("Silent error fetching unread count:", err);
     }
@@ -40,48 +44,48 @@ export const useAlertStore = defineStore("alert", () => {
     if (isLoading.value) return Promise.resolve(false);
 
     return perform(async () => {
-      const [alertsData, countData] = await Promise.all([
-        AlertService.getAlerts(),
-        AlertService.getUnreadCount(),
+      const [notificationsData, countData] = await Promise.all([
+        NotificationService.getNotifications(),
+        NotificationService.getUnreadCount(),
       ]);
-      alerts.value = alertsData;
+      notifications.value = notificationsData;
       unreadCount.value = countData;
     });
   };
 
   const markAsRead = (id) =>
     perform(async () => {
-      const alert = alerts.value.find((a) => a.id === id);
+      const notification = notifications.value.find((n) => n.id === id);
 
-      if (!alert || alert.isRead) return;
+      if (!notification || notification.isRead) return;
 
-      alert.isRead = true;
+      notification.isRead = true;
       if (unreadCount.value > 0) unreadCount.value--;
 
       try {
-        await AlertService.markAsRead(id);
+        await NotificationService.markAsRead(id);
       } catch (err) {
-        alert.isRead = false;
+        notification.isRead = false;
         unreadCount.value++;
         throw err;
       }
     });
 
-  const deleteAlert = (id) =>
+  const deleteNotification = (id) =>
     perform(async () => {
-      const index = alerts.value.findIndex((a) => a.id === id);
+      const index = notifications.value.findIndex((n) => n.id === id);
       if (index === -1) return;
 
-      const alert = alerts.value[index];
-      const wasRead = alert.isRead;
+      const notification = notifications.value[index];
+      const wasRead = notification.isRead;
 
-      alerts.value.splice(index, 1);
+      notifications.value.splice(index, 1);
       if (!wasRead && unreadCount.value > 0) unreadCount.value--;
 
       try {
-        await AlertService.deleteAlert(id);
+        await NotificationService.deleteNotification(id);
       } catch (err) {
-        alerts.value.splice(index, 0, alert);
+        notifications.value.splice(index, 0, notification);
         if (!wasRead) unreadCount.value++;
         throw err;
       }
@@ -96,7 +100,7 @@ export const useAlertStore = defineStore("alert", () => {
   const deleteMany = (ids) =>
     perform(async () => {
       if (!ids?.length) return;
-      await Promise.all(ids.map((id) => deleteAlert(id)));
+      await Promise.all(ids.map((id) => deleteNotification(id)));
     });
 
   const disconnect = () => {
@@ -137,7 +141,7 @@ export const useAlertStore = defineStore("alert", () => {
 
     const startSubscription = async () => {
       try {
-        await AlertService.subscribeToUnreadAlerts({
+        await NotificationService.subscribeToUnreadNotifications({
           signal: abortController.signal,
           onOpen: () => {
             reconnectAttempt = 0;
@@ -145,8 +149,8 @@ export const useAlertStore = defineStore("alert", () => {
             sync();
           },
           onEvent: (data) => {
-            if (data?.type === "NEW_ALERT") {
-              fetchAlerts();
+            if (data?.type === "NEW_NOTIFICATION") {
+              fetchNotifications();
               fetchUnreadCount();
             }
           },
@@ -180,7 +184,7 @@ export const useAlertStore = defineStore("alert", () => {
         connect();
       } else {
         disconnect();
-        alerts.value = [];
+        notifications.value = [];
         unreadCount.value = 0;
       }
     },
@@ -188,20 +192,20 @@ export const useAlertStore = defineStore("alert", () => {
   );
 
   return {
-    alerts,
+    notifications,
     unreadCount,
     isLoading,
     error,
     isConnected,
     isConnectionFailed,
-    unreadAlerts,
+    unreadNotifications,
     hasUnread,
     getById,
-    fetchAlerts,
+    fetchNotifications,
     fetchUnreadCount,
     markAsRead,
     markManyAsRead,
-    deleteAlert,
+    deleteNotification,
     deleteMany,
     sync,
     connect,

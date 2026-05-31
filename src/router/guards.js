@@ -68,7 +68,11 @@ export const createAuthGuard = async (to) => {
   if (to.meta.roles) {
     const userRole = authStore.user?.role;
 
-    if (!to.meta.roles.includes(userRole)) {
+    if (
+      !to.meta.roles
+        .map((r) => r.toLowerCase())
+        .includes(userRole?.toLowerCase())
+    ) {
       return { name: "accessDenied" };
     }
   }

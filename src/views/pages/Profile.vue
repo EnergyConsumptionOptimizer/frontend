@@ -23,14 +23,12 @@ const openDialog = () => {
 const handleSave = async (payload) => {
   let success = true;
 
-  const userId = payload.id?.value || payload.id;
-
   if (payload.username) {
-    success = await userStore.updateUser(userId, payload.username);
+    success = await userStore.updateUser(payload.id, payload.username);
   }
 
   if (success && payload.password) {
-    success = await userStore.updateUserPassword(userId, payload.password);
+    success = await userStore.updateUserPassword(payload.id, payload.password);
   }
 
   if (success) {
@@ -54,7 +52,9 @@ const handleSave = async (payload) => {
               <label class="font-semibold text-sm text-muted-color"
                 >Username</label
               >
-              <p class="text-lg mt-1">{{ user?.username }}</p>
+              <p class="text-lg mt-1" data-testid="profile-username">
+                {{ user?.username }}
+              </p>
             </div>
             <div>
               <label class="font-semibold text-sm text-muted-color">Role</label>

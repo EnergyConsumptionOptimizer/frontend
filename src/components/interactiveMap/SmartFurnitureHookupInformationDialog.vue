@@ -12,6 +12,7 @@ import { useServerFormErrors } from "@/composables/useServerFormErrors";
 const props = defineProps({
   isOnDrawMode: Boolean,
   saving: { type: Boolean, default: false },
+  bypassSync: { type: Boolean, default: false },
 });
 
 const smartFurnitureHookup = defineModel("smartFurnitureHookup", {
@@ -72,7 +73,7 @@ const isFormValid = computed(() => {
 watch(visible, (isOpen) => {
   if (isOpen) {
     submitted.value = false;
-    isSynced.value = !!smartFurnitureHookup.value?.id;
+    isSynced.value = !!smartFurnitureHookup.value?.id || props.bypassSync;
     syncFailed.value = false;
     if (interactiveMapStore.error) interactiveMapStore.clearError();
   }
