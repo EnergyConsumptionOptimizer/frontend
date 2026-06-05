@@ -4,7 +4,12 @@ export function useSmartFurnitureHookupZoneDetection(existingZones) {
   const collision = useZoneCollision();
 
   function findZoneForSmartFurnitureHookup(hookup) {
-    if (!hookup || !hookup.position.x || !hookup.position.y) {
+    if (
+      !hookup ||
+      hookup.position == null ||
+      hookup.position.x == null ||
+      hookup.position.y == null
+    ) {
       return null;
     }
 

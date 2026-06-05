@@ -95,7 +95,10 @@ const chartOptions = computed(() => ({
 </script>
 
 <template>
-  <section class="card h-full flex flex-col" aria-labelledby="hist-chart-title">
+  <section
+    class="card h-full flex flex-col"
+    aria-labelledby="historical-consumptions-title"
+  >
     <ConsumptionChartToolBar
       title="Historical Consumptions"
       v-model:filters="filters"

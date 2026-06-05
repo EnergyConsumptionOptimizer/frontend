@@ -14,7 +14,6 @@ import { useZoneEditor } from "@/composables/interactiveMap/useZoneEditor.js";
 import { useZoneDrag } from "@/composables/interactiveMap/useZoneDrag.js";
 import { useSmartFurnitureHookupEditor } from "@/composables/interactiveMap/useSmartFurnitureHookupEditor.js";
 import { useSmartFurnitureHookupDrag } from "@/composables/interactiveMap/useSmartFurnitureHookupDrag.js";
-import { useSmartFurnitureHookupZoneDetection } from "@/composables/interactiveMap/useSmartFurnitureHookupZoneDetection.js";
 import { computeFloorPlanTree } from "@/utils/floorPlanTree.js";
 
 import InteractiveMapEditorLayout from "@/layout/InteractiveMapEditorLayout.vue";
@@ -127,10 +126,6 @@ const {
   stopDrag: stopSmartFurnitureHookupDrag,
   dragState: smartFurnitureHookupDragState,
 } = useSmartFurnitureHookupDrag(zones);
-
-const { findZoneForSmartFurnitureHookup } =
-  useSmartFurnitureHookupZoneDetection(zones);
-
 const tree = computed(() =>
   computeFloorPlanTree(zones.value, smartFurnitureHookups.value),
 );
@@ -233,14 +228,9 @@ async function handleSaveSmartFurnitureHookup(smartFurnitureHookupInfo) {
 
   let success = false;
   if (isSmartFurnitureHookupOnDrawMode.value) {
-    const zone = findZoneForSmartFurnitureHookup(
-      draftSmartFurnitureHookup.value,
-    );
-
     success = await interactiveMapStore.addSmartFurnitureHookup({
       ...draftSmartFurnitureHookup.value,
       smartFurnitureHookupInfo,
-      zone,
     });
     if (success) {
       doneDrawingSmartFurnitureHookup();

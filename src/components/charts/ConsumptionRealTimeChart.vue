@@ -90,7 +90,10 @@ const hasData = computed(() => {
 </script>
 
 <template>
-  <section class="card h-full flex flex-col" aria-labelledby="rt-chart-title">
+  <section
+    class="card h-full flex flex-col"
+    aria-labelledby="real-time-consumptions-title"
+  >
     <ConsumptionChartToolBar
       title="Real-Time Consumptions"
       v-model:filters="filters"

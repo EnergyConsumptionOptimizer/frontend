@@ -61,7 +61,7 @@ export const InteractiveMapService = {
       ...info,
       utilityType: info.utilityType.toUpperCase(),
       position: mapInfo?.position || null,
-      zone: mapInfo?.zoneID || null,
+      zone: mapInfo?.zoneId || null,
     };
   },
   async fetchSmartFurnitureHookups() {
@@ -131,10 +131,8 @@ export const InteractiveMapService = {
       );
 
     const reqMap = await apiClient
-      .post(`${BASE_URL}/smart-furniture-hookups`, {
-        id: reqInfo.data.id,
+      .patch(`${BASE_URL}/smart-furniture-hookups/${reqInfo.data.id}`, {
         position: smartFurnitureHookup.position,
-        zoneID: smartFurnitureHookup.zone,
       })
       .catch(async (error) => {
         await SmartFurnitureHookupService.deleteSmartFurnitureHookup(
